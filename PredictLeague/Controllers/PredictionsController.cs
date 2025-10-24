@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -19,38 +18,38 @@ namespace PredictLeague.Controllers
             _context = context;
         }
 
-        // ✅ GET: Predictions
+       
         public async Task<IActionResult> Index()
         {
             var predictLeagueContext = _context.Prediction.Include(p => p.Match);
             return View(await predictLeagueContext.ToListAsync());
         }
 
-        // ✅ GET: Predictions/Details/5
+      
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var prediction = await _context.Prediction
                 .Include(p => p.Match)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (prediction == null)
-            {
                 return NotFound();
-            }
 
             return View(prediction);
         }
 
-        // ✅ GET: Predictions/Create?matchId=1
+       
         public IActionResult Create(int matchId)
         {
+            Console.WriteLine($"[DEBUG] Opening create for match ID: {matchId}");
+
             var match = _context.Match.FirstOrDefault(m => m.Id == matchId);
             if (match == null)
             {
+                Console.WriteLine("[ERROR] Match not found!");
                 return NotFound();
             }
 
@@ -63,61 +62,77 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
-        // ✅ POST: Predictions/Create (Save button)
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Prediction prediction)
         {
-            if (prediction.MatchId == 0)
+            try
             {
-                return BadRequest("Missing match ID.");
+               
+                Console.WriteLine($"[DEBUG] Received prediction: MatchId={prediction.MatchId}, User={prediction.UserName}, Home={prediction.PredictedHomeScore}, Away={prediction.PredictedAwayScore}");
+
+              
+                if (prediction.MatchId == 0)
+                {
+                    Console.WriteLine("[ERROR] Missing MatchId");
+                    TempData["Error"] = "Missing match ID!";
+                    return RedirectToAction("Index", "Matches");
+                }
+
+               
+                var match = await _context.Match.FirstOrDefaultAsync(m => m.Id == prediction.MatchId);
+                if (match == null)
+                {
+                    Console.WriteLine("[ERROR] Match not found in DB!");
+                    TempData["Error"] = "Match not found!";
+                    return RedirectToAction("Index", "Matches");
+                }
+
+                if (ModelState.IsValid)
+                {
+                    prediction.CreatedAt = DateTime.Now;
+                    _context.Prediction.Add(prediction);
+                    await _context.SaveChangesAsync();
+
+                    Console.WriteLine("[SUCCESS] Prediction saved successfully!");
+                    TempData["Success"] = "Prediction saved successfully!";
+                    return RedirectToAction("Index", "Matches");
+                }
+
+                Console.WriteLine("[ERROR] ModelState invalid!");
+                return View(prediction);
             }
-
-            var match = await _context.Match.FirstOrDefaultAsync(m => m.Id == prediction.MatchId);
-            if (match == null)
+            catch (Exception ex)
             {
-                return NotFound("Match not found.");
-            }
-
-            if (ModelState.IsValid)
-            {
-                prediction.CreatedAt = DateTime.Now;
-                _context.Add(prediction);
-                await _context.SaveChangesAsync();
-
-                // ✅ След успешен запис връщаме потребителя към Matches
+                Console.WriteLine($"[EXCEPTION] {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                TempData["Error"] = "An unexpected error occurred!";
                 return RedirectToAction("Index", "Matches");
             }
-
-            return View(prediction);
         }
 
-        // ✅ GET: Predictions/Edit/5
+       
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var prediction = await _context.Prediction.FindAsync(id);
             if (prediction == null)
-            {
                 return NotFound();
-            }
+
             ViewData["MatchId"] = new SelectList(_context.Match, "Id", "Id", prediction.MatchId);
             return View(prediction);
         }
 
-        // ✅ POST: Predictions/Edit/5
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,MatchId,UserName,PredictedHomeScore,PredictedAwayScore,CreatedAt")] Prediction prediction)
         {
             if (id != prediction.Id)
-            {
                 return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
@@ -129,49 +144,40 @@ namespace PredictLeague.Controllers
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!PredictionExists(prediction.Id))
-                    {
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["MatchId"] = new SelectList(_context.Match, "Id", "Id", prediction.MatchId);
             return View(prediction);
         }
 
-        // ✅ GET: Predictions/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var prediction = await _context.Prediction
                 .Include(p => p.Match)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (prediction == null)
-            {
                 return NotFound();
-            }
 
             return View(prediction);
         }
 
-        // ✅ POST: Predictions/Delete/5
+       
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var prediction = await _context.Prediction.FindAsync(id);
             if (prediction != null)
-            {
                 _context.Prediction.Remove(prediction);
-            }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

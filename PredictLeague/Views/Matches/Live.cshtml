@@ -1,0 +1,45 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Live Football Matches";
+}
+
+<h2 class="text-center mt-4 mb-4">⚽ Premier League (Season 2022)</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+else
+{
+    <table class="table table-bordered table-striped text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>🏠 Home</th>
+                <th>Score</th>
+                <th>🏃 Away</th>
+                <th>🕒 Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var match in Model)
+            {
+                <tr>
+                    <td>
+                        <img src="@match.teams.home.logo" width="40" height="40" class="me-2" />
+                        @match.teams.home.name
+                    </td>
+                    <td>
+                        @match.goals.home - @match.goals.away
+                    </td>
+                    <td>
+                        <img src="@match.teams.away.logo" width="40" height="40" class="me-2" />
+                        @match.teams.away.name
+                    </td>
+                    <td>@match.fixture.date.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@match.fixture.status.short_</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

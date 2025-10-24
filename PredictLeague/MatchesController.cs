@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using PredictLeague.Data;
 using PredictLeague.Models;
 using System;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace PredictLeague.Controllers
 {
@@ -17,13 +20,13 @@ namespace PredictLeague.Controllers
             _context = context;
         }
 
-        // GET: Matches
+      
         public async Task<IActionResult> Index()
         {
             return View(await _context.Match.ToListAsync());
         }
 
-        // GET: Matches/Details/5
+       
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -36,13 +39,13 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // GET: Matches/Create
+      
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Matches/Create
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,HomeTeam,AwayTeam,StartTime,IsFinished,HomeScore,AwayScore")] Match match)
@@ -56,7 +59,7 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // GET: Matches/Edit/5
+      
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -69,7 +72,7 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // POST: Matches/Edit/5
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,HomeTeam,AwayTeam,StartTime,IsFinished,HomeScore,AwayScore")] Match match)
@@ -84,7 +87,7 @@ namespace PredictLeague.Controllers
                     _context.Update(match);
                     await _context.SaveChangesAsync();
 
-                    // Изчисляване на точки
+                   
                     var predictions = await _context.Prediction.Where(p => p.MatchId == match.Id).ToListAsync();
 
                     foreach (var prediction in predictions)
@@ -122,7 +125,7 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // GET: Matches/Delete/5
+       
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -135,7 +138,7 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // POST: Matches/Delete/5
+       
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -152,5 +155,72 @@ namespace PredictLeague.Controllers
         {
             return _context.Match.Any(e => e.Id == id);
         }
+
+       
+        public async Task<IActionResult> Live()
+        {
+            string apiKey = "a1c5c63f7d7b71136b4512647b1da851";
+            string url = "https://v3.football.api-sports.io/fixtures?league=39&season=2022";
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.Add("x-apisports-key", apiKey);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            var response = await client.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                ViewBag.Error = "⚠️ Грешка при зареждане на данните от API-то.";
+                return View("Live", new List<FootballMatch>());
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<FootballApiResponse>(json);
+
+            return View("Live", result.response);
+        }
+    }
+
+   
+    public class FootballApiResponse
+    {
+        public List<FootballMatch> response { get; set; }
+    }
+
+    public class FootballMatch
+    {
+        public Fixture fixture { get; set; }
+        public Teams teams { get; set; }
+        public Goals goals { get; set; }
+    }
+
+    public class Fixture
+    {
+        public DateTime date { get; set; }
+        public Status status { get; set; }
+    }
+
+    public class Status
+    {
+        [JsonProperty("short")]
+        public string short_ { get; set; }
+    }
+
+    public class Teams
+    {
+        public Team home { get; set; }
+        public Team away { get; set; }
+    }
+
+    public class Team
+    {
+        public string name { get; set; }
+        public string logo { get; set; }
+    }
+
+    public class Goals
+    {
+        public int? home { get; set; }
+        public int? away { get; set; }
     }
 }

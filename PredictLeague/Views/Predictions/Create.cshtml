@@ -4,16 +4,7 @@
 @{
     ViewData["Title"] = "Make a Prediction";
 
-    int matchId = 0;
-    if (Model != null && Model.MatchId != 0)
-    {
-        matchId = Model.MatchId;
-    }
-    else if (ViewContext.RouteData.Values["matchId"] != null)
-    {
-        int.TryParse(ViewContext.RouteData.Values["matchId"].ToString(), out matchId);
-    }
-
+    int matchId = Model?.MatchId ?? 0;
     var match = _context.Match.FirstOrDefault(m => m.Id == matchId);
 }
 
@@ -32,10 +23,12 @@ else
 
 <div class="row mt-3">
     <div class="col-md-4">
-        <form asp-action="Create">
+        <form asp-controller="Predictions" asp-action="Create" method="post">
+            @Html.AntiForgeryToken()  
+
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <input type="hidden" asp-for="MatchId" value="@matchId" />
+            <input type="hidden" asp-for="MatchId" value="@Model.MatchId" />
 
             <div class="form-group">
                 <label asp-for="UserName" class="control-label">Your Name</label>
@@ -45,18 +38,18 @@ else
 
             <div class="form-group">
                 <label asp-for="PredictedHomeScore" class="control-label">@match?.HomeTeam Score</label>
-                <input asp-for="PredictedHomeScore" class="form-control" type="number" />
+                <input asp-for="PredictedHomeScore" class="form-control" type="number" min="0" />
                 <span asp-validation-for="PredictedHomeScore" class="text-danger"></span>
             </div>
 
             <div class="form-group">
                 <label asp-for="PredictedAwayScore" class="control-label">@match?.AwayTeam Score</label>
-                <input asp-for="PredictedAwayScore" class="form-control" type="number" />
+                <input asp-for="PredictedAwayScore" class="form-control" type="number" min="0" />
                 <span asp-validation-for="PredictedAwayScore" class="text-danger"></span>
             </div>
 
             <div class="form-group mt-3">
-                <input type="submit" value="Save Prediction" class="btn btn-success" />
+                <button type="submit" class="btn btn-success">Save Prediction</button>
             </div>
         </form>
     </div>

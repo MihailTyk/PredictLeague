@@ -3,17 +3,15 @@ using PredictLeague.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Настройка на базата данни
 builder.Services.AddDbContext<PredictLeagueContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PredictLeagueContext")
         ?? throw new InvalidOperationException("Connection string 'PredictLeagueContext' not found.")));
 
-// Добавяме контролери и изгледи
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-// Добавяме примерни мачове при стартиране
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PredictLeagueContext>();
@@ -48,7 +46,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Настройки за грешки и HTTPS
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -62,7 +59,6 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-// 👉 Основен маршрут — стартира на Home Page
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
