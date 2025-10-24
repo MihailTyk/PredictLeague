@@ -21,6 +21,8 @@ namespace PredictLeague.Models
         [Range(0, 20)]
         public int PredictedAwayScore { get; set; }
 
+        public int Points { get; set; } = 0;
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

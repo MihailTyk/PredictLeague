@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PredictLeague.Data;
 using PredictLeague.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace PredictLeague
+namespace PredictLeague.Controllers
 {
     public class MatchesController : Controller
     {
@@ -29,16 +27,11 @@ namespace PredictLeague
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var match = await _context.Match
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var match = await _context.Match.FirstOrDefaultAsync(m => m.Id == id);
             if (match == null)
-            {
                 return NotFound();
-            }
 
             return View(match);
         }
@@ -50,8 +43,6 @@ namespace PredictLeague
         }
 
         // POST: Matches/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,HomeTeam,AwayTeam,StartTime,IsFinished,HomeScore,AwayScore")] Match match)
@@ -69,29 +60,22 @@ namespace PredictLeague
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var match = await _context.Match.FindAsync(id);
             if (match == null)
-            {
                 return NotFound();
-            }
+
             return View(match);
         }
 
         // POST: Matches/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,HomeTeam,AwayTeam,StartTime,IsFinished,HomeScore,AwayScore")] Match match)
         {
             if (id != match.Id)
-            {
                 return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
@@ -99,20 +83,42 @@ namespace PredictLeague
                 {
                     _context.Update(match);
                     await _context.SaveChangesAsync();
+
+                    // Изчисляване на точки
+                    var predictions = await _context.Prediction.Where(p => p.MatchId == match.Id).ToListAsync();
+
+                    foreach (var prediction in predictions)
+                    {
+                        prediction.Points = 0;
+
+                        if (prediction.PredictedHomeScore == match.HomeScore &&
+                            prediction.PredictedAwayScore == match.AwayScore)
+                        {
+                            prediction.Points = 3;
+                        }
+                        else if ((match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
+                                 (match.HomeScore < match.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore) ||
+                                 (match.HomeScore == match.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore))
+                        {
+                            prediction.Points = 1;
+                        }
+
+                        _context.Update(prediction);
+                    }
+
+                    await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!MatchExists(match.Id))
-                    {
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
+
                 return RedirectToAction(nameof(Index));
             }
+
             return View(match);
         }
 
@@ -120,16 +126,11 @@ namespace PredictLeague
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var match = await _context.Match
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var match = await _context.Match.FirstOrDefaultAsync(m => m.Id == id);
             if (match == null)
-            {
                 return NotFound();
-            }
 
             return View(match);
         }
@@ -141,9 +142,7 @@ namespace PredictLeague
         {
             var match = await _context.Match.FindAsync(id);
             if (match != null)
-            {
                 _context.Match.Remove(match);
-            }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

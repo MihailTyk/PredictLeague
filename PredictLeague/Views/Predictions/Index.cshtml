@@ -34,7 +34,14 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Match.Id)
+                    @inject PredictLeague.Data.PredictLeagueContext _context
+                    @{
+                        var match = _context.Match.FirstOrDefault(m => m.Id == item.MatchId);
+                    }
+                  <td>
+                    @(match != null ? $"{match.HomeTeam} 🆚 {match.AwayTeam}" : "Match not found")
+                  </td>
+
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.UserName)

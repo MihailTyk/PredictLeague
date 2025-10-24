@@ -19,14 +19,14 @@ namespace PredictLeague.Controllers
             _context = context;
         }
 
-        // GET: Predictions
+        // ✅ GET: Predictions
         public async Task<IActionResult> Index()
         {
             var predictLeagueContext = _context.Prediction.Include(p => p.Match);
             return View(await predictLeagueContext.ToListAsync());
         }
 
-        // GET: Predictions/Details/5
+        // ✅ GET: Predictions/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -45,31 +45,54 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
-        // GET: Predictions/Create
-        public IActionResult Create()
+        // ✅ GET: Predictions/Create?matchId=1
+        public IActionResult Create(int matchId)
         {
-            ViewData["MatchId"] = new SelectList(_context.Match, "Id", "Id");
-            return View();
-        }
-
-        // POST: Predictions/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,MatchId,UserName,PredictedHomeScore,PredictedAwayScore,CreatedAt")] Prediction prediction)
-        {
-            if (ModelState.IsValid)
+            var match = _context.Match.FirstOrDefault(m => m.Id == matchId);
+            if (match == null)
             {
-                _context.Add(prediction);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
-            ViewData["MatchId"] = new SelectList(_context.Match, "Id", "Id", prediction.MatchId);
+
+            var prediction = new Prediction
+            {
+                MatchId = matchId,
+                CreatedAt = DateTime.Now
+            };
+
             return View(prediction);
         }
 
-        // GET: Predictions/Edit/5
+        // ✅ POST: Predictions/Create (Save button)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Prediction prediction)
+        {
+            if (prediction.MatchId == 0)
+            {
+                return BadRequest("Missing match ID.");
+            }
+
+            var match = await _context.Match.FirstOrDefaultAsync(m => m.Id == prediction.MatchId);
+            if (match == null)
+            {
+                return NotFound("Match not found.");
+            }
+
+            if (ModelState.IsValid)
+            {
+                prediction.CreatedAt = DateTime.Now;
+                _context.Add(prediction);
+                await _context.SaveChangesAsync();
+
+                // ✅ След успешен запис връщаме потребителя към Matches
+                return RedirectToAction("Index", "Matches");
+            }
+
+            return View(prediction);
+        }
+
+        // ✅ GET: Predictions/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -86,9 +109,7 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
-        // POST: Predictions/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // ✅ POST: Predictions/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,MatchId,UserName,PredictedHomeScore,PredictedAwayScore,CreatedAt")] Prediction prediction)
@@ -122,7 +143,7 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
-        // GET: Predictions/Delete/5
+        // ✅ GET: Predictions/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -141,7 +162,7 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
-        // POST: Predictions/Delete/5
+        // ✅ POST: Predictions/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
