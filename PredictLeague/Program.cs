@@ -1,17 +1,33 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using PredictLeague.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 🧱 Настройка на базата данни
 builder.Services.AddDbContext<PredictLeagueContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PredictLeagueContext")
         ?? throw new InvalidOperationException("Connection string 'PredictLeagueContext' not found.")));
 
+// ✅ Добавяме Identity за Login / Register
+builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddEntityFrameworkStores<PredictLeagueContext>();
+
+// ✅ Добавяме Razor Pages (необходимо за Login / Register UI)
+builder.Services.AddRazorPages();
+
+// ✅ Контролери и изгледи
 builder.Services.AddControllersWithViews();
+
+// ✅ HttpClient за външни API заявки
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
+// 📦 Създаваме базата и примерни мачове, ако липсват
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PredictLeagueContext>();
@@ -46,6 +62,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// ⚙️ Middleware настройки
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -57,10 +74,16 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// 🧍‍♂️ Identity Middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
+// 🗺️ Основен MVC маршрут
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// 🔑 Razor Pages маршрути (за Login / Register)
+app.MapRazorPages();
 
 app.Run();

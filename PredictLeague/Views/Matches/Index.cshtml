@@ -1,67 +1,106 @@
 ﻿@model IEnumerable<PredictLeague.Models.Match>
+@inject PredictLeague.Data.PredictLeagueContext _context
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Matches";
+
+    // 🔑 Тук определяме кой е логнатият потребител
+    string currentUser = "Misho"; // временно, после ще идва от Login
+    bool isAdmin = currentUser == "Misho"; // само ти си админ 😎
 }
 
-<h1>Index</h1>
+<h1 class="mb-4">⚽ Matches</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success text-center">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger text-center">@TempData["Error"]</div>
+}
+
+<table class="table table-striped table-hover text-center align-middle">
+    <thead class="table-dark">
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.HomeTeam)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AwayTeam)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StartTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsFinished)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.HomeScore)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AwayScore)
-            </th>
-            <th></th>
+            <th>🏠 Home</th>
+            <th>🆚 Away</th>
+            <th>🕒 Start Time</th>
+            <th>🏁 Result</th>
+            <th>🎯 Predictions</th>
+            @if (isAdmin)
+            {
+                <th>⚙️ Actions</th>
+            }
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.HomeTeam)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AwayTeam)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsFinished)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.HomeScore)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AwayScore)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-                    <a asp-controller="Predictions" asp-action="Create" asp-route-matchId="@item.Id" class="btn btn-success">Predict</a>
+        @foreach (var match in Model)
+        {
+            // всички предикти за този мач
+            var predictions = _context.Prediction
+            .Where(p => p.MatchId == match.Id)
+            .ToList();
 
-            </td>
-        </tr>
-}
+            <tr>
+                <td>@match.HomeTeam</td>
+                <td>@match.AwayTeam</td>
+                <td>@match.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
+                <td>
+                    @if (match.IsFinished)
+                    {
+                        <strong>@match.HomeScore - @match.AwayScore</strong>
+                    }
+                    else
+                    {
+                        <span>–</span>
+                    }
+                </td>
+
+                <td class="text-start">
+                    @if (predictions.Any())
+                    {
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var p in predictions)
+                            {
+                                <li>
+                                    <strong>@p.UserName:</strong>
+                                    predicted <b>@p.PredictedHomeScore - @p.PredictedAwayScore</b>
+                                    @if (match.IsFinished)
+                                    {
+                                        <span class="text-success">(+@p.Points pts)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary">⏳ waiting</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No predictions yet</span>
+                    }
+                    <div class="mt-2">
+                        <a asp-controller="Predictions"
+                           asp-action="Create"
+                           asp-route-matchId="@match.Id"
+                           class="btn btn-success btn-sm">
+                            Predict
+                        </a>
+                    </div>
+                </td>
+
+                @if (isAdmin)
+                {
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@match.Id" class="btn btn-primary btn-sm">Edit</a>
+                        <a asp-action="Details" asp-route-id="@match.Id" class="btn btn-info btn-sm">Details</a>
+                        <a asp-action="Delete" asp-route-id="@match.Id" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                }
+            </tr>
+        }
     </tbody>
 </table>

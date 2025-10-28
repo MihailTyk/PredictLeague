@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PredictLeague.Models;
 
 namespace PredictLeague.Data
 {
-    public class PredictLeagueContext : DbContext
+    public class PredictLeagueContext : IdentityDbContext
     {
-        public PredictLeagueContext (DbContextOptions<PredictLeagueContext> options)
+        public PredictLeagueContext(DbContextOptions<PredictLeagueContext> options)
             : base(options)
         {
         }
 
-        public DbSet<PredictLeague.Models.Match> Match { get; set; } = default!;
-        public DbSet<Prediction> Prediction { get; set; }
-
+        public DbSet<Match> Match { get; set; } = default!;
+        public DbSet<Prediction> Prediction { get; set; } = default!;
     }
 }

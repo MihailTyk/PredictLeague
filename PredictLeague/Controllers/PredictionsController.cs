@@ -18,14 +18,14 @@ namespace PredictLeague.Controllers
             _context = context;
         }
 
-       
+        // 🧾 Всички предсказания
         public async Task<IActionResult> Index()
         {
             var predictLeagueContext = _context.Prediction.Include(p => p.Match);
             return View(await predictLeagueContext.ToListAsync());
         }
 
-      
+        // 🧩 Детайли за конкретно Prediction
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -41,17 +41,12 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
-       
+        // ➕ Създаване на Prediction (GET)
         public IActionResult Create(int matchId)
         {
-            Console.WriteLine($"[DEBUG] Opening create for match ID: {matchId}");
-
             var match = _context.Match.FirstOrDefault(m => m.Id == matchId);
             if (match == null)
-            {
-                Console.WriteLine("[ERROR] Match not found!");
                 return NotFound();
-            }
 
             var prediction = new Prediction
             {
@@ -62,57 +57,69 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
-        
+        // 💾 Създаване на Prediction (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Prediction prediction)
+        public async Task<IActionResult> Create([Bind("Id,MatchId,UserName,PredictedHomeScore,PredictedAwayScore")] Prediction prediction)
         {
+            // ✅ Премахваме Match от ModelState
+            ModelState.Remove("Match");
+
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "⚠️ Please fill all fields correctly!";
+                return View(prediction);
+            }
+
             try
             {
-               
-                Console.WriteLine($"[DEBUG] Received prediction: MatchId={prediction.MatchId}, User={prediction.UserName}, Home={prediction.PredictedHomeScore}, Away={prediction.PredictedAwayScore}");
+                prediction.CreatedAt = DateTime.Now;
+                _context.Prediction.Add(prediction);
+                await _context.SaveChangesAsync();
 
-              
-                if (prediction.MatchId == 0)
-                {
-                    Console.WriteLine("[ERROR] Missing MatchId");
-                    TempData["Error"] = "Missing match ID!";
-                    return RedirectToAction("Index", "Matches");
-                }
-
-               
+                // 🔍 Намираме мача
                 var match = await _context.Match.FirstOrDefaultAsync(m => m.Id == prediction.MatchId);
-                if (match == null)
+                if (match != null && match.IsFinished)
                 {
-                    Console.WriteLine("[ERROR] Match not found in DB!");
-                    TempData["Error"] = "Match not found!";
-                    return RedirectToAction("Index", "Matches");
-                }
+                    int points = 0;
 
-                if (ModelState.IsValid)
-                {
-                    prediction.CreatedAt = DateTime.Now;
-                    _context.Prediction.Add(prediction);
+                    // 🎯 Точен резултат
+                    if (prediction.PredictedHomeScore == match.HomeScore &&
+                        prediction.PredictedAwayScore == match.AwayScore)
+                    {
+                        points = 5;
+                    }
+                    // 🏆 Познат победител (но не точен резултат)
+                    else if (
+                        (match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
+                        (match.HomeScore < match.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore)
+                    )
+                    {
+                        points = 3;
+                    }
+                    // ⚖️ Познато равенство (различен резултат)
+                    else if (match.HomeScore == match.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore)
+                    {
+                        points = 2;
+                    }
+
+                    prediction.Points = points;
+                    _context.Update(prediction);
                     await _context.SaveChangesAsync();
-
-                    Console.WriteLine("[SUCCESS] Prediction saved successfully!");
-                    TempData["Success"] = "Prediction saved successfully!";
-                    return RedirectToAction("Index", "Matches");
                 }
 
-                Console.WriteLine("[ERROR] ModelState invalid!");
-                return View(prediction);
+                TempData["Success"] = "✅ Prediction saved successfully!";
+                return RedirectToAction("Index", "Matches");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[EXCEPTION] {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
-                TempData["Error"] = "An unexpected error occurred!";
+                Console.WriteLine($"[ERROR] {ex.Message}");
+                TempData["Error"] = "❌ Something went wrong while saving your prediction!";
                 return RedirectToAction("Index", "Matches");
             }
         }
 
-       
+        // ✏️ Редакция
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -126,7 +133,6 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
-       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,MatchId,UserName,PredictedHomeScore,PredictedAwayScore,CreatedAt")] Prediction prediction)
@@ -155,6 +161,7 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
+        // 🗑️ Изтриване
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -170,7 +177,6 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
-       
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
