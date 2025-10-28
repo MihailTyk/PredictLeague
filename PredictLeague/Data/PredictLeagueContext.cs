@@ -11,7 +11,7 @@ namespace PredictLeague.Data
         {
         }
 
-        public DbSet<Match> Match { get; set; } = default!;
-        public DbSet<Prediction> Prediction { get; set; } = default!;
+        public DbSet<Match> Match { get; set; }
+        public DbSet<Prediction> Prediction { get; set; }
     }
 }

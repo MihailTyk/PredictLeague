@@ -9,14 +9,20 @@ builder.Services.AddDbContext<PredictLeagueContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PredictLeagueContext")
         ?? throw new InvalidOperationException("Connection string 'PredictLeagueContext' not found.")));
 
-// ✅ Добавяме Identity за Login / Register
+// ✅ Добавяме Identity (логин / регистрация + роли)
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 4; // по-лесна парола за тест
 })
+.AddRoles<IdentityRole>() // 👈 добавяме поддръжка на роли
 .AddEntityFrameworkStores<PredictLeagueContext>();
 
-// ✅ Добавяме Razor Pages (необходимо за Login / Register UI)
+// ✅ Razor Pages (за Login / Register)
 builder.Services.AddRazorPages();
 
 // ✅ Контролери и изгледи
@@ -27,12 +33,14 @@ builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-// 📦 Създаваме базата и примерни мачове, ако липсват
+// 📦 Инициализация на база данни и примерни данни
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<PredictLeagueContext>();
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<PredictLeagueContext>();
     context.Database.EnsureCreated();
 
+    // 🏟️ Примерни мачове
     if (!context.Match.Any())
     {
         context.Match.AddRange(
@@ -59,6 +67,36 @@ using (var scope = app.Services.CreateScope())
             }
         );
         context.SaveChanges();
+    }
+
+    // 👑 Създаваме ролята Admin при първо стартиране
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    if (!await roleManager.RoleExistsAsync("Admin"))
+    {
+        await roleManager.CreateAsync(new IdentityRole("Admin"));
+    }
+
+    // 👤 Създаваме потребител Admin ако го няма
+    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+    string adminEmail = "admin@predictleague.com";
+    string adminPassword = "Admin123!";
+
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        adminUser = new IdentityUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            EmailConfirmed = true
+        };
+
+        var result = await userManager.CreateAsync(adminUser, adminPassword);
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+            Console.WriteLine("✅ Admin user created: " + adminEmail);
+        }
     }
 }
 

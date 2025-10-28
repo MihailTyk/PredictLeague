@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using PredictLeague.Data;
@@ -20,13 +21,13 @@ namespace PredictLeague.Controllers
             _context = context;
         }
 
-      
+        // 🏟️ Всички мачове — достъпно за всички
         public async Task<IActionResult> Index()
         {
             return View(await _context.Match.ToListAsync());
         }
 
-       
+        // 🔍 Детайли за мач — достъпно за всички
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -39,15 +40,17 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-      
+        // ➕ Създаване на нов мач — само за Admin
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
         }
 
-       
+        // 💾 Създаване (POST) — само за Admin
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("Id,HomeTeam,AwayTeam,StartTime,IsFinished,HomeScore,AwayScore")] Match match)
         {
             if (ModelState.IsValid)
@@ -59,7 +62,8 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-      
+        // ✏️ Редакция на мач — само за Admin
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -72,9 +76,10 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        
+        // 💾 Записване на редакцията — само за Admin
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,HomeTeam,AwayTeam,StartTime,IsFinished,HomeScore,AwayScore")] Match match)
         {
             if (id != match.Id)
@@ -87,7 +92,7 @@ namespace PredictLeague.Controllers
                     _context.Update(match);
                     await _context.SaveChangesAsync();
 
-                   
+                    // 🏆 Изчисляваме точките след приключване на мача
                     var predictions = await _context.Prediction.Where(p => p.MatchId == match.Id).ToListAsync();
 
                     foreach (var prediction in predictions)
@@ -97,13 +102,15 @@ namespace PredictLeague.Controllers
                         if (prediction.PredictedHomeScore == match.HomeScore &&
                             prediction.PredictedAwayScore == match.AwayScore)
                         {
-                            prediction.Points = 3;
+                            prediction.Points = 3; // Точно познат резултат
                         }
-                        else if ((match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
-                                 (match.HomeScore < match.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore) ||
-                                 (match.HomeScore == match.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore))
+                        else if (
+                            (match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
+                            (match.HomeScore < match.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore) ||
+                            (match.HomeScore == match.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore)
+                        )
                         {
-                            prediction.Points = 1;
+                            prediction.Points = 1; // Познат изход (победа/загуба/равен)
                         }
 
                         _context.Update(prediction);
@@ -125,7 +132,8 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-       
+        // ❌ Изтриване на мач — само за Admin
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -138,9 +146,10 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-       
+        // 💣 Потвърждение на изтриването — само за Admin
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var match = await _context.Match.FindAsync(id);
@@ -156,11 +165,14 @@ namespace PredictLeague.Controllers
             return _context.Match.Any(e => e.Id == id);
         }
 
-       
+        // ⚽ Live API — достъпно за всички
         public async Task<IActionResult> Live()
         {
             string apiKey = "a1c5c63f7d7b71136b4512647b1da851";
-            string url = "https://v3.football.api-sports.io/fixtures?league=39&season=2022";
+
+            // 🧠 Автоматично откриване на текущия сезон (например 2024/2025)
+            int currentSeason = DateTime.Now.Month >= 8 ? DateTime.Now.Year : DateTime.Now.Year - 1;
+            string url = $"https://v3.football.api-sports.io/fixtures?league=39&season={currentSeason}";
 
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Clear();
@@ -168,6 +180,7 @@ namespace PredictLeague.Controllers
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             var response = await client.GetAsync(url);
+
             if (!response.IsSuccessStatusCode)
             {
                 ViewBag.Error = "⚠️ Грешка при зареждане на данните от API-то.";
@@ -177,11 +190,18 @@ namespace PredictLeague.Controllers
             var json = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<FootballApiResponse>(json);
 
+            // 🏁 Ако няма намерени мачове
+            if (result?.response == null || result.response.Count == 0)
+            {
+                ViewBag.Error = "❌ Няма налични мачове за текущия сезон.";
+                return View("Live", new List<FootballMatch>());
+            }
+
             return View("Live", result.response);
         }
     }
 
-   
+    // 🧩 Модели за Football API
     public class FootballApiResponse
     {
         public List<FootballMatch> response { get; set; }
@@ -224,3 +244,4 @@ namespace PredictLeague.Controllers
         public int? away { get; set; }
     }
 }
+
