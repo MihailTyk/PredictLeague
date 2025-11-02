@@ -165,14 +165,13 @@ namespace PredictLeague.Controllers
             return _context.Match.Any(e => e.Id == id);
         }
 
-        // ⚽ Live API — достъпно за всички
-        public async Task<IActionResult> Live()
+        // ⚽ Универсален метод за зареждане на мачове по лига
+        private async Task<IActionResult> LoadLeagueMatches(string leagueName, int leagueId)
         {
             string apiKey = "a1c5c63f7d7b71136b4512647b1da851";
-
-            // 🧠 Автоматично откриване на текущия сезон (например 2024/2025)
             int currentSeason = DateTime.Now.Month >= 8 ? DateTime.Now.Year : DateTime.Now.Year - 1;
-            string url = $"https://v3.football.api-sports.io/fixtures?league=39&season={currentSeason}";
+
+            string url = $"https://v3.football.api-sports.io/fixtures?league={leagueId}&season={currentSeason}";
 
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Clear();
@@ -183,21 +182,52 @@ namespace PredictLeague.Controllers
 
             if (!response.IsSuccessStatusCode)
             {
-                ViewBag.Error = "⚠️ Грешка при зареждане на данните от API-то.";
-                return View("Live", new List<FootballMatch>());
+                ViewBag.Error = $"⚠️ Неуспешно зареждане на {leagueName} от API.";
+                return View("League", new List<FootballMatch>());
             }
 
             var json = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<FootballApiResponse>(json);
 
-            // 🏁 Ако няма намерени мачове
-            if (result?.response == null || result.response.Count == 0)
+            if (result == null || result.response == null || !result.response.Any())
             {
-                ViewBag.Error = "❌ Няма налични мачове за текущия сезон.";
-                return View("Live", new List<FootballMatch>());
+                ViewBag.Error = $"❌ Няма налични мачове за {leagueName} ({currentSeason}).";
+                return View("League", new List<FootballMatch>());
             }
 
-            return View("Live", result.response);
+            ViewBag.LeagueName = leagueName;
+            ViewBag.Season = currentSeason;
+            return View("League", result.response);
+        }
+
+        // 🏴 Premier League
+        public async Task<IActionResult> PremierLeague()
+        {
+            return await LoadLeagueMatches("Premier League", 39);
+        }
+
+        // 🇪🇸 La Liga
+        public async Task<IActionResult> LaLiga()
+        {
+            return await LoadLeagueMatches("La Liga", 140);
+        }
+
+        // 🇮🇹 Serie A
+        public async Task<IActionResult> SerieA()
+        {
+            return await LoadLeagueMatches("Serie A", 135);
+        }
+
+        // 🇩🇪 Bundesliga
+        public async Task<IActionResult> Bundesliga()
+        {
+            return await LoadLeagueMatches("Bundesliga", 78);
+        }
+
+        // 🏆 Champions League
+        public async Task<IActionResult> ChampionsLeague()
+        {
+            return await LoadLeagueMatches("Champions League", 2);
         }
     }
 
@@ -244,4 +274,3 @@ namespace PredictLeague.Controllers
         public int? away { get; set; }
     }
 }
-

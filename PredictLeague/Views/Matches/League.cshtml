@@ -1,0 +1,86 @@
+﻿@model List<PredictLeague.Controllers.FootballMatch>
+
+@{
+    ViewData["Title"] = ViewBag.LeagueName;
+}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">
+        ⚽ @ViewBag.LeagueName (@ViewBag.Season)
+    </h2>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger text-center">
+            @ViewBag.Error
+        </div>
+    }
+    else if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-warning text-center">
+            ⚠️ Няма налични мачове в момента.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-striped table-bordered align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center">🏠 Home</th>
+                        <th class="text-center">⚔️ Score</th>
+                        <th class="text-center">🚩 Away</th>
+                        <th class="text-center">🕒 Date</th>
+                        <th class="text-center">📊 Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var match in Model)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@match.teams.home.logo" alt="logo" width="32" class="me-2" />
+                                <strong>@match.teams.home.name</strong>
+                            </td>
+
+                            <td class="fw-bold">
+                                @if (match.goals.home.HasValue && match.goals.away.HasValue)
+                                {
+                                    @($"{match.goals.home} - {match.goals.away}")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">vs</span>
+                                }
+                            </td>
+
+                            <td>
+                                <strong>@match.teams.away.name</strong>
+                                <img src="@match.teams.away.logo" alt="logo" width="32" class="ms-2" />
+                            </td>
+
+                            <td>
+                                @match.fixture.date.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                            </td>
+
+                            <td>
+                                @{
+                                    var status = match.fixture.status.short_;
+                                    string badgeClass = status switch
+                                    {
+                                        "FT" => "bg-success",
+                                        "NS" => "bg-secondary",
+                                        "1H" => "bg-warning text-dark",
+                                        "2H" => "bg-warning text-dark",
+                                        _ => "bg-info"
+                                    };
+                                }
+                                <span class="badge @badgeClass">@status</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

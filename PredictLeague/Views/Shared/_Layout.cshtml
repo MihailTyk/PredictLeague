@@ -3,62 +3,154 @@
 @inject UserManager<IdentityUser> UserManager
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bg">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - PredictLeague</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold text-primary" asp-controller="Home" asp-action="Index">⚽ PredictLeague</a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+    <style>
+        body {
+            background-color: #f5f6fa;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* 🔵 NAVBAR */
+        .navbar {
+            background: linear-gradient(90deg, #0b3d91, #1e90ff);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        .navbar-brand {
+            color: #ffd700 !important;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+            .navbar-brand:hover {
+                color: #fff !important;
+            }
+
+        .nav-link {
+            color: #f8f9fa !important;
+            font-weight: 500;
+        }
+
+            .nav-link:hover {
+                color: #ffd700 !important;
+            }
+
+        .dropdown-menu {
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ⚽ FOOTER */
+        footer {
+            background-color: #0b3d91;
+            color: #dbe4ff;
+            padding: 15px 0;
+            margin-top: 50px;
+        }
+
+            footer a {
+                color: #ffd700;
+                text-decoration: none;
+            }
+
+                footer a:hover {
+                    color: #fff;
+                }
+
+        /* 🟢 Buttons */
+        .btn-login {
+            border: 1px solid #ffd700;
+            color: #ffd700;
+        }
+
+            .btn-login:hover {
+                background-color: #ffd700;
+                color: #0b3d91;
+            }
+
+        .btn-register {
+            background-color: #ffd700;
+            color: #0b3d91;
+            border: none;
+        }
+
+            .btn-register:hover {
+                background-color: #fff200;
+            }
+
+        /* ⚽ Content Spacing */
+        main {
+            min-height: 70vh;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 🔝 NAVIGATION -->
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-dark mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">⚽ PredictLeague</a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                        aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">🏠 Начало</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark fw-bold" asp-controller="Matches" asp-action="Live">
-                                ⚽ Live Matches
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="leaguesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                🌍 Лиги
                             </a>
+                            <ul class="dropdown-menu" aria-labelledby="leaguesDropdown">
+                                <li><a class="dropdown-item" asp-controller="Matches" asp-action="PremierLeague">🏴 Premier League</a></li>
+                                <li><a class="dropdown-item" asp-controller="Matches" asp-action="LaLiga">🇪🇸 La Liga</a></li>
+                                <li><a class="dropdown-item" asp-controller="Matches" asp-action="SerieA">🇮🇹 Serie A</a></li>
+                                <li><a class="dropdown-item" asp-controller="Matches" asp-action="Bundesliga">🇩🇪 Bundesliga</a></li>
+                                <li><a class="dropdown-item" asp-controller="Matches" asp-action="ChampionsLeague">🏆 Champions League</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">🔒 Privacy</a>
                         </li>
                     </ul>
 
-                    <!-- 🔐 LOGIN / REGISTER / LOGOUT section -->
+                    <!-- 👤 LOGIN / REGISTER -->
                     <ul class="navbar-nav">
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item">
-                                <span class="nav-link text-success fw-semibold">
+                                <span class="nav-link text-warning fw-semibold">
                                     👋 Здравей, @UserManager.GetUserName(User)!
                                 </span>
                             </li>
                             <li class="nav-item">
-                                <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm ms-2">Изход</button>
+                                <form class="d-inline" asp-area="Identity" asp-page="/Account/Logout" method="post">
+                                    <button type="submit" class="btn btn-login btn-sm ms-2">Изход</button>
                                 </form>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="btn btn-outline-primary btn-sm me-2" asp-area="Identity" asp-page="/Account/Login">Вход</a>
+                                <a class="btn btn-login btn-sm me-2" asp-area="Identity" asp-page="/Account/Login">Вход</a>
                             </li>
                             <li class="nav-item">
-                                <a class="btn btn-primary btn-sm" asp-area="Identity" asp-page="/Account/Register">Регистрация</a>
+                                <a class="btn btn-register btn-sm" asp-area="Identity" asp-page="/Account/Register">Регистрация</a>
                             </li>
                         }
                     </ul>
@@ -67,15 +159,17 @@
         </nav>
     </header>
 
+    <!-- 🧱 MAIN CONTENT -->
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted text-center mt-4">
+    <!-- ⚙️ FOOTER -->
+    <footer class="text-center">
         <div class="container">
-            &copy; @DateTime.Now.Year - PredictLeague
+            &copy; @DateTime.Now.Year - <strong>PredictLeague</strong> ⚽ | Всички права запазени
         </div>
     </footer>
 
