@@ -1,0 +1,47 @@
+﻿@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Вход";
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg p-4" style="width: 420px; border-radius: 15px;">
+
+        <h2 class="text-center mb-3 fw-bold text-primary">Вход в акаунта</h2>
+        <p class="text-center text-muted mb-4">Радваме се да те видим отново!</p>
+
+        <form id="account" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Email" class="form-label fw-semibold"></label>
+                <input asp-for="Input.Email" class="form-control" placeholder="email@example.com" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Password" class="form-label fw-semibold"></label>
+                <input asp-for="Input.Password" class="form-control" placeholder="••••••••" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input asp-for="Input.RememberMe" class="form-check-input" />
+                <label asp-for="Input.RememberMe" class="form-check-label fw-semibold"></label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2" style="border-radius: 8px;">
+                Вход
+            </button>
+
+            <div class="text-center mt-3">
+                <span class="text-muted">Нямаш акаунт?</span>
+                <a asp-page="./Register" class="fw-semibold text-primary">Регистрация</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

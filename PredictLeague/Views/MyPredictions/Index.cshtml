@@ -1,0 +1,73 @@
+﻿@model IEnumerable<PredictLeague.Models.Prediction>
+
+@{
+    ViewData["Title"] = "My Predictions";
+}
+
+<div class="container mt-4">
+
+    <h2 class="fw-bold text-primary mb-4">
+        🎯 My Predictions
+    </h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            You haven't made any predictions yet.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-hover text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Match</th>
+                        <th>Your Prediction</th>
+                        <th>Result</th>
+                        <th>Points</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td>
+                                <b>@p.Match.HomeTeam</b> vs <b>@p.Match.AwayTeam</b>
+                            </td>
+
+                            <td>
+                                @p.PredictedHomeScore : @p.PredictedAwayScore
+                            </td>
+
+                            <td>
+                                @if (p.Match.IsFinished)
+                                {
+                                    <b>@p.Match.HomeScore - @p.Match.AwayScore</b>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Upcoming</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (p.Match.IsFinished)
+                                {
+                                    <span class="badge bg-info">@p.Points ⭐</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+
+                            <td>@p.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
