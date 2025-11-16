@@ -6,9 +6,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PredictLeague.Data;
 using PredictLeague.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PredictLeague.Controllers
 {
+  [Authorize]
     public class PredictionsController : Controller
     {
         private readonly PredictLeagueContext _context;
