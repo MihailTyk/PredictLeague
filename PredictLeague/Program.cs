@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PredictLeague.Controllers;
 using PredictLeague.Data;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 🧱 Настройка на базата данни
@@ -31,6 +32,8 @@ builder.Services.AddControllersWithViews();
 
 // ✅ HttpClient за външни API заявки
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<FootballNewsService>();
+
 
 var app = builder.Build();
 

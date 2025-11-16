@@ -7,15 +7,18 @@ namespace PredictLeague.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly FootballNewsService _newsService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, FootballNewsService newsService)
         {
             _logger = logger;
+            _newsService = newsService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var news = await _newsService.GetNewsAsync();
+            return View(news);  // <-- изпращаме новините към View
         }
 
         public IActionResult Privacy()
