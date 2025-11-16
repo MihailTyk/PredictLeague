@@ -4,45 +4,57 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
+<h1>Prediction Details</h1>
 
 <div>
-    <h4>Prediction</h4>
+    <h4>Prediction Information</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Match)
+
+        <!-- Match -->
+        <dt class="col-sm-2">
+            Match
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Match.Id)
+        <dd class="col-sm-10">
+            @Model.Match?.HomeTeam vs @Model.Match?.AwayTeam
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UserName)
+
+        <!-- Predicted Home Score -->
+        <dt class="col-sm-2">
+            Home Score Prediction
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UserName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PredictedHomeScore)
-        </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.PredictedHomeScore)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PredictedAwayScore)
+
+        <!-- Predicted Away Score -->
+        <dt class="col-sm-2">
+            Away Score Prediction
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.PredictedAwayScore)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
+
+        <!-- Created At -->
+        <dt class="col-sm-2">
+            Created At
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.CreatedAt)
         </dd>
+
+        <!-- Points -->
+        <dt class="col-sm-2">
+            Points Earned
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Points)
+        </dd>
+
     </dl>
 </div>
+
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

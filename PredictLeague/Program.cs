@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using PredictLeague.Controllers;
 using PredictLeague.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -125,3 +126,5 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
+
+

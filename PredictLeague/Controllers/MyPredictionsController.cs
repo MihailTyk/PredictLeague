@@ -6,7 +6,7 @@ using PredictLeague.Data;
 
 namespace PredictLeague.Controllers
 {
-    [Authorize] // трябва да е логнат
+    [Authorize] 
     public class MyPredictionsController : Controller
     {
         private readonly PredictLeagueContext _context;
@@ -22,11 +22,13 @@ namespace PredictLeague.Controllers
         {
             var userName = User.Identity.Name;
 
-            var predictions = await _context.Prediction
+            var userId = _userManager.GetUserId(User);
+
+            var predictions = _context.Prediction
                 .Include(p => p.Match)
-                .Where(p => p.UserName == userName)
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
+                .Where(p => p.UserId == userId)
+                .ToList();
+
 
             return View(predictions);
         }

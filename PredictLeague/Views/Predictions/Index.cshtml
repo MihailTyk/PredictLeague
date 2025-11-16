@@ -1,66 +1,55 @@
 ﻿@model IEnumerable<PredictLeague.Models.Prediction>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Predictions";
 }
 
-<h1>Index</h1>
+<h1>All Predictions</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
 </p>
-<table class="table">
+
+<table class="table table-striped">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Match)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UserName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PredictedHomeScore)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PredictedAwayScore)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th></th>
+            <th>Match</th>
+            <th>Home Score</th>
+            <th>Away Score</th>
+            <th>Created At</th>
+            <th>Points</th>
+            <th>Actions</th>
         </tr>
     </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                    @inject PredictLeague.Data.PredictLeagueContext _context
-                    @{
-                        var match = _context.Match.FirstOrDefault(m => m.Id == item.MatchId);
-                    }
-                  <td>
-                    @(match != null ? $"{match.HomeTeam} 🆚 {match.AwayTeam}" : "Match not found")
-                  </td>
 
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <!-- Match -->
+                <td>
+                    @(item.Match != null
+                                    ? $"{item.Match.HomeTeam} 🆚 {item.Match.AwayTeam}"
+                                    : "Match not found")
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UserName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PredictedHomeScore)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PredictedAwayScore)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+
+                <!-- Predicted scores -->
+                <td>@item.PredictedHomeScore</td>
+                <td>@item.PredictedAwayScore</td>
+
+                <!-- Created date -->
+                <td>@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+
+                <!-- Points -->
+                <td>@item.Points</td>
+
+                <!-- Buttons -->
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Details</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+                }
     </tbody>
 </table>

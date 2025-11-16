@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 namespace PredictLeague.Models
 {
@@ -13,7 +14,8 @@ namespace PredictLeague.Models
         public Match Match { get; set; }
 
         [Required]
-        public string UserName { get; set; } = string.Empty;
+        public string UserId { get; set; }     // <-- ВАЖНО!
+        public IdentityUser User { get; set; } // <-- връзка към ASP.NET потребителя
 
         [Range(0, 20)]
         public int PredictedHomeScore { get; set; }

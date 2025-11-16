@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PredictLeague.Data;
 
@@ -11,9 +12,11 @@ using PredictLeague.Data;
 namespace PredictLeague.Migrations
 {
     [DbContext(typeof(PredictLeagueContext))]
-    partial class PredictLeagueContextModelSnapshot : ModelSnapshot
+    [Migration("20251116182240_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -280,15 +283,13 @@ namespace PredictLeague.Migrations
                     b.Property<int>("PredictedHomeScore")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("UserName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MatchId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Prediction");
                 });
@@ -352,15 +353,7 @@ namespace PredictLeague.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Match");
-
-                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

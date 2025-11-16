@@ -24,17 +24,12 @@ else
 <div class="row mt-3">
     <div class="col-md-4">
         <form asp-controller="Predictions" asp-action="Create" method="post">
-            @Html.AntiForgeryToken()  
+            @Html.AntiForgeryToken()
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+            
             <input type="hidden" asp-for="MatchId" value="@Model.MatchId" />
-
-            <div class="form-group">
-                <label asp-for="UserName" class="control-label">Your Name</label>
-                <input asp-for="UserName" class="form-control" />
-                <span asp-validation-for="UserName" class="text-danger"></span>
-            </div>
 
             <div class="form-group">
                 <label asp-for="PredictedHomeScore" class="control-label">@match?.HomeTeam Score</label>

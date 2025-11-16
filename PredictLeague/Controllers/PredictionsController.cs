@@ -7,23 +7,29 @@ using Microsoft.EntityFrameworkCore;
 using PredictLeague.Data;
 using PredictLeague.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace PredictLeague.Controllers
 {
-  [Authorize]
+    [Authorize]
     public class PredictionsController : Controller
     {
         private readonly PredictLeagueContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public PredictionsController(PredictLeagueContext context)
+        public PredictionsController(PredictLeagueContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // 🧾 Всички предсказания
         public async Task<IActionResult> Index()
         {
-            var predictLeagueContext = _context.Prediction.Include(p => p.Match);
+            var predictLeagueContext = _context.Prediction
+                .Include(p => p.Match)
+                .Include(p => p.User); // ако използваш навигация към User
+
             return View(await predictLeagueContext.ToListAsync());
         }
 
@@ -35,6 +41,7 @@ namespace PredictLeague.Controllers
 
             var prediction = await _context.Prediction
                 .Include(p => p.Match)
+                .Include(p => p.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (prediction == null)
@@ -62,10 +69,12 @@ namespace PredictLeague.Controllers
         // 💾 Създаване на Prediction (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,MatchId,UserName,PredictedHomeScore,PredictedAwayScore")] Prediction prediction)
+        public async Task<IActionResult> Create([Bind("Id,MatchId,PredictedHomeScore,PredictedAwayScore")] Prediction prediction)
         {
-            // ✅ Премахваме Match от ModelState
+            // махаме ModelState за Match
             ModelState.Remove("Match");
+            ModelState.Remove("User");   // важно!
+            ModelState.Remove("UserId"); // важно!
 
             if (!ModelState.IsValid)
             {
@@ -75,7 +84,10 @@ namespace PredictLeague.Controllers
 
             try
             {
+                // 👉 записваме кой user прави предикта
+                prediction.UserId = _userManager.GetUserId(User);
                 prediction.CreatedAt = DateTime.Now;
+
                 _context.Prediction.Add(prediction);
                 await _context.SaveChangesAsync();
 
@@ -91,7 +103,7 @@ namespace PredictLeague.Controllers
                     {
                         points = 5;
                     }
-                    // 🏆 Познат победител (но не точен резултат)
+                    // 🏆 Познат победител
                     else if (
                         (match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
                         (match.HomeScore < match.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore)
@@ -99,8 +111,9 @@ namespace PredictLeague.Controllers
                     {
                         points = 3;
                     }
-                    // ⚖️ Познато равенство (различен резултат)
-                    else if (match.HomeScore == match.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore)
+                    // ⚖️ Познато равенство
+                    else if (match.HomeScore == match.AwayScore &&
+                             prediction.PredictedHomeScore == prediction.PredictedAwayScore)
                     {
                         points = 2;
                     }
@@ -137,7 +150,7 @@ namespace PredictLeague.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MatchId,UserName,PredictedHomeScore,PredictedAwayScore,CreatedAt")] Prediction prediction)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,MatchId,PredictedHomeScore,PredictedAwayScore,CreatedAt,UserId")] Prediction prediction)
         {
             if (id != prediction.Id)
                 return NotFound();
@@ -156,6 +169,7 @@ namespace PredictLeague.Controllers
                     else
                         throw;
                 }
+
                 return RedirectToAction(nameof(Index));
             }
 
@@ -171,6 +185,7 @@ namespace PredictLeague.Controllers
 
             var prediction = await _context.Prediction
                 .Include(p => p.Match)
+                .Include(p => p.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (prediction == null)
