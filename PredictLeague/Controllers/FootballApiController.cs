@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -9,10 +10,12 @@ namespace PredictLeague.Controllers
     public class FootballApiController : ControllerBase
     {
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
-        public FootballApiController(IHttpClientFactory httpClientFactory)
+        public FootballApiController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _httpClient = httpClientFactory.CreateClient();
+            _configuration = configuration;
         }
 
         
@@ -21,8 +24,7 @@ namespace PredictLeague.Controllers
         {
             try
             {
-              
-                string apiKey = "a1c5c63f7d7b71136b4512647b1da851";
+                string apiKey = _configuration["ApiKeys:ApiSports"] ?? "";
 
                
                 string url = "https://v3.football.api-sports.io/fixtures?league=39&season=2022";

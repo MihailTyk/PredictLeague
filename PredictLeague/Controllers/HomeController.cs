@@ -17,8 +17,18 @@ namespace PredictLeague.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var news = await _newsService.GetNewsAsync();
-            return View(news);  // <-- ��������� �������� ��� View
+            try
+            {
+                var newsList = await _newsService.GetNewsAsync();
+                // Използваме ViewData за да избегнем проблеми с динамични обекти
+                ViewData["NewsList"] = newsList;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading football news");
+                ViewData["NewsList"] = new List<Controllers.FootballNews>();
+            }
+            return View();
         }
 
         public IActionResult Privacy()

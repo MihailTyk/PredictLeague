@@ -32,7 +32,11 @@ builder.Services.AddControllersWithViews();
 
 // ✅ HttpClient за външни API заявки
 builder.Services.AddHttpClient();
-builder.Services.AddHttpClient<FootballNewsService>();
+builder.Services.AddHttpClient<FootballNewsService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "PredictLeague/1.0");
+});
 
 
 var app = builder.Build();
@@ -128,6 +132,7 @@ app.MapControllerRoute(
 // 🔑 Razor Pages маршрути (за Login / Register)
 app.MapRazorPages();
 
+// ✅ API контролери маршрути (за FootballApiController и PredictionsApiController)
+app.MapControllers();
+
 app.Run();
-
-

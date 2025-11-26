@@ -1,62 +1,328 @@
-﻿@{
+﻿@using PredictLeague.Controllers
+@{
     ViewData["Title"] = "Home Page";
-    var news = ViewBag.News;
+    var newsList = ViewData["NewsList"] as List<FootballNews> ?? new List<FootballNews>();
 }
 
 <!-- HERO SECTION -->
-<div class="text-center mt-5">
-    <h1 class="display-4 fw-bold text-primary">Welcome to PredictLeague!</h1>
-    <p class="lead text-secondary">Predict football matches and compete with friends.</p>
-
-    <a href="/Matches" class="btn btn-lg btn-primary px-5 py-2 mt-3 shadow">
-        ⚽ View Matches
-    </a>
+<div class="hero-section position-relative text-white overflow-hidden" style="background: linear-gradient(135deg, #0b3d91 0%, #1e90ff 100%); min-height: 80vh; display: flex; align-items: center;">
+    <div class="position-absolute top-0 start-0 w-100 h-100" style="background-image: url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); background-size: cover; background-position: center; opacity: 0.2;"></div>
+    
+    <div class="container position-relative z-index-1 text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 fade-in-up">
+                <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill fw-bold">🏆 The #1 Prediction Game</span>
+                <h1 class="display-2 fw-bold mb-4" style="text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                    Predict the Game.<br>
+                    <span class="text-warning">Win the League.</span>
+                </h1>
+                <p class="lead mb-5 opacity-75 fs-4">
+                    Join thousands of fans, predict match scores, and compete for the top spot on the leaderboard. It's free, fun, and competitive.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="/Matches" class="btn btn-accent btn-lg px-5 py-3 rounded-pill shadow-lg">
+                        Start Predicting ⚽
+                    </a>
+                    <a href="#how-it-works" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill">
+                        How it Works
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Decorative Elements -->
+    <div class="position-absolute bottom-0 start-0 w-100 overflow-hidden" style="line-height: 0;">
+        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" style="width: 100%; height: 60px; fill: #f5f6fa;">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
+        </svg>
+    </div>
 </div>
 
-<hr class="mt-5 mb-4" />
+<!-- FEATURES SECTION -->
+<div id="how-it-works" class="py-5 my-5">
+    <div class="container">
+        <div class="text-center mb-5 fade-in-up delay-100">
+            <h2 class="fw-bold display-6 text-primary">How It Works</h2>
+            <p class="text-muted">Simple steps to become a champion</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4 fade-in-up delay-200">
+                <div class="card h-100 border-0 shadow-sm text-center p-4 card-hover rounded-4">
+                    <div class="mb-3 display-4">🔮</div>
+                    <h3 class="h4 fw-bold mb-3">Predict Matches</h3>
+                    <p class="text-muted">Browse upcoming matches from top European leagues and submit your score predictions before kickoff.</p>
+                </div>
+            </div>
+            <div class="col-md-4 fade-in-up delay-200">
+                <div class="card h-100 border-0 shadow-sm text-center p-4 card-hover rounded-4">
+                    <div class="mb-3 display-4">🎯</div>
+                    <h3 class="h4 fw-bold mb-3">Earn Points</h3>
+                    <p class="text-muted">Get 3 points for a perfect score, or 1 point for guessing the correct winner. Every goal counts!</p>
+                </div>
+            </div>
+            <div class="col-md-4 fade-in-up delay-200">
+                <div class="card h-100 border-0 shadow-sm text-center p-4 card-hover rounded-4">
+                    <div class="mb-3 display-4">🥇</div>
+                    <h3 class="h4 fw-bold mb-3">Climb the Ranks</h3>
+                    <p class="text-muted">Compete against your friends and the global community. Can you reach the top of the leaderboard?</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- NEWS SECTION -->
-<div class="container mt-4">
-    <h2 class="text-center fw-bold mb-4">📰 Latest Football News</h2>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 fade-in-up delay-300">
+        <div>
+            <h2 class="fw-bold text-primary mb-0">📰 Latest Football News</h2>
+            <p class="text-muted mb-0">Stay updated with the latest headlines</p>
+        </div>
+        <button id="testNewsApiBtn" class="btn btn-outline-primary btn-sm rounded-pill">
+            🔄 Refresh News
+        </button>
+    </div>
+    
+    <div id="testResult" class="mb-3"></div>
 
-    @if (news == null || news.articles == null)
+    @if (newsList == null || !newsList.Any())
     {
-        <div class="alert alert-warning text-center">
-            ⚠️ Unable to load football news at the moment.
+        <div class="alert alert-light border shadow-sm text-center p-5 rounded-4 fade-in-up delay-300">
+            <div class="display-1 mb-3">📭</div>
+            <h4 class="fw-bold">No news available</h4>
+            <p class="text-muted">We couldn't fetch the latest news right now. Please try again later.</p>
         </div>
     }
     else
     {
-        <div class="row">
-            @foreach (var a in news.articles.Take(6))
-            {
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm border-0 rounded-3 h-100">
-
-                        @if (!string.IsNullOrEmpty(a.urlToImage))
-                        {
-                            <img src="@a.urlToImage"
-                                 class="card-img-top"
-                                 style="height:200px; object-fit:cover; border-top-left-radius:10px; border-top-right-radius:10px;">
-                        }
-
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title fw-bold">@a.title</h5>
-
-                            @if (!string.IsNullOrEmpty(a.description))
-                            {
-                                <p class="text-muted">@a.description</p>
-                            }
-
-                            <a href="@a.url"
-                               class="btn btn-sm btn-success mt-auto"
-                               target="_blank">
-                                Read More →
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            }
+        <div id="newsContainer" class="fade-in-up delay-300">
+            <div class="row g-4" id="newsRow">
+                <!-- News items will be loaded here by JavaScript -->
+            </div>
         </div>
+        
+        <!-- Pagination -->
+        <nav aria-label="News pagination" class="mt-5 fade-in-up delay-300">
+            <ul class="pagination justify-content-center" id="pagination">
+                <!-- Pagination buttons will be generated by JavaScript -->
+            </ul>
+        </nav>
+        
+        <!-- Store news data for JavaScript -->
+        <script type="application/json" id="newsData">
+            @Html.Raw(System.Text.Json.JsonSerializer.Serialize(newsList))
+        </script>
     }
 </div>
+
+<!-- Call to Action Footer -->
+<div class="bg-primary text-white py-5 mt-5">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-3">Ready to play?</h2>
+        <p class="lead mb-4 opacity-75">Join the community and show off your football knowledge.</p>
+        <a href="/Identity/Account/Register" class="btn btn-light btn-lg px-5 py-3 rounded-pill fw-bold text-primary shadow">
+            Create Free Account
+        </a>
+    </div>
+</div>
+
+<script>
+// Pagination settings
+const ITEMS_PER_PAGE = 6;
+let currentPage = 1;
+let allNews = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Load news data
+    const newsDataElement = document.getElementById('newsData');
+    if (newsDataElement) {
+        try {
+            allNews = JSON.parse(newsDataElement.textContent);
+            renderNews();
+            renderPagination();
+        } catch (e) {
+            console.error("Error parsing news data", e);
+        }
+    }
+    
+    // Test button handler
+    const testBtn = document.getElementById('testNewsApiBtn');
+    const testResult = document.getElementById('testResult');
+    
+    if (testBtn) {
+        testBtn.addEventListener('click', async function() {
+            testBtn.disabled = true;
+            testBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+            testResult.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/NewsApiTest/test');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload page to show new data if successful
+                    location.reload();
+                } else {
+                    testResult.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+                            <strong>Error:</strong> ${data.message || 'Could not fetch news'}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                testResult.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+                        <strong>Error:</strong> ${error.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🔄 Refresh News';
+            }
+        });
+    }
+});
+
+function renderNews() {
+    const newsRow = document.getElementById('newsRow');
+    if (!newsRow) return;
+    
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const newsToShow = allNews.slice(startIndex, endIndex);
+    
+    newsRow.innerHTML = newsToShow.map(article => `
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden card-hover">
+                <div class="position-relative">
+                    <img src="${article.urlToImage || 'https://via.placeholder.com/400x200?text=Football+News'}"
+                         class="card-img-top"
+                         style="height: 220px; object-fit: cover;"
+                         onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+                    <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+                        <small class="text-white fw-bold">${new Date(article.publishedAt).toLocaleDateString()}</small>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column p-4">
+                    <h5 class="card-title fw-bold mb-3 line-clamp-2">${escapeHtml(article.title || 'Untitled')}</h5>
+                    <p class="card-text text-muted mb-4 line-clamp-3 small flex-grow-1">${escapeHtml(article.description || 'No description available.')}</p>
+                    <a href="${escapeHtml(article.url)}"
+                       class="btn btn-outline-primary rounded-pill w-100 mt-auto fw-bold"
+                       target="_blank">
+                        Read Full Story
+                    </a>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderPagination() {
+    const pagination = document.getElementById('pagination');
+    if (!pagination) return;
+    
+    const totalPages = Math.ceil(allNews.length / ITEMS_PER_PAGE);
+    
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '';
+    
+    // Previous button
+    paginationHTML += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link border-0 rounded-circle mx-1" href="#" onclick="changePage(${currentPage - 1}); return false;" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+    `;
+    
+    // Page numbers logic (simplified for better UI)
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link border-0 rounded-circle mx-1 fw-bold" href="#" onclick="changePage(${i}); return false;">${i}</a>
+            </li>
+        `;
+    }
+    
+    // Next button
+    paginationHTML += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link border-0 rounded-circle mx-1" href="#" onclick="changePage(${currentPage + 1}); return false;" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    `;
+    
+    pagination.innerHTML = paginationHTML;
+}
+
+function changePage(page) {
+    const totalPages = Math.ceil(allNews.length / ITEMS_PER_PAGE);
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    renderNews();
+    renderPagination();
+    
+    // Scroll to top of news section
+    const newsContainer = document.getElementById('newsContainer');
+    if (newsContainer) {
+        newsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+
+<style>
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .page-link {
+        color: var(--primary-color);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .page-item.active .page-link {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    .page-link:hover {
+        background-color: #e9ecef;
+        color: var(--primary-dark);
+    }
+</style>

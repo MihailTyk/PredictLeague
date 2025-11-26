@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PredictLeague.Data;
 using PredictLeague.Models;
@@ -15,10 +18,12 @@ namespace PredictLeague.Controllers
     public class MatchesController : Controller
     {
         private readonly PredictLeagueContext _context;
+        private readonly ILogger<MatchesController> _logger;
 
-        public MatchesController(PredictLeagueContext context)
+        public MatchesController(PredictLeagueContext context, ILogger<MatchesController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // 🏟️ Всички мачове — достъпно за всички
@@ -168,36 +173,127 @@ namespace PredictLeague.Controllers
         // ⚽ Универсален метод за зареждане на мачове по лига
         private async Task<IActionResult> LoadLeagueMatches(string leagueName, int leagueId)
         {
-            string apiKey = "a1c5c63f7d7b71136b4512647b1da851";
-            int currentSeason = DateTime.Now.Month >= 8 ? DateTime.Now.Year : DateTime.Now.Year - 1;
-
-            string url = $"https://v3.football.api-sports.io/fixtures?league={leagueId}&season={currentSeason}";
-
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Clear();
-            client.DefaultRequestHeaders.Add("x-apisports-key", apiKey);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            var response = await client.GetAsync(url);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                ViewBag.Error = $"⚠️ Неуспешно зареждане на {leagueName} от API.";
+                var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+                string apiKey = configuration["ApiKeys:ApiSports"] ?? "";
+                
+                // Безплатният план на API-Sports.io дава достъп само до сезони 2021-2023
+                // Използваме най-новия достъпен сезон (2023)
+                int[] seasonsToTry = { 2023, 2022, 2021 };
+
+                string url = "";
+                var response = (System.Net.Http.HttpResponseMessage?)null;
+                var json = "";
+                FootballApiResponse? result = null;
+                
+                foreach (var season in seasonsToTry)
+                {
+                    url = $"https://v3.football.api-sports.io/fixtures?league={leagueId}&season={season}";
+
+                    _logger.LogInformation($"Trying {leagueName} matches for season {season}. URL: {url.Replace(apiKey, "***")}");
+
+                    using var client = new HttpClient();
+                    client.DefaultRequestHeaders.Clear();
+                    client.DefaultRequestHeaders.Add("x-apisports-key", apiKey);
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.Timeout = TimeSpan.FromSeconds(30);
+
+                    response = await client.GetAsync(url);
+
+                    _logger.LogInformation($"API Response Status for season {season}: {response.StatusCode}");
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync();
+                        _logger.LogError($"API request failed for season {season}. Status: {response.StatusCode}, Response: {errorContent}");
+                        
+                        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                        {
+                            ViewBag.Error = $"❌ API ключът е невалиден или изтекъл. Провери API ключа за {leagueName}.";
+                            return View("League", new List<FootballMatch>());
+                        }
+                        
+                        // Опитай следващия сезон
+                        continue;
+                    }
+
+                    json = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation($"Response received for season {season}. Length: {json.Length} characters");
+                    
+                    // Логваме първите 500 символа за дебъгване
+                    if (json.Length > 0)
+                    {
+                        _logger.LogInformation($"Response preview (first 500 chars): {json.Substring(0, Math.Min(500, json.Length))}");
+                    }
+                    
+                    result = JsonConvert.DeserializeObject<FootballApiResponse>(json);
+
+                    // Проверяваме дали има errors в response-а
+                    if (result != null && result.errors != null)
+                    {
+                        string errorMessage = "";
+                        
+                        // Обработваме errors като обект или масив
+                        if (result.errors is Newtonsoft.Json.Linq.JObject errorsObj)
+                        {
+                            var errorValues = errorsObj.Properties()
+                                .Select(p => p.Value?.ToString() ?? "")
+                                .Where(v => !string.IsNullOrEmpty(v))
+                                .ToList();
+                            errorMessage = string.Join(", ", errorValues);
+                        }
+                        else if (result.errors is Newtonsoft.Json.Linq.JArray errorsArray)
+                        {
+                            var errorValues = errorsArray
+                                .Select(item => item?.ToString() ?? "")
+                                .Where(v => !string.IsNullOrEmpty(v))
+                                .ToList();
+                            errorMessage = string.Join(", ", errorValues);
+                        }
+                        else
+                        {
+                            errorMessage = result.errors.ToString();
+                        }
+                        
+                        if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            _logger.LogWarning($"API returned errors for season {season}: {errorMessage}");
+                            
+                            // Ако грешката е за плана, показваме по-ясно съобщение
+                            if (errorMessage.Contains("Free plans") || errorMessage.Contains("plan"))
+                            {
+                                _logger.LogInformation($"Skipping season {season} due to plan restrictions");
+                                continue; // Опитай следващия сезон
+                            }
+                        }
+                    }
+
+                    if (result != null && result.response != null && result.response.Any())
+                    {
+                        _logger.LogInformation($"Successfully loaded {result.response.Count} matches for {leagueName} season {season}");
+                        
+                        ViewBag.LeagueName = leagueName;
+                        ViewBag.Season = season;
+                        return View("League", result.response);
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"No matches found for {leagueName} season {season}");
+                    }
+                }
+
+                // Ако стигнем тук, не сме намерили мачове в никой от сезоните
+                ViewBag.Error = $"❌ Няма налични мачове за {leagueName} за сезоните {string.Join(", ", seasonsToTry)}.";
                 return View("League", new List<FootballMatch>());
             }
-
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<FootballApiResponse>(json);
-
-            if (result == null || result.response == null || !result.response.Any())
+            catch (Exception ex)
             {
-                ViewBag.Error = $"❌ Няма налични мачове за {leagueName} ({currentSeason}).";
+                _logger.LogError(ex, $"Error loading {leagueName} matches");
+                
+                ViewBag.Error = $"❌ Грешка при зареждане на {leagueName}: {ex.Message}";
                 return View("League", new List<FootballMatch>());
             }
-
-            ViewBag.LeagueName = leagueName;
-            ViewBag.Season = currentSeason;
-            return View("League", result.response);
         }
 
         // 🏴 Premier League
@@ -235,6 +331,9 @@ namespace PredictLeague.Controllers
     public class FootballApiResponse
     {
         public List<FootballMatch> response { get; set; }
+        [JsonProperty("errors")]
+        public object errors { get; set; }
+        public int results { get; set; }
     }
 
     public class FootballMatch
