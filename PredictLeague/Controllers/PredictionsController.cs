@@ -97,25 +97,22 @@ namespace PredictLeague.Controllers
                 {
                     int points = 0;
 
-                    // 🎯 Точен резултат
+                    // 🎯 Точен резултат - 10 точки
                     if (prediction.PredictedHomeScore == match.HomeScore &&
                         prediction.PredictedAwayScore == match.AwayScore)
                     {
-                        points = 5;
+                        points = 10;
                     }
-                    // 🏆 Познат победител
-                    else if (
-                        (match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
-                        (match.HomeScore < match.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore)
-                    )
+                    // ⚽ Познат само единия отбор головете - 3 точки
+                    else if (prediction.PredictedHomeScore == match.HomeScore ||
+                             prediction.PredictedAwayScore == match.AwayScore)
                     {
                         points = 3;
                     }
-                    // ⚖️ Познато равенство
-                    else if (match.HomeScore == match.AwayScore &&
-                             prediction.PredictedHomeScore == prediction.PredictedAwayScore)
+                    // ❌ Нищо не е познато - 0 точки
+                    else
                     {
-                        points = 2;
+                        points = 0;
                     }
 
                     prediction.Points = points;

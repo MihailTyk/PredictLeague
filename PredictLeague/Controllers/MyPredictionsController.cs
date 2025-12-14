@@ -24,10 +24,11 @@ namespace PredictLeague.Controllers
 
             var userId = _userManager.GetUserId(User);
 
-            var predictions = _context.Prediction
+            var predictions = await _context.Prediction
                 .Include(p => p.Match)
                 .Where(p => p.UserId == userId)
-                .ToList();
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
 
 
             return View(predictions);

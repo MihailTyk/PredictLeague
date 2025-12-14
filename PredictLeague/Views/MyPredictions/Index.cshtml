@@ -10,6 +10,22 @@
         🎯 My Predictions
     </h2>
 
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     @if (!Model.Any())
     {
         <div class="alert alert-info text-center">
@@ -18,6 +34,25 @@
     }
     else
     {
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">Total Predictions</h5>
+                        <h2 class="fw-bold text-primary">@Model.Count()</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-muted">Total Points</h5>
+                        <h2 class="fw-bold text-success">@Model.Sum(p => p.Points) ⭐</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="table-responsive shadow-sm rounded">
             <table class="table table-hover text-center align-middle">
                 <thead class="table-dark">
@@ -32,9 +67,14 @@
                 <tbody>
                     @foreach (var p in Model)
                     {
-                        <tr>
+                        var isNew = (DateTime.Now - p.CreatedAt).TotalMinutes < 5;
+                        <tr class="@(isNew ? "table-success" : "")">
                             <td>
                                 <b>@p.Match.HomeTeam</b> vs <b>@p.Match.AwayTeam</b>
+                                @if (isNew)
+                                {
+                                    <span class="badge bg-success ms-2">NEW!</span>
+                                }
                             </td>
 
                             <td>
@@ -55,11 +95,22 @@
                             <td>
                                 @if (p.Match.IsFinished)
                                 {
-                                    <span class="badge bg-info">@p.Points ⭐</span>
+                                    @if (p.Points == 10)
+                                    {
+                                        <span class="badge bg-warning text-dark">@p.Points ⭐ Exact!</span>
+                                    }
+                                    else if (p.Points == 3)
+                                    {
+                                        <span class="badge bg-info">@p.Points ⭐ Partial!</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">@p.Points ⭐ Miss!</span>
+                                    }
                                 }
                                 else
                                 {
-                                    <span class="text-muted">-</span>
+                                    <span class="badge bg-light text-dark">Pending</span>
                                 }
                             </td>
 
