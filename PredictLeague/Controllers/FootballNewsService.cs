@@ -31,7 +31,8 @@ namespace PredictLeague.Controllers
                 }
 
                 // NewsData.io endpoint - използваме latest news endpoint
-                string url = $"https://newsdata.io/api/1/news?apikey={apiKey}&category=sports&q=football&language=en";
+                // NewsData.io endpoint - използваме по-специфични ключови думи за да избегнем американски футбол
+                string url = $"https://newsdata.io/api/1/news?apikey={apiKey}&category=sports&q=soccer OR \"premier league\" OR \"champions league\"&language=en";
                 
                 _logger.LogInformation($"Making request to NewsData.io: {url.Replace(apiKey, "***")}");
 

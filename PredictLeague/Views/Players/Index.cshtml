@@ -1,0 +1,282 @@
+@model List<PredictLeague.Controllers.PlayerEntry>
+
+@{
+    ViewData["Title"] = "Топ Играчи";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="text-center mb-4">
+        <h1 class="display-4 fw-bold" style="color: #0b3d91;">🏃 Всички Играчи</h1>
+        <p class="lead text-muted">Играчи от @ViewBag.CurrentLeagueName (Сезон @ViewBag.CurrentSeason)</p>
+    </div>
+
+    <!-- League Selector -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+        @if (ViewBag.Leagues != null)
+        {
+            foreach (var league in ViewBag.Leagues as Dictionary<int, string>)
+            {
+                var isActive = ViewBag.CurrentLeagueId == league.Key;
+                var btnClass = isActive ? "btn-primary active-league scale-110" : "btn-outline-primary opacity-75";
+                
+                <a href="@Url.Action("Index", new { leagueId = league.Key, page = 1 })" 
+                   class="btn @btnClass rounded-pill px-4 fw-bold d-flex align-items-center shadow-sm transition-all">
+                    @if(league.Key == 39) { <span class="me-2">🏴</span> }
+                    else if(league.Key == 140) { <span class="me-2">🇪🇸</span> }
+                    else if(league.Key == 135) { <span class="me-2">🇮🇹</span> }
+                    else if(league.Key == 78) { <span class="me-2">🇩🇪</span> }
+                    else if(league.Key == 2) { <span class="me-2">🏆</span> }
+                    @league.Value
+                </a>
+            }
+        }
+    </div>
+
+    <!-- 🔍 Search Bar -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8 col-lg-6">
+            <form method="get" asp-action="Index" class="d-flex input-group">
+                <input type="hidden" name="leagueId" value="@ViewBag.CurrentLeagueId" />
+                <input type="text" name="search" class="form-control rounded-pill rounded-end-0 border-end-0 ps-4 py-2" 
+                       placeholder="Търси играч..." 
+                       value="@ViewBag.SearchTerm" minlength="3">
+                <button type="submit" class="btn btn-primary rounded-pill rounded-start-0 px-4 fw-bold">Търси</button>
+            </form>
+            <div class="text-muted small mt-2 ms-3">
+                ℹ️ Моля, пишете имената на латиница (напр. <i>Yamal</i>, <i>Bellingham</i>)
+            </div>
+            @if (!string.IsNullOrEmpty(ViewBag.SearchTerm as string))
+            {
+                <div class="text-center mt-2">
+                    <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId })" class="text-danger text-decoration-none small">
+                        ❌ Изчисти търсенето
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Pagination Controls (Top) -->
+    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+        @{
+            var currentPage = (int)(ViewBag.CurrentPage ?? 1);
+            var totalPages = (int)(ViewBag.TotalPages ?? 1);
+            var prevPage = currentPage > 1 ? currentPage - 1 : 1;
+            var nextPage = currentPage + 1;
+            var isFirstPage = currentPage == 1;
+            var isLastPage = currentPage >= totalPages;
+            
+            // За следене на дубликати
+            var shownPlayerIds = new HashSet<int>();
+        }
+
+        <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId, page = prevPage, search = ViewBag.SearchTerm })" 
+           class="btn btn-outline-secondary btn-sm @(isFirstPage ? "disabled" : "")">
+           ⬅️ Предишна
+        </a>
+
+        <span class="text-muted small fw-bold">Стр. @currentPage / @totalPages</span>
+
+        <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId, page = nextPage, search = ViewBag.SearchTerm })" 
+           class="btn btn-outline-primary btn-sm @(isLastPage ? "disabled" : "")">
+           Следваща ➡️
+        </a>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger shadow-sm rounded-3">
+            <i class="fs-4 me-2">⚠️</i> @ViewBag.Error
+        </div>
+    }
+    else if (ViewBag.Warning != null)
+    {
+        <div class="alert alert-warning shadow-sm rounded-3">
+             ℹ️ @ViewBag.Warning
+        </div>
+    }
+    else if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info shadow-sm rounded-3">
+            ⏳ Все още няма заредени играчи или всички на текущата страница са с 0 мача. Опитайте следващата страница.
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+            
+            @* 1. ПОКАЗВАМЕ ТОП ГОЛМАЙСТОРИТЕ НАЙ-ОТГОРЕ *@
+            @if (ViewBag.TopScorers != null && string.IsNullOrEmpty(ViewBag.SearchTerm as string) && currentPage == 1)
+            {
+                var topScorers = ViewBag.TopScorers as List<PredictLeague.Controllers.PlayerEntry>;
+                @foreach (var entry in topScorers)
+                {
+                     var player = entry.Player;
+                     var stats = entry.Statistics.FirstOrDefault();
+                     if (stats == null || shownPlayerIds.Contains(player.Id)) continue;
+                     
+                     shownPlayerIds.Add(player.Id); // Маркираме като показан
+
+                     <div class="col">
+                        <div class="card h-100 border-warning border-2 shadow player-card position-relative overflow-hidden" style="background: #fffdf5;">
+                            <div class="position-absolute top-0 end-0 bg-warning text-dark px-2 py-1 rounded-bottom-start fw-bold small shadow-sm z-1">
+                                👑 Top Scorer
+                            </div>
+                            <!-- Header -->
+                            <div class="text-center pt-4 pb-3 rounded-top" style="background: linear-gradient(135deg, #fff3cd 0%, #ffecb3 100%);">
+                                <img src="@player.Photo" class="rounded-circle border border-4 border-white shadow profile-img" alt="@player.Name">
+                            </div>
+                            <!-- Body -->
+                            <div class="card-body text-center pt-2">
+                                <h5 class="card-title fw-bold text-dark mb-1 text-truncate">@player.Name</h5>
+                                <div class="badge bg-white text-warning border border-warning mb-3">@stats.Team.Name</div>
+                                
+                                <div class="row text-center g-2 mb-3">
+                                    <div class="col-4">
+                                        <div class="p-2 rounded bg-white border border-warning h-100">
+                                            <div class="fw-bold text-warning fs-5">@(stats.Goals.Total ?? 0)</div>
+                                            <small class="text-muted d-block" style="font-size: 0.7rem;">ГОЛОВЕ</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-2 rounded bg-white border h-100">
+                                            <div class="fw-bold text-primary fs-5">@(stats.Goals.Assists ?? 0)</div>
+                                            <small class="text-muted d-block" style="font-size: 0.7rem;">АСИСТИ</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-2 rounded bg-white border h-100">
+                                            <div class="fw-bold text-secondary fs-5">
+                                                @(stats.Games.Rating != null && stats.Games.Rating.Length >= 3 ? stats.Games.Rating.Substring(0, 3) : "-")
+                                            </div>
+                                            <small class="text-muted d-block" style="font-size: 0.7rem;">РЕЙТИНГ</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+
+            @* 2. ОСТАНАЛИТЕ ИГРАЧИ *@
+            @if (Model != null)
+            {
+                @foreach (var entry in Model)
+                {
+                    var player = entry.Player;
+                    var stats = entry.Statistics.FirstOrDefault();
+
+                    if (stats == null || shownPlayerIds.Contains(player.Id)) continue;
+                     
+                    shownPlayerIds.Add(player.Id);
+
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm player-card">
+                            <!-- Header with gradient and Photo -->
+                            <div class="position-relative text-center pt-4 pb-3 rounded-top card-header-custom">
+                                <div class="team-badge position-absolute top-0 end-0 m-2 bg-white rounded-circle p-1 shadow-sm" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                    <img src="@stats.Team.Logo" alt="@stats.Team.Name" title="@stats.Team.Name" style="width: 30px; height: 30px; object-fit: contain;">
+                                </div>
+                                
+                                <img src="@player.Photo" class="rounded-circle border border-4 border-white shadow profile-img" alt="@player.Name">
+                            </div>
+
+                            <div class="card-body text-center pt-2">
+                                <h5 class="card-title fw-bold text-dark mb-1 text-truncate" title="@player.Name">@player.Name</h5>
+                                <div class="badge bg-light text-secondary mb-3 border text-truncate w-75">@stats.Team.Name</div>
+                                
+                                <!-- Stats Grid -->
+                                <div class="row text-center g-2 mb-3">
+                                    <div class="col-4">
+                                        <div class="p-2 rounded bg-light border h-100">
+                                            <div class="fw-bold text-success fs-5">@(stats.Goals.Total ?? 0)</div>
+                                            <small class="text-muted d-block" style="font-size: 0.7rem;">ГОЛОВЕ</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-2 rounded bg-light border h-100">
+                                            <div class="fw-bold text-primary fs-5">@(stats.Goals.Assists ?? 0)</div>
+                                            <small class="text-muted d-block" style="font-size: 0.7rem;">АСИСТИ</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-2 rounded bg-light border h-100">
+                                            <div class="fw-bold text-warning fs-5">
+                                                @(stats.Games.Rating != null && stats.Games.Rating.Length >= 3 ? stats.Games.Rating.Substring(0, 3) : "-")
+                                            </div>
+                                            <small class="text-muted d-block" style="font-size: 0.7rem;">РЕЙТИНГ</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="my-3 opacity-10">
+                                
+                                <div class="d-flex justify-content-between align-items-center small text-muted px-2">
+                                    <span>🏳️ @player.Nationality</span>
+                                    <span title="Изиграни минути: @stats.Games.Minutes">⏱️ @(stats.Games.Appearences ?? 0) Мача</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Pagination Controls (Bottom) -->
+        <div class="d-flex justify-content-center align-items-center mt-5 gap-3">
+             <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId, page = prevPage, search = ViewBag.SearchTerm })" 
+               class="btn btn-outline-primary px-4 @(isFirstPage ? "disabled" : "")">
+               ⬅️ Предишна
+            </a>
+
+            <span class="fw-bold text-muted">Страница @currentPage от @totalPages</span>
+
+            <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId, page = nextPage, search = ViewBag.SearchTerm })" 
+               class="btn btn-primary px-4 @(isLastPage ? "disabled" : "")">
+               Следваща ➡️
+            </a>
+        </div>
+    }
+</div>
+
+<style>
+    .card-header-custom {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    
+    .player-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .player-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(11, 61, 145, 0.15) !important;
+    }
+
+    .profile-img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        background-color: white;
+    }
+
+    .scale-110 {
+        transform: scale(1.05);
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    .opacity-75 {
+        opacity: 0.75;
+    }
+    
+    .opacity-75:hover {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+</style>
