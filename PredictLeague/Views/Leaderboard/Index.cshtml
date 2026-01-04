@@ -1,0 +1,102 @@
+@model List<PredictLeague.Controllers.TeamLeaderboardEntry>
+
+@{
+    ViewData["Title"] = "Team Leaderboard";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary">🏆 Team Leaderboard</h1>
+        <p class="lead text-muted">Who has the strongest squad?</p>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="display-1 mb-3">👻</div>
+            <h3>No squads yet!</h3>
+            <p>Go to <a asp-controller="Players" asp-action="Index">Players</a> to build your team.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow border-0 overflow-hidden rounded-4">
+            <div class="card-header bg-gradient-primary text-white p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="row align-items-center fw-bold text-uppercase small letter-spacing-1">
+                    <div class="col-1 text-center">Rank</div>
+                    <div class="col-4">Manager</div>
+                    <div class="col-2 text-center">Players</div>
+                    <div class="col-3">Best Player</div>
+                    <div class="col-2 text-end">Total Rating</div>
+                </div>
+            </div>
+            <div class="list-group list-group-flush">
+                @{ var rank = 1; }
+                @foreach (var entry in Model)
+                {
+                    var bgClass = rank == 1 ? "bg-warning-subtle" : (rank == 2 ? "bg-secondary-subtle" : (rank == 3 ? "bg-danger-subtle" : ""));
+                    var borderClass = rank <= 3 ? "border-start border-5" : "";
+                    var borderColor = rank == 1 ? "border-warning" : (rank == 2 ? "border-secondary" : (rank == 3 ? "border-danger" : ""));
+                    
+                    <div class="list-group-item p-4 transition-hover @bgClass @borderClass @borderColor">
+                        <div class="row align-items-center">
+                            <div class="col-1 text-center">
+                                @if (rank == 1) { <span class="fs-2">🥇</span> }
+                                else if (rank == 2) { <span class="fs-2">🥈</span> }
+                                else if (rank == 3) { <span class="fs-2">🥉</span> }
+                                else { <span class="badge bg-light text-dark rounded-circle p-2 fs-6 shadow-sm" style="width:32px;height:32px;">@rank</span> }
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar bg-gradient rounded-circle text-white d-flex align-items-center justify-content-center me-3 shadow-sm"
+                                         style="width: 40px; height: 40px; background-color: #@entry.UserName.GetHashCode().ToString("X").Substring(0,6);">
+                                        @entry.UserName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0 fw-bold">@entry.UserName</h5>
+                                        <small class="text-muted">Manager</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-2 text-center">
+                                <span class="badge bg-white text-primary border border-primary px-3 py-2 rounded-pill">
+                                    @entry.PlayerCount Players
+                                </span>
+                            </div>
+                            <div class="col-3 text-truncate">
+                                @if(!string.IsNullOrEmpty(entry.BestPlayer))
+                                {
+                                    <span>🌟 @entry.BestPlayer</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </div>
+                            <div class="col-2 text-end">
+                                <span class="fw-bold fs-4 text-success">@entry.TotalRating.ToString("F1")</span>
+                                <small class="d-block text-muted">pts</small>
+                            </div>
+                        </div>
+                    </div>
+                    rank++;
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .transition-hover {
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .transition-hover:hover {
+        transform: scale(1.01);
+        z-index: 10;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        background-color: white !important;
+    }
+    .letter-spacing-1 {
+        letter-spacing: 1px;
+    }
+</style>

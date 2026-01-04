@@ -1,0 +1,409 @@
+@model PredictLeague.Controllers.MyTeamViewModel
+
+@{
+    ViewData["Title"] = "My Team";
+    var formationPositions = ViewBag.Positions as List<string>;
+}
+
+<div class="container mt-4 mb-5">
+    <!-- Header & Formation Selector -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-0">📋 My Squad</h1>
+            <p class="text-muted small">Manage your starting XI and tactics</p>
+        </div>
+        
+        <form asp-action="UpdateFormation" class="d-flex align-items-center gap-2 bg-white p-2 rounded shadow-sm border">
+            <span class="fw-bold text-secondary small">FORMATION:</span>
+            <select name="formation" class="form-select form-select-sm fw-bold border-0 bg-light" style="width: auto;" onchange="this.form.submit()">
+                <!option value="4-4-2" @(Model.Settings.Formation == "4-4-2" ? "selected" : "")>4-4-2 Classical</!option>
+                <!option value="4-3-3" @(Model.Settings.Formation == "4-3-3" ? "selected" : "")>4-3-3 Attack</!option>
+                <!option value="3-5-2" @(Model.Settings.Formation == "3-5-2" ? "selected" : "")>3-5-2 Dynamic</!option>
+                <!option value="5-3-2" @(Model.Settings.Formation == "5-3-2" ? "selected" : "")>5-3-2 Defensive</!option>
+            </select>
+        </form>
+    </div>
+
+    <div class="row g-4">
+        <!-- PITCH Section (Left) -->
+        <div class="col-lg-8">
+            <div class="pitch-container shadow-lg rounded-4 position-relative overflow-hidden mb-3">
+                <!-- Grass Pattern -->
+                <div class="pitch-grass"></div>
+                <!-- Lines -->
+                <div class="pitch-lines">
+                    <div class="center-circle"></div>
+                    <div class="half-line"></div>
+                    <div class="box-area-top"></div>
+                    <div class="box-area-bottom"></div>
+                </div>
+
+                <!-- Players on Pitch -->
+                <div class="players-overlay w-100 h-100 position-absolute top-0 start-0 p-3">
+                    @foreach (var pos in formationPositions)
+                    {
+                        var player = Model.StartingLineup.FirstOrDefault(p => p.FieldPosition == pos);
+                        var posClass = GetPositionGridClass(Model.Settings.Formation, pos);
+
+                        <div class="player-slot @posClass" onclick="openPlayerSelector('@pos')">
+                             @if (player != null)
+                             {
+                                 <div class="player-token verified">
+                                     <div class="player-rating">@player.Rating.ToString("0")</div>
+                                     <div class="player-name text-truncate">@player.PlayerName</div>
+                                     <div class="player-pos-badge">@pos</div>
+                                     
+                                     <!-- Remove Button (visible on hover) -->
+                                     <form asp-action="RemovePlayer" class="remove-btn-form">
+                                         <input type="hidden" name="playerId" value="@player.Id" />
+                                         <button type="submit" class="btn-remove" onclick="event.stopPropagation()">×</button>
+                                     </form>
+                                 </div>
+                             }
+                             else
+                             {
+                                 <div class="player-token empty">
+                                     <div class="plus-icon">+</div>
+                                     <div class="player-pos-badge">@pos</div>
+                                 </div>
+                             }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- BENCH Section (Right) -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-light fw-bold py-3 d-flex justify-content-between align-items-center">
+                    <span>💺 Bench (@Model.Bench.Count)</span>
+                    <a asp-controller="Players" asp-action="Index" class="btn btn-sm btn-primary rounded-pill px-3">+ Scout</a>
+                </div>
+                <div class="card-body p-0 overflow-auto" style="max-height: 600px;">
+                    @if (!Model.Bench.Any())
+                    {
+                        <div class="text-center p-5 text-muted">
+                            <p class="mb-2">👻</p>
+                            <p>No players on bench.</p>
+                            <a asp-controller="Players" asp-action="Index" class="small">Find players</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var p in Model.Bench)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark">@p.PlayerName</div>
+                                        <div class="small text-muted">@p.Position • @p.TeamName</div>
+                                    </div>
+                                    <div class="badge bg-secondary">@p.Rating.ToString("0.0")</div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Player Selection -->
+<div class="modal fade" id="playerSelectorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Select Player for <span id="targetPosName" class="text-primary"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group list-group-flush" id="modalPlayerList">
+                    @foreach (var p in Model.Bench)
+                    {
+                        <form asp-action="AssignPlayer" method="post" class="w-100">
+                            <input type="hidden" name="playerId" value="@p.Id" />
+                            <input type="hidden" name="position" id="inputPos-@p.Id" />
+                            
+                            <button type="submit" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 border rounded mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="badge bg-light text-dark border me-3" style="width:35px">@p.Rating.ToString("0")</div>
+                                    <div>
+                                        <div class="fw-bold">@p.PlayerName</div>
+                                        <div class="small text-muted">@p.TeamName • <span class="text-info">@p.Position</span></div>
+                                    </div>
+                                </div>
+                                <span class="btn btn-sm btn-outline-primary rounded-pill">Select</span>
+                            </button>
+                        </form>
+                    }
+                    @if (!Model.Bench.Any())
+                    {
+                         <div class="text-center py-4 text-muted">
+                             No players available on bench.
+                         </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPlayerSelector(positionCode) {
+        document.getElementById('targetPosName').innerText = positionCode;
+        
+        // Update all hidden inputs in the modal with the selected position
+        var inputs = document.querySelectorAll('input[name="position"]');
+        inputs.forEach(input => input.value = positionCode);
+        
+        var myModal = new bootstrap.Modal(document.getElementById('playerSelectorModal'));
+        myModal.show();
+    }
+</script>
+
+@functions {
+    public string GetPositionGridClass(string formation, string pos)
+    {
+        // Simple positioning logic based on percentage coordinate system (top/left)
+        // Adjust these coords for visual balance on the vertical pitch
+        
+        if (pos == "GK") return "pos-gk";
+        
+        if (formation == "4-4-2")
+        {
+            if (pos == "LB") return "pos-lb";
+            if (pos == "RB") return "pos-rb";
+            if (pos == "CB1") return "pos-cb1";
+            if (pos == "CB2") return "pos-cb2";
+            if (pos == "LM") return "pos-lm";
+            if (pos == "RM") return "pos-rm";
+            if (pos == "CM1") return "pos-cm1";
+            if (pos == "CM2") return "pos-cm2";
+            if (pos == "ST1") return "pos-st1";
+            if (pos == "ST2") return "pos-st2";
+        }
+        else if (formation == "4-3-3")
+        {
+             if (pos == "LB") return "pos-lb";
+            if (pos == "RB") return "pos-rb";
+            if (pos == "CB1") return "pos-cb1";
+            if (pos == "CB2") return "pos-cb2";
+            // Mids
+            if (pos == "CM1") return "pos-lcm";
+            if (pos == "CM2") return "pos-ccm";
+            if (pos == "CM3") return "pos-rcm";
+             // Attack
+            if (pos == "LW") return "pos-lw";
+            if (pos == "ST") return "pos-st-c"; // Center Striker
+            if (pos == "RW") return "pos-rw";
+        }
+        
+        return "pos-gk"; // fallback
+    }
+}
+
+<style>
+    /* Pitch Visuals */
+    .pitch-container {
+        width: 100%;
+        padding-top: 135%; /* Aspect Ratio of a pitch roughly */
+        background-color: #4ba852;
+        position: relative;
+        border: 4px solid #fff;
+        box-shadow: inset 0 0 50px rgba(0,0,0,0.2);
+    }
+    
+    .pitch-grass {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: repeating-linear-gradient(
+            0deg,
+            #4ba852,
+            #4ba852 10%,
+            #52b759 10%,
+            #52b759 20%
+        );
+        opacity: 0.8;
+    }
+    
+    .pitch-lines {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        pointer-events: none;
+    }
+    
+    .pitch-lines .half-line {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: rgba(255,255,255,0.6);
+    }
+    
+    .pitch-lines .center-circle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20%;
+        padding-top: 20%;
+        border: 2px solid rgba(255,255,255,0.6);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .box-area-top {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40%;
+        height: 16%;
+        border: 2px solid rgba(255,255,255,0.6);
+        border-top: none;
+    }
+    
+    .box-area-bottom {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40%;
+        height: 16%;
+        border: 2px solid rgba(255,255,255,0.6);
+        border-bottom: none;
+    }
+
+    /* Player Slots */
+    .player-slot {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        width: 18%; /* Relative size */
+        height: 12%; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+        z-index: 2;
+    }
+    
+    .player-slot:hover {
+        transform: translate(-50%, -50%) scale(1.1);
+        z-index: 10;
+    }
+
+    /* Token Styles */
+    .player-token {
+        width: 100%;
+        height: 100%;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        position: relative;
+    }
+    
+    .player-token.verified {
+        background: linear-gradient(135deg, #0b3d91 0%, #1e90ff 100%);
+        color: white;
+        border: 2px solid #ffd700;
+    }
+    
+    .player-token.empty {
+        background: rgba(255,255,255,0.3);
+        border: 2px dashed rgba(255,255,255,0.8);
+        color: white;
+    }
+    
+    .player-token.empty:hover {
+        background: rgba(255,255,255,0.5);
+    }
+    
+    .player-rating {
+        font-weight: 900;
+        font-size: 1.2rem;
+        line-height: 1;
+        color: #ffd700;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    .player-name {
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        max-width: 90%;
+    }
+    
+    .player-pos-badge {
+        position: absolute;
+        top: -8px;
+        background: #222;
+        color: #fff;
+        font-size: 0.6rem;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-weight: bold;
+        text-transform: uppercase;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .remove-btn-form {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .player-slot:hover .remove-btn-form {
+        opacity: 1;
+    }
+    
+    .btn-remove {
+        background: #dc3545;
+        color: white;
+        border: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    /* POSITIONS CSS (Top% Left%) */
+    /* 4-4-2 */
+    .pos-gk { top: 92%; left: 50%; }
+    
+    .pos-lb { top: 75%; left: 15%; }
+    .pos-cb1 { top: 80%; left: 35%; }
+    .pos-cb2 { top: 80%; left: 65%; }
+    .pos-rb { top: 75%; left: 85%; }
+    
+    .pos-lm { top: 45%; left: 15%; } /* Midfield line */
+    .pos-cm1 { top: 50%; left: 35%; }
+    .pos-cm2 { top: 50%; left: 65%; }
+    .pos-rm { top: 45%; left: 85%; }
+    
+    .pos-st1 { top: 15%; left: 35%; }
+    .pos-st2 { top: 15%; left: 65%; }
+    
+    /* 4-3-3 Variants */
+    .pos-lcm { top: 50%; left: 25%; }
+    .pos-ccm { top: 55%; left: 50%; }
+    .pos-rcm { top: 50%; left: 75%; }
+    
+    .pos-lw { top: 15%; left: 15%; }
+    .pos-st-c { top: 10%; left: 50%; }
+    .pos-rw { top: 15%; left: 85%; }
+
+</style>

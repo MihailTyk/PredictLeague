@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -13,11 +14,15 @@ namespace PredictLeague.Controllers
     public class PlayersController : Controller
     {
         private readonly ILogger<PlayersController> _logger;
+        private readonly Data.PredictLeagueContext _context;
+        private readonly UserManager<Microsoft.AspNetCore.Identity.IdentityUser> _userManager;
         private const string ApiKey = "a1c5c63f7d7b71136b4512647b1da851";
 
-        public PlayersController(ILogger<PlayersController> logger)
+        public PlayersController(ILogger<PlayersController> logger, Data.PredictLeagueContext context, UserManager<Microsoft.AspNetCore.Identity.IdentityUser> userManager)
         {
             _logger = logger;
+            _context = context;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index(int leagueId = 39, int season = 2023, int page = 1, string search = null)
@@ -155,6 +160,47 @@ namespace PredictLeague.Controllers
                 ViewBag.Error = $"Грешка: {ex.Message}";
                 return View("Index", new List<PlayerEntry>());
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddToTeam(int playerId, string playerName, string position, string rating, string teamName)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
+            // Check if player exists in user's team
+            var exists = _context.UserPlayers.Any(up => up.UserId == user.Id && up.PlayerApiId == playerId);
+            if (exists)
+            {
+                TempData["Error"] = "Играчът вече е във вашия отбор!";
+                return RedirectToAction("Index");
+            }
+
+            // Parse rating
+            double ratingValue = 0;
+            if (double.TryParse(rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r))
+            {
+                ratingValue = r;
+            }
+
+            var userPlayer = new Models.UserPlayer
+            {
+                UserId = user.Id,
+                PlayerApiId = playerId,
+                PlayerName = playerName,
+                Position = position,
+                Rating = ratingValue,
+                TeamName = teamName
+            };
+
+            _context.UserPlayers.Add(userPlayer);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Играчът е добавен успешно!";
+            return RedirectToAction("Index");
         }
 
         private async Task<PlayerApiResponse> FetchApiData(string url)
