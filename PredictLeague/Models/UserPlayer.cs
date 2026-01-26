@@ -16,7 +16,7 @@ namespace PredictLeague.Models
         public double Rating { get; set; }
         public string TeamName { get; set; } // Real life team
         
-        public string FieldPosition { get; set; } // e.g. "GK", "ST1", "CM2". Null if on bench.
+        public string? FieldPosition { get; set; } // e.g. "GK", "ST1", "CM2". Null if on bench.
         public bool IsStarter => !string.IsNullOrEmpty(FieldPosition);
     }
 }

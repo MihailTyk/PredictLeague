@@ -46,6 +46,30 @@ namespace PredictLeague.Controllers
                 ? (ViewBag.Leagues as Dictionary<int, string>)[leagueId] 
                 : "League";
 
+            // Get user's existing players to mark them in UI
+            var user = await _userManager.GetUserAsync(User);
+            HashSet<int> userPlayerIds = new HashSet<int>();
+            if (user != null)
+            {
+                // Ensure we use the correct namespace for ToListAsync or use standard ToList if EF Core namespace is missing, 
+                // but better to include it. Since I cannot easily add top-level using without rewriting file, 
+                // I will use standard synchronous ToList() or verify if I can add the using.
+                // Actually, _context.UserPlayers is a DbSet.
+                // I'll stick to synchronous logic for safety or use IQueryable.
+                // Or I can add "using Microsoft.EntityFrameworkCore;" at the top in a separate edit.
+                // For now, let's use synchronous loop/linq if async is tricky, BUT I need async for Performace.
+                // Wait, I modify the method to be `async Task`.
+                // I will assume I can add the using directive or fully qualify it.
+                // Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(...)
+                
+                userPlayerIds = (await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                    _context.UserPlayers
+                    .Where(up => up.UserId == user.Id)
+                    .Select(up => up.PlayerApiId)))
+                    .ToHashSet();
+            }
+            ViewBag.UserPlayerIds = userPlayerIds;
+
             // Ако има малко търсене (API изисква мин 3 символа), връщаме предупреждение
             if (!string.IsNullOrEmpty(search) && search.Length < 3)
             {

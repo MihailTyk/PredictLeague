@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Топ Играчи";
+    var userPlayerIds = ViewBag.UserPlayerIds as HashSet<int> ?? new HashSet<int>();
 }
 
 <div class="container mt-4 mb-5">
@@ -85,8 +86,9 @@
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success shadow-sm rounded-3">
-             ✅ @TempData["Success"]
+        <div class="alert alert-success shadow-sm rounded-3 d-flex align-items-center justify-content-between">
+             <span>✅ @TempData["Success"]</span>
+             <a asp-controller="MyTeam" asp-action="Index" class="btn btn-sm btn-success fw-bold text-white shadow-sm">📋 Go to My Team ➡️</a>
         </div>
     }
     @if (TempData["Error"] != null)
@@ -165,14 +167,22 @@
                                         </div>
                                     </div>
                                 </div>
-                                <form method="post" asp-action="AddToTeam" asp-controller="Players">
-                                    <input type="hidden" name="playerId" value="@player.Id" />
-                                    <input type="hidden" name="playerName" value="@player.Name" />
-                                    <input type="hidden" name="position" value="@stats.Games.Position" />
-                                    <input type="hidden" name="rating" value="@stats.Games.Rating" />
-                                    <input type="hidden" name="teamName" value="@stats.Team.Name" />
-                                    <button type="submit" class="btn btn-sm btn-outline-success w-100 fw-bold">Add to My Team</button>
-                                </form>
+                                
+                                @if (userPlayerIds.Contains(player.Id))
+                                {
+                                     <button class="btn btn-sm btn-secondary w-100 fw-bold" disabled>✅ In My Team</button>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="AddToTeam" asp-controller="Players">
+                                        <input type="hidden" name="playerId" value="@player.Id" />
+                                        <input type="hidden" name="playerName" value="@player.Name" />
+                                        <input type="hidden" name="position" value="@stats.Games.Position" />
+                                        <input type="hidden" name="rating" value="@stats.Games.Rating" />
+                                        <input type="hidden" name="teamName" value="@stats.Team.Name" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success w-100 fw-bold">Add to My Team</button>
+                                    </form>
+                                }
                             </div>
                         </div>
                     </div>
@@ -236,14 +246,24 @@
                                     <span>🏳️ @player.Nationality</span>
                                     <span title="Изиграни минути: @stats.Games.Minutes">⏱️ @(stats.Games.Appearences ?? 0) Мача</span>
                                 </div>
-                                <form method="post" asp-action="AddToTeam" asp-controller="Players" class="mt-3">
-                                    <input type="hidden" name="playerId" value="@player.Id" />
-                                    <input type="hidden" name="playerName" value="@player.Name" />
-                                    <input type="hidden" name="position" value="@stats.Games.Position" />
-                                    <input type="hidden" name="rating" value="@stats.Games.Rating" />
-                                    <input type="hidden" name="teamName" value="@stats.Team.Name" />
-                                    <button type="submit" class="btn btn-sm btn-success w-100 fw-bold shadow-sm">➕ Добави в отбора</button>
-                                </form>
+                                
+                                @if (userPlayerIds.Contains(player.Id))
+                                {
+                                     <div class="mt-3">
+                                         <button class="btn btn-sm btn-secondary w-100 fw-bold shadow-sm" disabled>✅ In My Team</button>
+                                     </div>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-action="AddToTeam" asp-controller="Players" class="mt-3">
+                                        <input type="hidden" name="playerId" value="@player.Id" />
+                                        <input type="hidden" name="playerName" value="@player.Name" />
+                                        <input type="hidden" name="position" value="@stats.Games.Position" />
+                                        <input type="hidden" name="rating" value="@stats.Games.Rating" />
+                                        <input type="hidden" name="teamName" value="@stats.Team.Name" />
+                                        <button type="submit" class="btn btn-sm btn-success w-100 fw-bold shadow-sm">➕ Добави в отбора</button>
+                                    </form>
+                                }
                             </div>
                         </div>
                     </div>
