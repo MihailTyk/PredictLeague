@@ -1,7 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
-
+@inject PredictLeague.Data.PredictLeagueContext DbContext
 <!DOCTYPE html>
 <html lang="bg">
 <head>
@@ -161,8 +161,18 @@
                     <ul class="navbar-nav">
                         @if (SignInManager.IsSignedIn(User))
                         {
+                            // Fetch User Points
+                            var userId = UserManager.GetUserId(User);
+                            var teamSettings = DbContext.UserTeamSettings.FirstOrDefault(s => s.UserId == userId);
+                            var points = teamSettings != null ? teamSettings.Points : 0; // default to 0 if not found
+
+                            <li class="nav-item me-3">
+                                <span class="nav-link text-warning fw-bold border border-warning rounded px-3">
+                                    💰 @points pts
+                                </span>
+                            </li>
                             <li class="nav-item">
-                                <span class="nav-link text-warning fw-semibold">
+                                <span class="nav-link text-white fw-semibold">
                                     👋 Здравей, @UserManager.GetUserName(User)!
                                 </span>
                             </li>

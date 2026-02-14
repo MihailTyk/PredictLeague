@@ -24,10 +24,9 @@
             <div class="card-header bg-gradient-primary text-white p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="row align-items-center fw-bold text-uppercase small letter-spacing-1">
                     <div class="col-1 text-center">Rank</div>
-                    <div class="col-4">Manager</div>
+                    <div class="col-5">Manager</div>
                     <div class="col-2 text-center">Players</div>
-                    <div class="col-3">Best Player</div>
-                    <div class="col-2 text-end">Total Rating</div>
+                    <div class="col-4">Best Player</div>
                 </div>
             </div>
             <div class="list-group list-group-flush">
@@ -46,7 +45,7 @@
                                 else if (rank == 3) { <span class="fs-2">🥉</span> }
                                 else { <span class="badge bg-light text-dark rounded-circle p-2 fs-6 shadow-sm" style="width:32px;height:32px;">@rank</span> }
                             </div>
-                            <div class="col-4">
+                            <div class="col-5">
                                 <div class="d-flex align-items-center">
                                     <div class="avatar bg-gradient rounded-circle text-white d-flex align-items-center justify-content-center me-3 shadow-sm"
                                          style="width: 40px; height: 40px; background-color: #@entry.UserName.GetHashCode().ToString("X").Substring(0,6);">
@@ -63,7 +62,7 @@
                                     @entry.PlayerCount Players
                                 </span>
                             </div>
-                            <div class="col-3 text-truncate">
+                            <div class="col-4 text-truncate">
                                 @if(!string.IsNullOrEmpty(entry.BestPlayer))
                                 {
                                     <span>🌟 @entry.BestPlayer</span>
@@ -73,10 +72,7 @@
                                     <span class="text-muted">-</span>
                                 }
                             </div>
-                            <div class="col-2 text-end">
-                                <span class="fw-bold fs-4 text-success">@entry.TotalRating.ToString("F1")</span>
-                                <small class="d-block text-muted">pts</small>
-                            </div>
+
                         </div>
                     </div>
                     rank++;

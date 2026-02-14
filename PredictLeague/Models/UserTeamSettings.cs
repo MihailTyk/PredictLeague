@@ -12,5 +12,6 @@ namespace PredictLeague.Models
         public IdentityUser User { get; set; }
 
         public string Formation { get; set; } = "4-4-2"; // Default
+        public int Points { get; set; } = 0; // Default Points for buying players
     }
 }

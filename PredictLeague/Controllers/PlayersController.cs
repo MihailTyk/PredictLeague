@@ -195,6 +195,23 @@ namespace PredictLeague.Controllers
                 return RedirectToAction("Login", "Account", new { area = "Identity" });
             }
 
+            // 1. Get or Create User Team Settings
+            var teamSettings = _context.UserTeamSettings.FirstOrDefault(s => s.UserId == user.Id);
+            if (teamSettings == null)
+            {
+                teamSettings = new Models.UserTeamSettings { UserId = user.Id, Points = 0, Formation = "4-4-2" };
+                _context.UserTeamSettings.Add(teamSettings);
+                await _context.SaveChangesAsync();
+            }
+
+            // 2. Check if user has enough points
+            int playerCost = 10;
+            if (teamSettings.Points < playerCost)
+            {
+                 TempData["Error"] = $"Недостатъчно точки! Този играч струва {playerCost} точки, а вие имате {teamSettings.Points}.";
+                 return RedirectToAction("Index");
+            }
+
             // Check if player exists in user's team
             var exists = _context.UserPlayers.Any(up => up.UserId == user.Id && up.PlayerApiId == playerId);
             if (exists)
@@ -220,10 +237,14 @@ namespace PredictLeague.Controllers
                 TeamName = teamName
             };
 
+            // 3. Deduct points and Save
+            teamSettings.Points -= playerCost;
+            _context.UserTeamSettings.Update(teamSettings);
+
             _context.UserPlayers.Add(userPlayer);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Играчът е добавен успешно!";
+            TempData["Success"] = $"Играчът е добавен успешно! (-{playerCost} точки)";
             return RedirectToAction("Index");
         }
 
