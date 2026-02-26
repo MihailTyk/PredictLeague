@@ -68,12 +68,33 @@
                     @foreach (var p in Model)
                     {
                         var isNew = (DateTime.Now - p.CreatedAt).TotalMinutes < 5;
-                        <tr class="@(isNew ? "table-success" : "")">
+                        var rowClass = "";
+                        var badgeClass = "bg-info text-dark";
+
+                        if (p.Match.IsFinished)
+                        {
+                            if (p.Points > 0)
+                            {
+                                rowClass = "table-success";
+                                badgeClass = "bg-success";
+                            }
+                            else
+                            {
+                                rowClass = "table-danger";
+                                badgeClass = "bg-danger";
+                            }
+                        }
+                        else if (isNew)
+                        {
+                            rowClass = "table-info";
+                        }
+
+                        <tr class="@rowClass">
                             <td>
                                 <b>@p.Match.HomeTeam</b> vs <b>@p.Match.AwayTeam</b>
                                 @if (isNew)
                                 {
-                                    <span class="badge bg-success ms-2">NEW!</span>
+                                    <span class="badge @badgeClass ms-2">NEW!</span>
                                 }
                             </td>
 
