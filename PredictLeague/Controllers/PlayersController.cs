@@ -25,7 +25,7 @@ namespace PredictLeague.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(int leagueId = 39, int season = 2023, int page = 1, string search = null)
+        public async Task<IActionResult> Index(int leagueId = 39, int season = 2024, int page = 1, string search = null)
         {
             // Списък с поддържани лиги за менюто
             ViewBag.Leagues = new Dictionary<int, string>
@@ -144,15 +144,8 @@ namespace PredictLeague.Controllers
 
                 if (result != null && result.Response != null)
                 {
-                     // ФИЛТРИРАНЕ: Само ако НЕ търсим (при търсене искаме да видим всичко намерено)
+                     // ФИЛТРИРАНЕ: Показваме всички играчи
                      List<PlayerEntry> playersToShow = result.Response;
-                     
-                     if (string.IsNullOrEmpty(search))
-                     {
-                        playersToShow = result.Response
-                            .Where(p => p.Statistics.Any(s => (s.Games.Appearences ?? 0) > 0 || (s.Games.Minutes ?? 0) > 0))
-                            .ToList();
-                     }
 
                      // Запазваме информация за страниците
                      if (result.Paging != null)
@@ -164,11 +157,7 @@ namespace PredictLeague.Controllers
                          ViewBag.TotalPages = 1; // При търсене обикновено няма странициране в този endpoint по същия начин
                      }
                      
-                     if (!playersToShow.Any() && result.Response.Any() && string.IsNullOrEmpty(search))
-                     {
-                         ViewBag.Warning = "Всички играчи на тази страница имат 0 мача.";
-                     }
-                     else if (!result.Response.Any() && !string.IsNullOrEmpty(search))
+                     if (!result.Response.Any() && !string.IsNullOrEmpty(search))
                      {
                          ViewBag.Warning = "Няма намерени играчи с това име. Уверете се, че сте написали името на латиница (напр. 'Yamal' вместо 'Ямал').";
                      }
@@ -192,7 +181,7 @@ namespace PredictLeague.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
+                return LocalRedirect("/Identity/Account/Login");
             }
 
             // 1. Get or Create User Team Settings

@@ -178,9 +178,9 @@ namespace PredictLeague.Controllers
                 var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
                 string apiKey = configuration["ApiKeys:ApiSports"] ?? "";
                 
-                // Безплатният план на API-Sports.io дава достъп само до сезони 2021-2023
-                // Използваме най-новия достъпен сезон (2023)
-                int[] seasonsToTry = { 2023, 2022, 2021 };
+                // Безплатният план на API-Sports.io (ако има промяна) или нормален ключ
+                // Използваме най-новия достъпен сезон
+                int[] seasonsToTry = { 2024, 2023, 2022, 2021 };
 
                 string url = "";
                 var response = (System.Net.Http.HttpResponseMessage?)null;

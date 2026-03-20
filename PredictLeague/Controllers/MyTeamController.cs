@@ -26,7 +26,7 @@ namespace PredictLeague.Controllers
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login", "Account");
+            if (user == null) return LocalRedirect("/Identity/Account/Login");
 
             // Setup Team Settings if not exists
             var teamSettings = await _context.UserTeamSettings
