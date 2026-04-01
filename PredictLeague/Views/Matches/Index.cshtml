@@ -1,96 +1,117 @@
-﻿@model IEnumerable<PredictLeague.Models.Match>
-@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
-
 @{
-    ViewData["Title"] = "⚽ Matches";
+    ViewData["Title"] = "Избери Лига за Прогнози";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-bold text-primary">
-            ⚽ Football Matches
-        </h2>
-
-        @if (User.IsInRole("Admin"))
-        {
-            <a asp-action="Create" class="btn btn-success">
-                ➕ Add New Match
-            </a>
-        }
+<div class="container py-5">
+    <div class="text-center mb-5 fade-in-up">
+        <h1 class="display-4 fw-bold text-primary mb-3">🌍 Избери Първенство</h1>
+        <p class="lead text-muted">Избери любимата си лига, виж предстоящите мачове и направи своите прогнози!</p>
     </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success text-center">@TempData["Success"]</div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger text-center">@TempData["Error"]</div>
-    }
+    <div class="row g-4 justify-content-center">
+        <!-- Premier League -->
+        <div class="col-md-6 col-lg-4 fade-in-up delay-100">
+            <a href="/Matches/PremierLeague" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm rounded-4 card-hover overflow-hidden position-relative">
+                    <div class="bg-primary bg-gradient p-4 text-center">
+                        <img src="https://media.api-sports.io/football/leagues/39.png" alt="Premier League" class="img-fluid" style="height: 100px; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));" />
+                    </div>
+                    <div class="card-body text-center p-4">
+                        <h4 class="fw-bold text-dark mb-1">Premier League</h4>
+                        <span class="badge bg-light text-dark border rounded-pill px-3 py-2 mt-2 shadow-sm">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</span>
+                    </div>
+                </div>
+            </a>
+        </div>
 
-    <div class="table-responsive shadow-sm rounded">
-        <table class="table table-hover align-middle text-center">
-            <thead class="table-dark">
-                <tr>
-                    <th>🏠 Home</th>
-                    <th>🆚 Away</th>
-                    <th>🕒 Start Time</th>
-                    <th>🏁 Result</th>
-                    <th>🎯 Predictions</th>
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <th>⚙️ Actions</th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var match in Model)
-                {
-                    <tr>
-                        <td class="fw-semibold">@match.HomeTeam</td>
-                        <td class="fw-semibold">@match.AwayTeam</td>
-                        <td>@match.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
-                        <td>
-                            @if (match.IsFinished)
-                            {
-                                <span class="fw-bold text-success">
-                                    @match.HomeScore - @match.AwayScore
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="text-muted">Upcoming</span>
-                            }
-                        </td>
+        <!-- La Liga -->
+        <div class="col-md-6 col-lg-4 fade-in-up delay-200">
+            <a href="/Matches/LaLiga" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm rounded-4 card-hover overflow-hidden position-relative">
+                    <div class="bg-danger bg-gradient p-4 text-center">
+                        <img src="https://media.api-sports.io/football/leagues/140.png" alt="La Liga" class="img-fluid" style="height: 100px; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));" />
+                    </div>
+                    <div class="card-body text-center p-4">
+                        <h4 class="fw-bold text-dark mb-1">La Liga</h4>
+                        <span class="badge bg-light text-dark border rounded-pill px-3 py-2 mt-2 shadow-sm">🇪🇸 Spain</span>
+                    </div>
+                </div>
+            </a>
+        </div>
 
-                        <td>
-                            <a asp-controller="Predictions"
-                               asp-action="Create"
-                               asp-route-matchId="@match.Id"
-                               class="btn btn-sm btn-outline-primary">
-                                🎯 Predict
-                            </a>
-                        </td>
+        <!-- Serie A -->
+        <div class="col-md-6 col-lg-4 fade-in-up delay-300">
+            <a href="/Matches/SerieA" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm rounded-4 card-hover overflow-hidden position-relative">
+                    <div class="bg-info bg-gradient p-4 text-center">
+                        <img src="https://media.api-sports.io/football/leagues/135.png" alt="Serie A" class="img-fluid" style="height: 100px; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));" />
+                    </div>
+                    <div class="card-body text-center p-4">
+                        <h4 class="fw-bold text-dark mb-1">Serie A</h4>
+                        <span class="badge bg-light text-dark border rounded-pill px-3 py-2 mt-2 shadow-sm">🇮🇹 Italy</span>
+                    </div>
+                </div>
+            </a>
+        </div>
 
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <td>
-                                <a asp-action="Edit" asp-route-id="@match.Id" class="btn btn-sm btn-warning text-white">
-                                    ✏️ Edit
-                                </a>
-                                <a asp-action="Details" asp-route-id="@match.Id" class="btn btn-sm btn-info text-white">
-                                    👁️ Details
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@match.Id" class="btn btn-sm btn-danger">
-                                    🗑️ Delete
-                                </a>
-                            </td>
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <!-- Bundesliga -->
+        <div class="col-md-6 col-lg-4 fade-in-up delay-400">
+            <a href="/Matches/Bundesliga" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm rounded-4 card-hover overflow-hidden position-relative">
+                    <div class="bg-dark bg-gradient p-4 text-center">
+                        <img src="https://media.api-sports.io/football/leagues/78.png" alt="Bundesliga" class="img-fluid" style="height: 100px; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));" />
+                    </div>
+                    <div class="card-body text-center p-4">
+                        <h4 class="fw-bold text-dark mb-1">Bundesliga</h4>
+                        <span class="badge bg-light text-dark border rounded-pill px-3 py-2 mt-2 shadow-sm">🇩🇪 Germany</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Champions League -->
+        <div class="col-md-6 col-lg-4 fade-in-up delay-500">
+            <a href="/Matches/ChampionsLeague" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm rounded-4 card-hover overflow-hidden position-relative">
+                    <div class="p-4 text-center" style="background: linear-gradient(135deg, #0b3d91 0%, #1e90ff 100%);">
+                        <img src="https://media.api-sports.io/football/leagues/2.png" alt="Champions League" class="img-fluid" style="height: 100px; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));" />
+                    </div>
+                    <div class="card-body text-center p-4">
+                        <h4 class="fw-bold text-dark mb-1">Champions League</h4>
+                        <span class="badge bg-light text-dark border rounded-pill px-3 py-2 mt-2 shadow-sm">🌍 Europe</span>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 </div>
+
+<style>
+    .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.15)!important;
+    }
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+    .delay-100 { animation-delay: 100ms; }
+    .delay-200 { animation-delay: 200ms; }
+    .delay-300 { animation-delay: 300ms; }
+    .delay-400 { animation-delay: 400ms; }
+    .delay-500 { animation-delay: 500ms; }
+    
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>

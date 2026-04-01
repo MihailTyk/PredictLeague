@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+using System.Net.Http;
 using System.Text.Json;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
@@ -31,8 +31,8 @@ namespace PredictLeague.Controllers
                 }
 
                 // NewsData.io endpoint - използваме latest news endpoint
-                // NewsData.io endpoint - използваме по-специфични ключови думи за да избегнем американски футбол
-                string query = Uri.EscapeDataString("football OR soccer OR \"premier league\" OR \"champions league\"");
+                // NewsData.io endpoint - използваме по-специфични ключови думи за да избегнем американски футбол (премахваме общото "football")
+                string query = Uri.EscapeDataString("soccer OR \"premier league\" OR \"champions league\" OR \"la liga\" OR UEFA OR FIFA");
                 string url = $"https://newsdata.io/api/1/news?apikey={apiKey}&category=sports&q={query}&language=en";
                 
                 _logger.LogInformation($"Making request to NewsData.io: {url.Replace(apiKey, "***")}");
@@ -62,14 +62,19 @@ namespace PredictLeague.Controllers
 
                 _logger.LogInformation($"Successfully loaded {data.results.Count} news articles from NewsData.io");
                 
-                // Конвертираме NewsData.io формат към нашия формат
-                var footballNews = data.results.Select(article => new FootballNews
-                {
-                    title = article.title ?? "",
-                    description = article.description ?? "",
-                    url = article.link ?? "",
-                    urlToImage = article.image_url ?? ""
-                }).ToList();
+                // Конвертираме NewsData.io формат към нашия формат и филтрираме евентуални новини за американски футбол
+                var footballNews = data.results
+                    .Where(a => !(a.title ?? "").Contains("NFL", StringComparison.OrdinalIgnoreCase) && 
+                                !(a.title ?? "").Contains("American football", StringComparison.OrdinalIgnoreCase) &&
+                                !(a.title ?? "").Contains("quarterback", StringComparison.OrdinalIgnoreCase) &&
+                                !(a.title ?? "").Contains("touchdown", StringComparison.OrdinalIgnoreCase))
+                    .Select(article => new FootballNews
+                    {
+                        title = article.title ?? "",
+                        description = article.description ?? "",
+                        url = article.link ?? "",
+                        urlToImage = article.image_url ?? ""
+                    }).ToList();
 
                 return footballNews;
             }

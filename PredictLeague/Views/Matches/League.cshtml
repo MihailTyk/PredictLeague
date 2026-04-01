@@ -1,4 +1,4 @@
-﻿@model List<PredictLeague.Controllers.FootballMatch>
+@model List<PredictLeague.Controllers.FootballMatch>
 
 @{
     ViewData["Title"] = ViewBag.LeagueName;
@@ -32,6 +32,7 @@
                         <th class="text-center">🚩 Away</th>
                         <th class="text-center">🕒 Date</th>
                         <th class="text-center">📊 Status</th>
+                        <th class="text-center">🎯 Predict</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -76,6 +77,21 @@
                                     };
                                 }
                                 <span class="badge @badgeClass">@status</span>
+                            </td>
+                            <td>
+                                @if (status == "NS")
+                                {
+                                    <form method="post" action="/Predictions/CreateFromApi">
+                                        <input type="hidden" name="homeTeam" value="@match.teams.home.name" />
+                                        <input type="hidden" name="awayTeam" value="@match.teams.away.name" />
+                                        <input type="hidden" name="startTime" value="@match.fixture.date.ToString("o")" />
+                                        <button type="submit" class="btn btn-sm btn-primary fw-bold px-3">🎯 Predict</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-secondary disabled" disabled>Match Started</button>
+                                }
                             </td>
                         </tr>
                     }

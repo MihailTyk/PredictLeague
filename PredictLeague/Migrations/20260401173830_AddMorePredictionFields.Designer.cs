@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PredictLeague.Data;
 
@@ -11,9 +12,11 @@ using PredictLeague.Data;
 namespace PredictLeague.Migrations
 {
     [DbContext(typeof(PredictLeagueContext))]
-    partial class PredictLeagueContextModelSnapshot : ModelSnapshot
+    [Migration("20260401173830_AddMorePredictionFields")]
+    partial class AddMorePredictionFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -265,17 +268,11 @@ namespace PredictLeague.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AnytimeGoalscorer")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("BothTeamsToScore")
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("GoalScoringPrediction")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("MatchId")
                         .HasColumnType("int");
@@ -286,23 +283,11 @@ namespace PredictLeague.Migrations
                     b.Property<int>("PredictedAwayScore")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PredictedCorners")
-                        .HasColumnType("int");
-
                     b.Property<int>("PredictedHomeScore")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PredictedOffsides")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PredictedRedCards")
                         .HasColumnType("int");
 
                     b.Property<string>("PredictedWinner")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("PredictedYellowCards")
-                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
                         .IsRequired()

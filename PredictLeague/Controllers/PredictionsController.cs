@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -66,10 +66,34 @@ namespace PredictLeague.Controllers
             return View(prediction);
         }
 
+        // 💡 Създаване на мач локално от API-то преди предсказване
+        [HttpPost]
+        public async Task<IActionResult> CreateFromApi(string homeTeam, string awayTeam, DateTime startTime)
+        {
+            var match = await _context.Match.FirstOrDefaultAsync(m => 
+                m.HomeTeam == homeTeam && 
+                m.AwayTeam == awayTeam && 
+                m.StartTime.Date == startTime.Date);
+
+            if (match == null)
+            {
+                match = new Match { 
+                    HomeTeam = homeTeam, 
+                    AwayTeam = awayTeam, 
+                    StartTime = startTime.ToLocalTime(), 
+                    IsFinished = false 
+                };
+                _context.Match.Add(match);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Create), new { matchId = match.Id });
+        }
+
         // 💾 Създаване на Prediction (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,MatchId,PredictedHomeScore,PredictedAwayScore")] Prediction prediction)
+        public async Task<IActionResult> Create([Bind("Id,MatchId,PredictedHomeScore,PredictedAwayScore,PredictedWinner,BothTeamsToScore,PredictedCorners,PredictedYellowCards,PredictedRedCards,PredictedOffsides,GoalScoringPrediction,AnytimeGoalscorer")] Prediction prediction)
         {
             // махаме ModelState за Match
             ModelState.Remove("Match");

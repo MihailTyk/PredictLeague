@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -27,9 +27,9 @@ namespace PredictLeague.Controllers
         }
 
         // 🏟️ Всички мачове — достъпно за всички
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            return View(await _context.Match.ToListAsync());
+            return View();
         }
 
         // 🔍 Детайли за мач — достъпно за всички
@@ -179,8 +179,8 @@ namespace PredictLeague.Controllers
                 string apiKey = configuration["ApiKeys:ApiSports"] ?? "";
                 
                 // Безплатният план на API-Sports.io (ако има промяна) или нормален ключ
-                // Използваме най-новия достъпен сезон
-                int[] seasonsToTry = { 2024, 2023, 2022, 2021 };
+                // Използваме най-новите достъпни сезони спрямо 2026-та година
+                int[] seasonsToTry = { 2026, 2025, 2024, 2023, 2022, 2021 };
 
                 string url = "";
                 var response = (System.Net.Http.HttpResponseMessage?)null;
@@ -271,11 +271,16 @@ namespace PredictLeague.Controllers
 
                     if (result != null && result.response != null && result.response.Any())
                     {
-                        _logger.LogInformation($"Successfully loaded {result.response.Count} matches for {leagueName} season {season}");
+                        var futureMatches = result.response
+                            .Where(m => m.fixture.date >= DateTime.UtcNow)
+                            .OrderBy(m => m.fixture.date)
+                            .ToList();
+
+                        _logger.LogInformation($"Successfully loaded {result.response.Count} matches, showed {futureMatches.Count} future matches for {leagueName} season {season}");
                         
                         ViewBag.LeagueName = leagueName;
                         ViewBag.Season = season;
-                        return View("League", result.response);
+                        return View("League", futureMatches);
                     }
                     else
                     {
