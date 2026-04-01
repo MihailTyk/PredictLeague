@@ -2,109 +2,226 @@
 @inject PredictLeague.Data.PredictLeagueContext _context
 
 @{
-    ViewData["Title"] = "Make a Prediction";
-
+    ViewData["Title"] = "Направи Прогноза";
+    
     int matchId = Model?.MatchId ?? 0;
     var match = _context.Match.FirstOrDefault(m => m.Id == matchId);
 }
 
-<h1>Make a Prediction</h1>
-<hr />
+<style>
+    .prediction-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .match-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 10px 25px rgba(30,60,114,0.2);
+        position: relative;
+        overflow: hidden;
+    }
+    .match-header::before {
+        content: '⚽';
+        position: absolute;
+        top: -20px;
+        left: -10px;
+        font-size: 10rem;
+        opacity: 0.05;
+        transform: rotate(-15deg);
+    }
+    .prediction-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 2.5rem;
+    }
+    .section-title {
+        background: #f8f9fa;
+        padding: 12px 20px;
+        border-radius: 10px;
+        border-left: 5px solid #2a5298;
+        font-weight: 700;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #2b3035;
+        font-size: 1.15rem;
+    }
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+        background-color: #fcfcfc;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #2a5298;
+        box-shadow: 0 0 0 0.25rem rgba(42,82,152,0.1);
+        background-color: #ffffff;
+    }
+    .btn-predict {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        color: white;
+        font-weight: 700;
+        font-size: 1.1rem;
+        padding: 15px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .btn-predict:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(40,167,69,0.3);
+        color: white;
+    }
+    .btn-back {
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .vs-text {
+        font-size: 1.2rem;
+        color: #a5c2f5;
+        margin: 0 15px;
+        font-weight: bold;
+    }
+    .team-name {
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+</style>
 
-@if (match != null)
-{
-    <h3>Predict result for:</h3>
-    <h4>@match.HomeTeam 🆚 @match.AwayTeam</h4>
-}
-else
-{
-    <h4 class="text-danger">Match not found</h4>
-}
+<div class="container py-5 prediction-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">🎯 Направи Прогноза</h2>
+        <a asp-controller="Matches" asp-action="Index" class="btn btn-outline-secondary btn-back">
+            ⬅️ Назад
+        </a>
+    </div>
 
-<div class="row mt-3">
-    <div class="col-md-8 col-lg-6">
-        <form asp-controller="Predictions" asp-action="Create" method="post" class="card shadow-sm p-4 rounded-4 border-0">
+    @if (match != null)
+    {
+        <div class="match-header text-center mb-4">
+            <p class="text-uppercase tracking-wide mb-2 opacity-75" style="font-size: 0.9rem; letter-spacing: 2px;">Предстоящ мач</p>
+            <div class="d-flex justify-content-center align-items-center flex-wrap">
+                <span class="team-name">@match.HomeTeam</span>
+                <span class="vs-text">VS</span>
+                <span class="team-name">@match.AwayTeam</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger rounded-4 shadow-sm border-0 text-center py-4">
+            <h4 class="mb-0">❌ Мачът не е намерен</h4>
+        </div>
+    }
+
+    @if (match != null)
+    {
+        <form asp-controller="Predictions" asp-action="Create" method="post" class="prediction-card">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="MatchId" value="@Model.MatchId" />
 
-            <h5 class="fw-bold mb-3 border-bottom pb-2">🎯 Основна Прогноза</h5>
+            <!-- Основна Прогноза -->
+            <div class="section-title">
+                <span>🎯</span> Основна Прогноза
+            </div>
             
-            <div class="row">
-                <div class="col-6 form-group mb-3">
-                    <label asp-for="PredictedHomeScore" class="control-label fw-bold">🏠 @match?.HomeTeam</label>
-                    <input asp-for="PredictedHomeScore" class="form-control" type="number" min="0" placeholder="Голове" />
-                    <span asp-validation-for="PredictedHomeScore" class="text-danger"></span>
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <label asp-for="PredictedHomeScore" class="form-label">🏠 @match.HomeTeam (Голове)</label>
+                    <input asp-for="PredictedHomeScore" class="form-control form-control-lg text-center" type="number" min="0" placeholder="0" />
+                    <span asp-validation-for="PredictedHomeScore" class="text-danger small"></span>
                 </div>
-                <div class="col-6 form-group mb-3">
-                    <label asp-for="PredictedAwayScore" class="control-label fw-bold">🚩 @match?.AwayTeam</label>
-                    <input asp-for="PredictedAwayScore" class="form-control" type="number" min="0" placeholder="Голове" />
-                    <span asp-validation-for="PredictedAwayScore" class="text-danger"></span>
+                <div class="col-md-6">
+                    <label asp-for="PredictedAwayScore" class="form-label">🚩 @match.AwayTeam (Голове)</label>
+                    <input asp-for="PredictedAwayScore" class="form-control form-control-lg text-center" type="number" min="0" placeholder="0" />
+                    <span asp-validation-for="PredictedAwayScore" class="text-danger small"></span>
                 </div>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="PredictedWinner" class="control-label fw-bold">Кой ще победи? (1X2)</label>
-                <select asp-for="PredictedWinner" class="form-select">
-                    <option value="">-- Избери --</option>
-                    <option value="Home">@match?.HomeTeam 🏠</option>
-                    <option value="Draw">Равен (Draw) 🤝</option>
-                    <option value="Away">@match?.AwayTeam 🚩</option>
+            <div class="mb-5">
+                <label asp-for="PredictedWinner" class="form-label">Кой ще победи? (1X2)</label>
+                <select asp-for="PredictedWinner" class="form-select form-select-lg">
+                    <option value="">-- Избери победител --</option>
+                    <option value="Home">@match.HomeTeam 🏠</option>
+                    <option value="Draw">Равенство (Draw) 🤝</option>
+                    <option value="Away">@match.AwayTeam 🚩</option>
                 </select>
-                <span asp-validation-for="PredictedWinner" class="text-danger"></span>
+                <span asp-validation-for="PredictedWinner" class="text-danger small"></span>
             </div>
 
-            <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2">⚽ Голмайстори</h5>
+            <!-- Голмайстори -->
+            <div class="section-title">
+                <span>⚽</span> Голове и Голмайстори
+            </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="GoalScoringPrediction" class="control-label fw-bold">Кой ще отбележи гол?</label>
-                <select asp-for="GoalScoringPrediction" class="form-select">
-                    <option value="">-- Избери --</option>
+            <div class="mb-4">
+                <label asp-for="GoalScoringPrediction" class="form-label">Ще има ли голове от двата отбора?</label>
+                <select asp-for="GoalScoringPrediction" class="form-select form-select-lg">
+                    <option value="">-- Избери опция --</option>
                     <option value="Both">И двата отбора (BTTS) ⚽⚽</option>
-                    <option value="Home Only">Само @match?.HomeTeam 🏠</option>
-                    <option value="Away Only">Само @match?.AwayTeam 🚩</option>
+                    <option value="Home Only">Само @match.HomeTeam 🏠</option>
+                    <option value="Away Only">Само @match.AwayTeam 🚩</option>
                     <option value="None">Никой няма да вкара (0:0) ❌</option>
                 </select>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="AnytimeGoalscorer" class="control-label fw-bold">Играч да отбележи (Anytime Scorer)</label>
-                <input asp-for="AnytimeGoalscorer" class="form-control" placeholder="Въведи име (напр. Haaland)..." />
+            <div class="mb-5">
+                <label asp-for="AnytimeGoalscorer" class="form-label">Играч да отбележи (Anytime Scorer)</label>
+                <input asp-for="AnytimeGoalscorer" class="form-control form-control-lg" placeholder="Въведи име (напр. Haaland, Lewandowski)..." />
             </div>
 
-            <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2">📈 Статистика на мача</h5>
-
-            <div class="row">
-                <div class="col-6 form-group mb-3">
-                    <label asp-for="PredictedCorners" class="control-label fw-bold">Корнери ⛳</label>
-                    <input asp-for="PredictedCorners" class="form-control" type="number" min="0" placeholder="Общо корнери" />
-                </div>
-                <div class="col-6 form-group mb-3">
-                    <label asp-for="PredictedOffsides" class="control-label fw-bold">Засади 🛑</label>
-                    <input asp-for="PredictedOffsides" class="form-control" type="number" min="0" placeholder="Общо засади" />
-                </div>
+            <!-- Статистика на мача -->
+            <div class="section-title">
+                <span>📈</span> Статистика на мача
             </div>
 
-            <div class="row">
-                <div class="col-6 form-group mb-3">
-                    <label asp-for="PredictedYellowCards" class="control-label fw-bold">Жълти картони 🟨</label>
-                    <input asp-for="PredictedYellowCards" class="form-control" type="number" min="0" placeholder="Брой жълти" />
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <label asp-for="PredictedCorners" class="form-label">Корнери ⛳</label>
+                    <input asp-for="PredictedCorners" class="form-control form-control-lg" type="number" min="0" placeholder="Общо корнери в мача" />
                 </div>
-                <div class="col-6 form-group mb-3">
-                    <label asp-for="PredictedRedCards" class="control-label fw-bold">Червени картони 🟥</label>
-                    <input asp-for="PredictedRedCards" class="form-control" type="number" min="0" placeholder="Брой червени" />
+                <div class="col-md-6">
+                    <label asp-for="PredictedOffsides" class="form-label">Засади 🛑</label>
+                    <input asp-for="PredictedOffsides" class="form-control form-control-lg" type="number" min="0" placeholder="Общо засади в мача" />
                 </div>
             </div>
 
-            <div class="form-group mt-4">
-                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm">💾 Запази Прогнозата</button>
+            <div class="row mb-5">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <label asp-for="PredictedYellowCards" class="form-label">Жълти картони 🟨</label>
+                    <input asp-for="PredictedYellowCards" class="form-control form-control-lg" type="number" min="0" placeholder="Брой жълти картони" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PredictedRedCards" class="form-label">Червени картони 🟥</label>
+                    <input asp-for="PredictedRedCards" class="form-control form-control-lg" type="number" min="0" placeholder="Брой червени картони" />
+                </div>
+            </div>
+
+            <div class="mt-4 pt-2">
+                <button type="submit" class="btn btn-predict w-100 shadow-sm">
+                    💾 Запази Прогнозата
+                </button>
             </div>
         </form>
-    </div>
-</div>
-
-<div class="mt-3">
-    <a asp-controller="Matches" asp-action="Index" class="btn btn-secondary">Back to Matches</a>
+    }
 </div>
 
 @section Scripts {

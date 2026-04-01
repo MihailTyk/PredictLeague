@@ -17,18 +17,22 @@ namespace PredictLeague.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var userStats = await _context.UserPlayers
+            var userStatsList = await _context.UserPlayers
                 .Include(up => up.User)
+                .ToListAsync();
+
+            var userStats = userStatsList
                 .GroupBy(up => up.User)
                 .Select(g => new TeamLeaderboardEntry
                 {
                     UserName = g.Key.UserName,
                     PlayerCount = g.Count(),
-                    TotalRating = g.Sum(up => up.Rating),
-                    BestPlayer = g.OrderByDescending(up => up.Rating).FirstOrDefault().PlayerName
+                    // Изчисляваме стойността (богатството) на отбора: Сбор от цените на играчите
+                    TotalRating = g.Sum(up => up.Rating > 0 ? (int)System.Math.Max(10, System.Math.Round(up.Rating * 5)) : 10),
+                    BestPlayer = g.OrderByDescending(up => up.Rating).FirstOrDefault()?.PlayerName
                 })
                 .OrderByDescending(x => x.TotalRating)
-                .ToListAsync();
+                .ToList();
 
             return View(userStats);
         }

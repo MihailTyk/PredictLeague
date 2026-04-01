@@ -1,0 +1,86 @@
+@model List<PredictLeague.Models.AdminUserViewModel>
+
+@{
+    ViewData["Title"] = "Админ Панел - Потребители";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h2 class="fw-bold text-dark mb-0">🛠️ Администраторски Панел</h2>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            ✅ @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            ❌ @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-center mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Потребител</th>
+                            <th>Имейл</th>
+                            <th>Общо Прогнози</th>
+                            <th>Общо Точки от Прогнози</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@user.UserName</td>
+                                <td class="text-muted">@user.Email</td>
+                                <td>
+                                    <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                        @user.TotalPredictions прогнози
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success rounded-pill px-3 py-2 fs-6">
+                                        @user.TotalPoints pts
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a asp-controller="Admin" asp-action="UserPredictions" asp-route-id="@user.UserId" class="btn btn-sm btn-primary fw-bold rounded-pill px-3">
+                                            👁️ Прогнози
+                                        </a>
+                                        
+                                        @if (user.Email?.ToLower() != "admin@predictleague.com")
+                                        {
+                                            <form asp-controller="Admin" asp-action="DeleteUser" asp-route-id="@user.UserId" method="post" onsubmit="return confirm('Сигурни ли сте, че искате да изтриете този потребител напълно?');">
+                                                <button type="submit" class="btn btn-sm btn-danger fw-bold rounded-pill px-3">
+                                                    🗑️ Изтрий
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-secondary fw-bold rounded-pill px-3" disabled title="Главен администратор не може да бъде изтрит">
+                                                👑 Админ
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

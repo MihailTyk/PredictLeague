@@ -1,0 +1,94 @@
+@model List<PredictLeague.Models.Prediction>
+
+@{
+    ViewData["Title"] = "Прогнози на " + ViewBag.UserName;
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">
+            📋 Прогнози на <span class="text-primary">@ViewBag.UserName</span>
+        </h2>
+        
+        <div class="d-flex align-items-center gap-3">
+            <div class="badge bg-success py-2 px-4 shadow-sm" style="font-size: 1.1rem;">
+                Общо Точки: @ViewBag.TotalPoints
+            </div>
+            
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                ⬅️ Назад към потребителите
+            </a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center rounded-4 shadow-sm border-0 py-4">
+            <h5 class="mb-0">Този потребител няма направени прогнози все още.</h5>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var prediction in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0 rounded-4 border-top border-primary border-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-center fw-bold mb-3 border-bottom pb-2">
+                                @prediction.Match.HomeTeam 🆚 @prediction.Match.AwayTeam
+                            </h5>
+                            
+                            <p class="mb-1 text-muted small text-center">
+                                🕒 Направена на: @prediction.CreatedAt.ToString("dd MMM yyyy HH:mm")
+                            </p>
+
+                            <ul class="list-group list-group-flush mt-3 mb-3">
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <span>Точен резултат:</span>
+                                    <strong class="text-primary">@prediction.PredictedHomeScore - @prediction.PredictedAwayScore</strong>
+                                </li>
+                                @if (!string.IsNullOrEmpty(prediction.PredictedWinner))
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>Край: (1X2):</span>
+                                        <strong>@prediction.PredictedWinner</strong>
+                                    </li>
+                                }
+                                @if (!string.IsNullOrEmpty(prediction.GoalScoringPrediction))
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>Голове:</span>
+                                        <strong>@prediction.GoalScoringPrediction</strong>
+                                    </li>
+                                }
+                                @if (!string.IsNullOrEmpty(prediction.AnytimeGoalscorer))
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>Играч (гол):</span>
+                                        <strong>@prediction.AnytimeGoalscorer</strong>
+                                    </li>
+                                }
+                            </ul>
+                            
+                        </div>
+                        <div class="card-footer bg-light border-0 rounded-bottom-4 text-center">
+                            @if (prediction.Points > 0)
+                            {
+                                <span class="badge bg-success px-3 py-2 w-100 fs-6">
+                                    Точки: @prediction.Points
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary px-3 py-2 w-100 fs-6">
+                                    Очаква се / Загуба (0 pts)
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

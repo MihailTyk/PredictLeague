@@ -4,99 +4,179 @@
     ViewData["Title"] = ViewBag.LeagueName;
 }
 
-<div class="container mt-4">
-    <h2 class="text-center mb-4">
-        ⚽ @ViewBag.LeagueName (@ViewBag.Season)
-    </h2>
+<style>
+    .league-banner {
+        background: linear-gradient(135deg, #0b1a2e 0%, #1e3c72 100%);
+        border-radius: 20px;
+        color: white;
+        padding: 3rem 2rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .league-banner::after {
+        content: '⚽';
+        position: absolute;
+        right: -20px;
+        bottom: -40px;
+        font-size: 15rem;
+        opacity: 0.05;
+    }
+    .match-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.06);
+        transition: transform 0.3s ease, box-shadow 0.3s;
+        border-top: 5px solid #1e3c72;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .match-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+    }
+    .team-logo {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+    }
+    .match-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+        background: #f8f9fa;
+        padding: 6px 15px;
+        border-radius: 20px;
+        display: inline-block;
+        font-weight: 500;
+    }
+    .score-badge {
+        font-size: 1.2rem;
+        font-weight: bold;
+        background: #1e3c72;
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+    }
+    .vs-badge {
+        font-weight: bold;
+        color: #adb5bd;
+        font-size: 1rem;
+    }
+    .btn-predict {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.6rem 1.5rem;
+        transition: all 0.2s;
+        width: 100%;
+    }
+    .btn-predict:hover {
+        background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+        box-shadow: 0 5px 15px rgba(30,60,114,0.3);
+        color: white;
+    }
+    .fast-blink {
+        animation: blink 1.5s infinite;
+    }
+    @@keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+</style>
+
+<div class="container py-4">
+    <div class="league-banner">
+        <h1 class="display-5 fw-bold mb-2">@ViewBag.LeagueName</h1>
+        <p class="lead mb-0 opacity-75">Сезон @ViewBag.Season</p>
+    </div>
 
     @if (ViewBag.Error != null)
     {
-        <div class="alert alert-danger text-center">
+        <div class="alert alert-danger text-center rounded-4 shadow-sm border-0">
             @ViewBag.Error
         </div>
     }
     else if (Model == null || !Model.Any())
     {
-        <div class="alert alert-warning text-center">
-            ⚠️ Няма налични мачове в момента.
+        <div class="alert alert-warning text-center rounded-4 shadow-sm border-0">
+            <h4 class="mb-0">⚠️ Няма налични мачове в момента.</h4>
         </div>
     }
     else
     {
-        <div class="table-responsive shadow-sm rounded">
-            <table class="table table-striped table-bordered align-middle text-center">
-                <thead class="table-dark">
-                    <tr>
-                        <th class="text-center">🏠 Home</th>
-                        <th class="text-center">⚔️ Score</th>
-                        <th class="text-center">🚩 Away</th>
-                        <th class="text-center">🕒 Date</th>
-                        <th class="text-center">📊 Status</th>
-                        <th class="text-center">🎯 Predict</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var match in Model)
-                    {
-                        <tr>
-                            <td>
-                                <img src="@match.teams.home.logo" alt="logo" width="32" class="me-2" />
-                                <strong>@match.teams.home.name</strong>
-                            </td>
+        <div class="row g-4">
+            @foreach (var match in Model)
+            {
+                var status = match.fixture.status.short_;
+                string statusColor = status switch
+                {
+                    "FT" => "text-success",
+                    "NS" => "text-primary",
+                    "1H" or "2H" => "text-danger fast-blink",
+                    _ => "text-secondary"
+                };
 
-                            <td class="fw-bold">
+                <div class="col-md-6 col-lg-4">
+                    <div class="match-card">
+                        <div class="text-center mb-3">
+                            <div class="match-time mb-2">
+                                🕒 @match.fixture.date.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                            </div>
+                            <div class="fw-bold @statusColor" style="font-size: 0.9rem;">
+                                @(status == "NS" ? "Предстоящ" : status == "FT" ? "Завършил" : "На живо")
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                            <div class="text-center" style="width: 40%;">
+                                <img src="@match.teams.home.logo" alt="@match.teams.home.name" class="team-logo mb-2" />
+                                <h6 class="mb-0 fw-bold text-truncate" title="@match.teams.home.name">@match.teams.home.name</h6>
+                            </div>
+
+                            <div class="text-center" style="width: 20%;">
                                 @if (match.goals.home.HasValue && match.goals.away.HasValue)
                                 {
-                                    @($"{match.goals.home} - {match.goals.away}")
+                                    <div class="score-badge">@match.goals.home - @match.goals.away</div>
                                 }
                                 else
                                 {
-                                    <span class="text-muted">vs</span>
+                                    <div class="vs-badge">VS</div>
                                 }
-                            </td>
+                            </div>
 
-                            <td>
-                                <strong>@match.teams.away.name</strong>
-                                <img src="@match.teams.away.logo" alt="logo" width="32" class="ms-2" />
-                            </td>
+                            <div class="text-center" style="width: 40%;">
+                                <img src="@match.teams.away.logo" alt="@match.teams.away.name" class="team-logo mb-2" />
+                                <h6 class="mb-0 fw-bold text-truncate" title="@match.teams.away.name">@match.teams.away.name</h6>
+                            </div>
+                        </div>
 
-                            <td>
-                                @match.fixture.date.ToLocalTime().ToString("dd MMM yyyy HH:mm")
-                            </td>
-
-                            <td>
-                                @{
-                                    var status = match.fixture.status.short_;
-                                    string badgeClass = status switch
-                                    {
-                                        "FT" => "bg-success",
-                                        "NS" => "bg-secondary",
-                                        "1H" => "bg-warning text-dark",
-                                        "2H" => "bg-warning text-dark",
-                                        _ => "bg-info"
-                                    };
-                                }
-                                <span class="badge @badgeClass">@status</span>
-                            </td>
-                            <td>
-                                @if (status == "NS")
-                                {
-                                    <form method="post" action="/Predictions/CreateFromApi">
-                                        <input type="hidden" name="homeTeam" value="@match.teams.home.name" />
-                                        <input type="hidden" name="awayTeam" value="@match.teams.away.name" />
-                                        <input type="hidden" name="startTime" value="@match.fixture.date.ToString("o")" />
-                                        <button type="submit" class="btn btn-sm btn-primary fw-bold px-3">🎯 Predict</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-sm btn-secondary disabled" disabled>Match Started</button>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                        <div class="mt-auto">
+                            @if (status == "NS")
+                            {
+                                <form method="post" action="/Predictions/CreateFromApi">
+                                    <input type="hidden" name="homeTeam" value="@match.teams.home.name" />
+                                    <input type="hidden" name="awayTeam" value="@match.teams.away.name" />
+                                    <input type="hidden" name="startTime" value="@match.fixture.date.ToString("o")" />
+                                    <button type="submit" class="btn btn-predict">🎯 Направи Прогноза</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary w-100 rounded-3 text-uppercase fw-bold" style="font-size: 0.85rem; padding: 0.7rem;" disabled>
+                                    🔒 Мачът е започнал
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     }
 </div>

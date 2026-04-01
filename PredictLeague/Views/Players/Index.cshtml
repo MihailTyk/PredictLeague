@@ -131,6 +131,12 @@
                      
                      shownPlayerIds.Add(player.Id); // Маркираме като показан
 
+                     int playerCost = 10;
+                     if (double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) && r > 0)
+                     {
+                         playerCost = (int)Math.Max(10, Math.Round(r * 5));
+                     }
+
                      <div class="col">
                         <div class="card h-100 border-warning border-2 shadow player-card position-relative overflow-hidden" style="background: #fffdf5;">
                             <div class="position-absolute top-0 end-0 bg-warning text-dark px-2 py-1 rounded-bottom-start fw-bold small shadow-sm z-1">
@@ -180,7 +186,7 @@
                                         <input type="hidden" name="position" value="@stats.Games.Position" />
                                         <input type="hidden" name="rating" value="@stats.Games.Rating" />
                                         <input type="hidden" name="teamName" value="@stats.Team.Name" />
-                                        <button type="submit" class="btn btn-sm btn-outline-success w-100 fw-bold">Add to My Team (10 pts)</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-success w-100 fw-bold">Add to My Team (@playerCost pts)</button>
                                     </form>
                                 }
                             </div>
@@ -200,6 +206,12 @@
                     if (stats == null || shownPlayerIds.Contains(player.Id)) continue;
                      
                     shownPlayerIds.Add(player.Id);
+
+                    int playerCost = 10;
+                    if (double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) && r > 0)
+                    {
+                        playerCost = (int)Math.Max(10, Math.Round(r * 5));
+                    }
 
                     <div class="col">
                         <div class="card h-100 border-0 shadow-sm player-card">
@@ -261,7 +273,7 @@
                                         <input type="hidden" name="position" value="@stats.Games.Position" />
                                         <input type="hidden" name="rating" value="@stats.Games.Rating" />
                                         <input type="hidden" name="teamName" value="@stats.Team.Name" />
-                                        <button type="submit" class="btn btn-sm btn-success w-100 fw-bold shadow-sm">➕ Добави (10 pts)</button>
+                                        <button type="submit" class="btn btn-sm btn-success w-100 fw-bold shadow-sm">➕ Добави (@playerCost pts)</button>
                                     </form>
                                 }
                             </div>

@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @inject PredictLeague.Data.PredictLeagueContext DbContext
@@ -19,77 +19,119 @@
 
     <style>
         body {
-            background-color: #f5f6fa;
-            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0f2f5;
+            font-family: 'Inter', sans-serif;
+            padding-top: 80px; /* За да не се крие контентът зад фиксираната навигация */
         }
 
-        /* 🔵 NAVBAR */
-        .navbar {
-            background: linear-gradient(90deg, #0b3d91, #1e90ff);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+        /* 🌑 PREMIUM DARK NAVBAR */
+        .custom-navbar {
+            background: rgba(15, 23, 42, 0.95); /* Модерен тъмен цвят (Slate 900) */
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            padding: 0.8rem 0;
         }
 
-        .navbar-brand {
-            color: #ffd700 !important;
-            font-weight: 700;
-            font-size: 1.5rem;
+        .brand-text {
+            color: #ffd700;
+            background: linear-gradient(90deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-
-            .navbar-brand:hover {
-                color: #fff !important;
-            }
 
         .nav-link {
-            color: #f8f9fa !important;
+            color: rgba(255, 255, 255, 0.75) !important;
             font-weight: 500;
+            transition: all 0.2s ease;
         }
 
-            .nav-link:hover {
-                color: #ffd700 !important;
-            }
+        .nav-link:hover, .nav-link.active {
+            color: #ffd700 !important;
+            background-color: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
 
-        .dropdown-menu {
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        .custom-dropdown {
+            background-color: rgba(15, 23, 42, 0.98);
+            border-radius: 12px;
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .custom-dropdown .dropdown-item {
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            transition: background 0.2s;
+        }
+
+        .custom-dropdown .dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffd700;
+        }
+
+        /* 🟢 USER POINTS BADGE */
+        .points-badge {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #0f172a;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* LOGIN / REGISTER BUTTONS */
+        .btn-login {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff !important;
+            border-radius: 50px;
+            padding: 0.4rem 1.2rem;
+            font-weight: 600;
+        }
+
+        .btn-login:hover {
+            border-color: #ffd700;
+            color: #ffd700 !important;
+        }
+
+        .btn-register {
+            background: #ffd700;
+            color: #0f172a !important;
+            border: none;
+            border-radius: 50px;
+            padding: 0.4rem 1.2rem;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .btn-register:hover {
+            background: #ffea00;
+            transform: translateY(-2px);
         }
 
         /* ⚽ FOOTER */
         footer {
-            background-color: #0b3d91;
-            color: #dbe4ff;
-            padding: 15px 0;
-            margin-top: 50px;
+            background-color: #0f172a;
+            color: #94a3b8;
+            padding: 30px 0;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-            footer a {
-                color: #ffd700;
-                text-decoration: none;
-            }
+        footer a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
 
-                footer a:hover {
-                    color: #fff;
-                }
-
-        /* 🟢 LOGIN BUTTONS */
-        .btn-login {
-            border: 1px solid #ffd700;
+        footer a:hover {
             color: #ffd700;
         }
-
-            .btn-login:hover {
-                background-color: #ffd700;
-                color: #0b3d91;
-            }
-
-        .btn-register {
-            background-color: #ffd700;
-            color: #0b3d91;
-            border: none;
-        }
-
-            .btn-register:hover {
-                background-color: #fff200;
-            }
 
         main {
             min-height: 70vh;
@@ -99,123 +141,138 @@
 
 <body>
 
-    <!-- ✅ NAVIGATION -->
+    <!-- ✅ MODERN NAVIGATION -->
     <header>
-        <nav class="navbar navbar-expand-sm navbar-dark mb-4">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">⚽ PredictLeague</a>
+        <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" asp-controller="Home" asp-action="Index">
+                    <span class="fs-4">⚽</span> <span class="brand-text">PredictLeague</span>
+                </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarContent" aria-controls="navbarContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1 align-items-center ms-lg-4">
+                        
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">🏠 Начало</a>
+                            <a class="nav-link px-3 rounded-pill" asp-controller="Home" asp-action="Index">🏠 Начало</a>
                         </li>
 
-                        <!-- ✅ Лиги -->
+                        <!-- МЕНЮ: ПРОГНОЗИ -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="leaguesDropdown"
+                            <a class="nav-link dropdown-toggle px-3 rounded-pill" href="#" id="leaguesDropdown"
                                role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                🌍 Лиги
+                                🌍 Прогнозирай
                             </a>
-                            <ul class="dropdown-menu" aria-labelledby="leaguesDropdown">
+                            <ul class="dropdown-menu custom-dropdown shadow-lg" aria-labelledby="leaguesDropdown">
                                 <li><a class="dropdown-item" asp-controller="Matches" asp-action="PremierLeague">🏴 Premier League</a></li>
                                 <li><a class="dropdown-item" asp-controller="Matches" asp-action="LaLiga">🇪🇸 La Liga</a></li>
                                 <li><a class="dropdown-item" asp-controller="Matches" asp-action="SerieA">🇮🇹 Serie A</a></li>
                                 <li><a class="dropdown-item" asp-controller="Matches" asp-action="Bundesliga">🇩🇪 Bundesliga</a></li>
+                                <li><hr class="dropdown-divider border-secondary opacity-25"></li>
                                 <li><a class="dropdown-item" asp-controller="Matches" asp-action="ChampionsLeague">🏆 Champions League</a></li>
                             </ul>
                         </li>
 
-                        <!-- ✅ НОВИЯТ БУТОН ТУК!! -->
+                        <!-- МЕНЮ: FANTASY -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle px-3 rounded-pill" href="#" id="fantasyDropdown"
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                🎮 Fantasy Отбор
+                            </a>
+                            <ul class="dropdown-menu custom-dropdown shadow-lg" aria-labelledby="fantasyDropdown">
+                                @if (SignInManager.IsSignedIn(User))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="MyTeam" asp-action="Index">👕 Моят Отбор</a></li>
+                                }
+                                <li><a class="dropdown-item" asp-controller="Players" asp-action="Index">🛒 Пазар (Всички Играчи)</a></li>
+                                <li><hr class="dropdown-divider border-secondary opacity-25"></li>
+                                <li><a class="dropdown-item text-warning fw-bold" asp-controller="Leaderboard" asp-action="Index">🏆 Leaderboard</a></li>
+                            </ul>
+                        </li>
+
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="MyPredictions" asp-action="Index">📋 Моите предикти</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="MyTeam" asp-action="Index">👕 Моят Отбор</a>
+                                <a class="nav-link px-3 rounded-pill text-info fw-semibold" asp-controller="MyPredictions" asp-action="Index">📋 Моите Предикти</a>
                             </li>
                         }
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Leaderboard" asp-action="Index">🏆 Team Leaderboard</a>
-                        </li>
-                        
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Players" asp-action="Index">🏃 Играчи</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">🔒 Privacy</a>
-                        </li>
+                        @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item ms-lg-2">
+                                <a class="nav-link px-3 rounded-pill text-warning fw-bold border border-warning" style="background: rgba(255, 215, 0, 0.1);" asp-controller="Admin" asp-action="Index">🛠️ Админ Панел</a>
+                            </li>
+                        }
                     </ul>
 
-                    <!-- ✅ LOGIN / LOGOUT -->
-                    <ul class="navbar-nav">
+                    <!-- LOGIN / USER BUBBLE -->
+                    <ul class="navbar-nav align-items-center gap-3">
                         @if (SignInManager.IsSignedIn(User))
                         {
-                            // Fetch User Points
                             var userId = UserManager.GetUserId(User);
                             var teamSettings = DbContext.UserTeamSettings.FirstOrDefault(s => s.UserId == userId);
-                            var points = teamSettings != null ? teamSettings.Points : 0; // default to 0 if not found
+                            var points = teamSettings != null ? teamSettings.Points : 0;
+                            var rawUserName = UserManager.GetUserName(User) ?? "User";
+                            var displayUserName = rawUserName.Contains("@") ? rawUserName.Split('@')[0] : rawUserName;
 
-                            <li class="nav-item me-3">
-                                <span class="nav-link text-warning fw-bold border border-warning rounded px-3">
-                                    💰 @points pts
-                                </span>
-                            </li>
                             <li class="nav-item">
-                                <span class="nav-link text-white fw-semibold">
-                                    👋 Здравей, @UserManager.GetUserName(User)!
-                                </span>
+                                <div class="points-badge px-3 py-1 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2" title="Налични точки за играчи">
+                                    <span class="fs-5">💰</span> <span>@points pts</span>
+                                </div>
                             </li>
-                            <li class="nav-item">
-                                <form class="d-inline" asp-area="Identity"
-                                      asp-page="/Account/Logout" method="post">
-                                    <button type="submit"
-                                            class="btn btn-login btn-sm ms-2">
-                                        Изход
-                                    </button>
-                                </form>
+                            <li class="nav-item dropdown user-dropdown">
+                                <a class="nav-link dropdown-toggle text-white fw-semibold d-flex align-items-center gap-2 px-3 rounded-pill" style="background: rgba(255,255,255,0.1);" href="#" role="button" data-bs-toggle="dropdown">
+                                    <div class="user-avatar bg-white text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 28px; height: 28px;">
+                                        @(displayUserName.Length > 0 ? displayUserName.Substring(0, 1).ToUpper() : "U")
+                                    </div>
+                                    @displayUserName
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end custom-dropdown shadow-lg mt-2">
+                                    <li>
+                                        <form class="form-inline w-100" asp-area="Identity" asp-page="/Account/Logout" method="post">
+                                            <button type="submit" class="dropdown-item text-danger fw-bold text-center">Изход от профила</button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="btn btn-login btn-sm me-2"
-                                   asp-area="Identity" asp-page="/Account/Login">Вход</a>
+                                <a class="nav-link btn-login" asp-area="Identity" asp-page="/Account/Login">Вход</a>
                             </li>
-
                             <li class="nav-item">
-                                <a class="btn btn-register btn-sm"
-                                   asp-area="Identity" asp-page="/Account/Register">Регистрация</a>
+                                <a class="nav-link btn-register" asp-area="Identity" asp-page="/Account/Register">Регистрация</a>
                             </li>
                         }
                     </ul>
-
                 </div>
             </div>
         </nav>
     </header>
 
     <!-- ✅ MAIN CONTENT -->
-    <div class="container">
-        <main role="main" class="pb-3">
+    <div class="container pb-5">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
     <!-- ✅ FOOTER -->
-    <footer class="text-center">
-        <div class="container">
-            &copy; @DateTime.Now.Year - <strong>PredictLeague</strong> ⚽ | Всички права запазени
+    <footer>
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <div class="mb-3 mb-md-0">
+                <span class="text-white fw-bold">⚽ PredictLeague</span> &copy; @DateTime.Now.Year | Всички права запазени.
+            </div>
+            <div class="d-flex gap-4">
+                <a asp-controller="Home" asp-action="Index">Начало</a>
+                <a asp-controller="Home" asp-action="Privacy">Политика за Поверителност</a>
+            </div>
         </div>
     </footer>
 

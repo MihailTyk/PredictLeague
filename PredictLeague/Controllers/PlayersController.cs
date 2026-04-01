@@ -193,11 +193,24 @@ namespace PredictLeague.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // 2. Check if user has enough points
+            // Parse rating FIRST so we calculate dynamic cost
+            double ratingValue = 0;
+            if (double.TryParse(rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r))
+            {
+                ratingValue = r;
+            }
+
+            // Динамична цена: Рейтинг * 5 (минимум 10 точки)
             int playerCost = 10;
+            if (ratingValue > 0)
+            {
+                playerCost = (int)Math.Max(10, Math.Round(ratingValue * 5));
+            }
+
+            // 2. Check if user has enough points
             if (teamSettings.Points < playerCost)
             {
-                 TempData["Error"] = $"Недостатъчно точки! Този играч струва {playerCost} точки, а вие имате {teamSettings.Points}.";
+                 TempData["Error"] = $"Недостатъчно точки! Този играч струва {playerCost} точки, а вие имате само {teamSettings.Points}.";
                  return RedirectToAction("Index");
             }
 
@@ -207,13 +220,6 @@ namespace PredictLeague.Controllers
             {
                 TempData["Error"] = "Играчът вече е във вашия отбор!";
                 return RedirectToAction("Index");
-            }
-
-            // Parse rating
-            double ratingValue = 0;
-            if (double.TryParse(rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r))
-            {
-                ratingValue = r;
             }
 
             var userPlayer = new Models.UserPlayer
