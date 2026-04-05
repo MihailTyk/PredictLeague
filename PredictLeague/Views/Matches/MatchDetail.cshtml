@@ -1,0 +1,1121 @@
+@model PredictLeague.Controllers.MatchDetailViewModel
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+
+@{
+    ViewData["Title"] = $"{Model.HomeTeam} vs {Model.AwayTeam}";
+    var isNS = Model.Status == "NS";
+    var isLive = Model.Status == "1H" || Model.Status == "2H" || Model.Status == "HT" || Model.Status == "ET" || Model.Status == "P";
+    var isFT = Model.Status == "FT";
+    var isLoggedIn = SignInManager.IsSignedIn(User);
+
+    // Вземаме всички играчи от съставите
+    var allPlayers = new List<string>();
+    if (Model.Lineups != null)
+    {
+        foreach (var lineup in Model.Lineups)
+        {
+            if (lineup.startXI != null)
+                allPlayers.AddRange(lineup.startXI.Select(p => p.player?.name).Where(n => !string.IsNullOrEmpty(n)));
+            if (lineup.substitutes != null)
+                allPlayers.AddRange(lineup.substitutes.Select(p => p.player?.name).Where(n => !string.IsNullOrEmpty(n)));
+        }
+    }
+    var firstPlayerName = allPlayers.FirstOrDefault() ?? "напр. Haaland";
+}
+
+<style>
+    :root {
+        --primary: #1e3c72;
+        --primary-light: #2a5298;
+        --accent: #e91e8c;
+        --dark: #0b1120;
+        --card-bg: #111827;
+        --card-border: rgba(255,255,255,0.07);
+        --text-muted: rgba(255,255,255,0.5);
+    }
+
+    body {
+        background: #0d1117;
+    }
+
+    .match-hero {
+        background: linear-gradient(135deg, #0b1a2e 0%, #1a3060 50%, #0b1a2e 100%);
+        border-radius: 24px;
+        padding: 3rem 2rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .match-hero::before {
+        content: '';
+        position: absolute;
+        top: -80px; left: -80px;
+        width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(30,60,114,0.4) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .match-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -80px; right: -80px;
+        width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(233,30,140,0.15) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .team-block {
+        text-align: center;
+        flex: 1;
+    }
+
+    .team-logo-lg {
+        width: 90px;
+        height: 90px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 15px rgba(0,0,0,0.5));
+        transition: transform 0.3s;
+    }
+
+    .team-logo-lg:hover { transform: scale(1.1); }
+
+    .team-name-lg {
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-top: 0.75rem;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .score-center {
+        text-align: center;
+        min-width: 140px;
+    }
+
+    .score-display {
+        font-size: 3rem;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 4px;
+        text-shadow: 0 0 30px rgba(233,30,140,0.3);
+    }
+
+    .vs-text {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: rgba(255,255,255,0.25);
+        letter-spacing: 3px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-top: 0.5rem;
+    }
+
+    .status-live {
+        background: rgba(239,68,68,0.2);
+        color: #f87171;
+        border: 1px solid rgba(239,68,68,0.4);
+        animation: pulse 1.5s infinite;
+    }
+
+    .status-upcoming {
+        background: rgba(59,130,246,0.2);
+        color: #93c5fd;
+        border: 1px solid rgba(59,130,246,0.4);
+    }
+
+    .status-finished {
+        background: rgba(34,197,94,0.2);
+        color: #86efac;
+        border: 1px solid rgba(34,197,94,0.4);
+    }
+
+    @@keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
+    .match-meta {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-top: 1rem;
+    }
+
+    /* Tabs */
+    .tab-nav {
+        display: flex;
+        gap: 0;
+        background: #111827;
+        border-radius: 16px 16px 0 0;
+        border: 1px solid var(--card-border);
+        border-bottom: none;
+        overflow: hidden;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 1rem 2rem;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-bottom: 3px solid transparent;
+    }
+
+    .tab-btn:hover {
+        color: #fff;
+        background: rgba(255,255,255,0.04);
+    }
+
+    .tab-btn.active {
+        color: #fff;
+        background: rgba(30,60,114,0.3);
+        border-bottom: 3px solid #2a5298;
+    }
+
+    .tab-content {
+        background: #111827;
+        border: 1px solid var(--card-border);
+        border-top: none;
+        border-radius: 0 0 16px 16px;
+        padding: 2rem;
+        min-height: 400px;
+    }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Prediction form */
+    .predict-card {
+        background: rgba(30,60,114,0.15);
+        border: 1px solid rgba(30,60,114,0.4);
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .score-input-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        margin: 1.5rem 0;
+    }
+
+    .score-input-group {
+        text-align: center;
+    }
+
+    .score-input-group label {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .score-number-input {
+        width: 80px;
+        height: 80px;
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 900;
+        background: rgba(255,255,255,0.05);
+        border: 2px solid rgba(255,255,255,0.1);
+        color: #fff;
+        border-radius: 14px;
+        transition: all 0.3s;
+    }
+
+    .score-number-input:focus {
+        outline: none;
+        border-color: #2a5298;
+        background: rgba(42,82,152,0.2);
+        box-shadow: 0 0 0 3px rgba(42,82,152,0.2);
+    }
+
+    .score-separator {
+        font-size: 2rem;
+        font-weight: 900;
+        color: rgba(255,255,255,0.3);
+    }
+
+    .extra-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .option-group label {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        margin-bottom: 0.4rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-control-dark {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff;
+        border-radius: 10px;
+        padding: 0.5rem 0.75rem;
+        width: 100%;
+        transition: all 0.3s;
+    }
+
+    .form-control-dark:focus {
+        outline: none;
+        border-color: #2a5298;
+        background: rgba(42,82,152,0.15);
+        box-shadow: 0 0 0 3px rgba(42,82,152,0.2);
+    }
+
+    .form-control-dark option { background: #111827; }
+
+    .btn-submit-predict {
+        width: 100%;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #1e3c72 0%, #e91e8c 100%);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 1.5rem;
+        transition: all 0.3s;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-submit-predict:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(233,30,140,0.3);
+    }
+
+    /* Statistics */
+    .stat-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .stat-row:last-child { border-bottom: none; }
+
+    .stat-label {
+        width: 160px;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-bar-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .stat-val {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #fff;
+        min-width: 40px;
+        text-align: right;
+    }
+
+    .stat-val.away { text-align: left; }
+
+    .stat-bar-bg {
+        flex: 1;
+        height: 8px;
+        background: rgba(255,255,255,0.07);
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+    }
+
+    .stat-bar-home {
+        height: 100%;
+        background: linear-gradient(90deg, #1e3c72, #2a5298);
+        border-radius: 8px;
+        transition: width 0.6s ease;
+    }
+
+    .stat-bar-away {
+        height: 100%;
+        background: linear-gradient(90deg, #e91e8c, #c01070);
+        border-radius: 8px;
+        transition: width 0.6s ease;
+        margin-left: auto;
+    }
+
+    /* Lineups */
+    .lineup-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .lineup-team-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+
+    .lineup-team-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .lineup-team-logo {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+    }
+
+    .lineup-team-name {
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .formation-badge {
+        margin-left: auto;
+        background: rgba(42,82,152,0.3);
+        border: 1px solid rgba(42,82,152,0.5);
+        color: #93c5fd;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .player-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.4rem 0.5rem;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+
+    .player-item:hover { background: rgba(255,255,255,0.04); }
+
+    .player-num {
+        width: 26px;
+        height: 26px;
+        background: rgba(42,82,152,0.4);
+        color: #93c5fd;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .player-name {
+        color: rgba(255,255,255,0.85);
+        font-size: 0.88rem;
+        flex: 1;
+    }
+
+    .player-pos {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        background: rgba(255,255,255,0.05);
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .subs-label {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 0.6rem 0.5rem 0.3rem;
+        margin-top: 0.5rem;
+    }
+
+    .coach-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem;
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .coach-photo {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .coach-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    .coach-name {
+        font-size: 0.88rem;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .no-data-msg {
+        text-align: center;
+        color: var(--text-muted);
+        padding: 3rem 1rem;
+    }
+
+    .no-data-msg .icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Venue */
+    .venue-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 14px;
+        padding: 1.2rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .venue-icon { font-size: 2rem; }
+    .venue-name { color: #fff; font-weight: 700; font-size: 1.05rem; }
+    .venue-city { color: var(--text-muted); font-size: 0.82rem; }
+
+    /* Standings mini-table */
+    .standing-compare {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .standing-team-block {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 14px;
+        padding: 1.2rem;
+        text-align: center;
+    }
+    .standing-rank {
+        font-size: 2.5rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+    .standing-rank-home { color: #93c5fd; }
+    .standing-rank-away { color: #f9a8d4; }
+    .standing-label { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
+    .standing-pts { font-size: 0.95rem; color: #fff; font-weight: 700; margin-top: 0.4rem; }
+    .standing-form span {
+        display: inline-block;
+        width: 22px; height: 22px;
+        border-radius: 50%;
+        font-size: 0.7rem;
+        font-weight: 700;
+        line-height: 22px;
+        text-align: center;
+        margin: 2px;
+    }
+    .form-w { background: rgba(34,197,94,0.3); color: #86efac; }
+    .form-d { background: rgba(234,179,8,0.3); color: #fde047; }
+    .form-l { background: rgba(239,68,68,0.3); color: #fca5a5; }
+    .standing-vs-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 700;
+        letter-spacing: 2px;
+    }
+    .standing-stats-row {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 0.5rem;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+    }
+    .standing-stats-row span { font-weight: 600; color: rgba(255,255,255,0.7); }
+
+    /* H2H */
+    .h2h-summary {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    .h2h-bubble {
+        text-align: center;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 50%;
+        width: 80px; height: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .h2h-bubble .num { font-size: 1.6rem; font-weight: 900; color: #fff; line-height: 1; }
+    .h2h-bubble .lbl { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .h2h-bubble.home-wins .num { color: #93c5fd; }
+    .h2h-bubble.draws .num { color: #fde047; }
+    .h2h-bubble.away-wins .num { color: #f9a8d4; }
+    .h2h-match {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.65rem 0.75rem;
+        border-radius: 10px;
+        margin-bottom: 0.4rem;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        transition: background 0.2s;
+    }
+    .h2h-match:hover { background: rgba(255,255,255,0.06); }
+    .h2h-date { color: var(--text-muted); font-size: 0.75rem; min-width: 80px; }
+    .h2h-team { flex: 1; font-size: 0.88rem; color: rgba(255,255,255,0.8); }
+    .h2h-team.home { text-align: right; }
+    .h2h-score {
+        background: rgba(42,82,152,0.3);
+        border: 1px solid rgba(42,82,152,0.5);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.9rem;
+        padding: 4px 12px;
+        border-radius: 8px;
+        min-width: 60px;
+        text-align: center;
+    }
+    .h2h-winner { font-size: 0.7rem; font-weight: 700; }
+
+    @@media (max-width: 768px) {
+        .lineup-grid { grid-template-columns: 1fr; }
+        .extra-options { grid-template-columns: 1fr; }
+        .standing-compare { grid-template-columns: 1fr; }
+        .team-logo-lg { width: 65px; height: 65px; }
+        .score-display { font-size: 2rem; }
+        .team-name-lg { font-size: 1rem; }
+        .h2h-summary { gap: 0.75rem; }
+        .h2h-bubble { width: 65px; height: 65px; }
+    }
+</style>
+
+
+    <!-- Match Hero Header -->
+    <div class="match-hero">
+        <div class="d-flex align-items-center justify-content-between">
+            <!-- Home Team -->
+            <div class="team-block">
+                <img src="@Model.HomeLogo" alt="@Model.HomeTeam" class="team-logo-lg" onerror="this.src='/img/default-team.png'" />
+                <div class="team-name-lg">@Model.HomeTeam</div>
+            </div>
+
+            <!-- Center Score/VS -->
+            <div class="score-center">
+                <div class="@(isLive ? "status-badge status-live" : isFT ? "status-badge status-finished" : "status-badge status-upcoming")">
+                    @(isLive ? "🔴 На живо" : isFT ? "✅ Край" : "⏰ Предстоящ")
+                </div>
+                
+                @if (isNS)
+                {
+                    <div class="vs-text mt-2">VS</div>
+                }
+                else
+                {
+                    <div class="score-display mt-2">
+                        @(Model.HomeScore ?? 0) : @(Model.AwayScore ?? 0)
+                    </div>
+                }
+            </div>
+
+            <!-- Away Team -->
+            <div class="team-block">
+                <img src="@Model.AwayLogo" alt="@Model.AwayTeam" class="team-logo-lg" onerror="this.src='/img/default-team.png'" />
+                <div class="team-name-lg">@Model.AwayTeam</div>
+            </div>
+        </div>
+        <div class="match-meta text-center mt-3">
+            🕒 @Model.MatchDate &nbsp;|&nbsp; Fixture #@Model.FixtureId
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tab-nav">
+        <button class="tab-btn active" id="tab-predict-btn" onclick="switchTab('predict')">
+            🎯 Направи Прогноза
+        </button>
+        <button class="tab-btn" id="tab-stats-btn" onclick="switchTab('stats')">
+            📊 Статистика &amp; Съставите
+        </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+
+        <!-- TAB 1: Прогноза -->
+        <div class="tab-pane active" id="tab-predict">
+            @if (!isLoggedIn)
+            {
+                <div class="no-data-msg">
+                    <div class="icon">🔐</div>
+                    <h5 class="text-white mb-3">Трябва да си влязъл в профила</h5>
+                    <p class="mb-4">За да правиш прогнози, трябва да имаш акаунт.</p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a href="/Identity/Account/Login?returnUrl=@Uri.EscapeDataString(Context.Request.Path + Context.Request.QueryString)"
+                           style="background:linear-gradient(135deg,#1e3c72,#2a5298); color:#fff; padding:0.75rem 2rem; border-radius:12px; font-weight:700; text-decoration:none;">
+                            🔑 Влез в профила
+                        </a>
+                        <a href="/Identity/Account/Register"
+                           style="background:linear-gradient(135deg,#e91e8c,#c01070); color:#fff; padding:0.75rem 2rem; border-radius:12px; font-weight:700; text-decoration:none;">
+                            ✨ Регистрирай се
+                        </a>
+                    </div>
+                </div>
+            }
+            else if (isNS)
+            {
+                <div class="predict-card">
+                    <h4 class="text-white text-center mb-1 fw-bold">🎯 Твоята Прогноза</h4>
+                    <p class="text-center mb-3" style="color:rgba(255,255,255,0.45); font-size:0.88rem;">Познай точния резултат и спечели точки!</p>
+
+                    <form method="post" action="/Predictions/CreateFromApi">
+                        <input type="hidden" name="homeTeam" value="@Model.HomeTeam" />
+                        <input type="hidden" name="awayTeam" value="@Model.AwayTeam" />
+                        <input type="hidden" name="startTime" value="@Model.MatchDate" />
+
+                        <!-- Score inputs -->
+                        <div class="score-input-row">
+                            <div class="score-input-group">
+                                <label>@Model.HomeTeam</label>
+                                <input type="number" name="predictedHomeScore" min="0" max="20" value="0"
+                                       class="score-number-input" id="homeScoreInput" />
+                            </div>
+                            <div class="score-separator">:</div>
+                            <div class="score-input-group">
+                                <label>@Model.AwayTeam</label>
+                                <input type="number" name="predictedAwayScore" min="0" max="20" value="0"
+                                       class="score-number-input" id="awayScoreInput" />
+                            </div>
+                        </div>
+
+                        <!-- Extra options -->
+                        <div class="extra-options">
+                            <div class="option-group">
+                                <label>И двата отбора вкарват?</label>
+                                <select name="bothTeamsToScore" class="form-control-dark">
+                                    <option value="">-- Избери --</option>
+                                    <option value="true">✅ Да</option>
+                                    <option value="false">❌ Не</option>
+                                </select>
+                            </div>
+                            <div class="option-group">
+                                <label>Ъглови удара (прибл.)</label>
+                                <input type="number" name="predictedCorners" min="0" max="30" placeholder="напр. 9"
+                                       class="form-control-dark" />
+                            </div>
+                            <div class="option-group">
+                                <label>Жълти картони</label>
+                                <input type="number" name="predictedYellowCards" min="0" max="20" placeholder="напр. 3"
+                                       class="form-control-dark" />
+                            </div>
+                            <div class="option-group">
+                                <label>Червени картони</label>
+                                <input type="number" name="predictedRedCards" min="0" max="10" placeholder="напр. 0"
+                                       class="form-control-dark" />
+                            </div>
+                        </div>
+
+                        <div style="margin-top:1rem;">
+                            <div class="option-group">
+                                <label>Голмайстор (за всяко)</label>
+                                @if (allPlayers.Any())
+                                {
+                                    <select name="anytimeGoalscorer" class="form-control-dark">
+                                        <option value="">-- Избери играч --</option>
+                                        @if (Model.Lineups != null && Model.Lineups.Count >= 1)
+                                        {
+                                            <optgroup label="@Model.HomeTeam">
+                                                @foreach (var pl in (Model.Lineups[0].startXI ?? new()).Concat(Model.Lineups[0].substitutes ?? new()))
+                                                {
+                                                    <option value="@pl.player?.name">@pl.player?.number — @pl.player?.name</option>
+                                                }
+                                            </optgroup>
+                                        }
+                                        @if (Model.Lineups != null && Model.Lineups.Count >= 2)
+                                        {
+                                            <optgroup label="@Model.AwayTeam">
+                                                @foreach (var pl in (Model.Lineups[1].startXI ?? new()).Concat(Model.Lineups[1].substitutes ?? new()))
+                                                {
+                                                    <option value="@pl.player?.name">@pl.player?.number — @pl.player?.name</option>
+                                                }
+                                            </optgroup>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <input type="text" name="anytimeGoalscorer" placeholder="@firstPlayerName"
+                                           class="form-control-dark" />
+                                }
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit-predict">
+                            ✅ Завърши Прогнозата
+                        </button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="no-data-msg">
+                    <div class="icon">🔒</div>
+                    <h5 class="text-white mb-2">Прогнозата е заключена</h5>
+                    <p>@(isFT ? "Мачът е вече завършил." : "Мачът е в момента на живо. Не можеш да правиш прогнози.")</p>
+                </div>
+            }
+        </div>
+
+        <!-- TAB 2: Статистика & Съставите -->
+        <div class="tab-pane" id="tab-stats">
+            @if (Model.ApiError != null)
+            {
+                <div class="alert" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; border-radius:12px; padding:1rem;">
+                    ⚠️ Грешка при зареждане: @Model.ApiError
+                </div>
+            }
+
+            <!-- 🏟️ Стадион -->
+            @if (!string.IsNullOrEmpty(Model.VenueName))
+            {
+                <div class="venue-card">
+                    <div class="venue-icon">🏟️</div>
+                    <div>
+                        <div class="venue-name">@Model.VenueName</div>
+                        <div class="venue-city">📍 @Model.VenueCity</div>
+                    </div>
+                </div>
+            }
+
+            <!-- 📊 Класация -->
+            @if (Model.HomeStanding != null || Model.AwayStanding != null)
+            {
+                <h5 class="text-white fw-bold mb-3">📋 Позиция в Класацията</h5>
+                <div class="standing-compare mb-4">
+                    <!-- Home team -->
+                    <div class="standing-team-block">
+                        <div class="standing-label">@Model.HomeTeam</div>
+                        @if (Model.HomeStanding != null)
+                        {
+                            <div class="standing-rank standing-rank-home">#@Model.HomeStanding.rank</div>
+                            <div class="standing-pts">@Model.HomeStanding.points т.</div>
+                            <div class="standing-stats-row">
+                                <div>МГ <span>@Model.HomeStanding.all?.played</span></div>
+                                <div>П <span>@Model.HomeStanding.all?.win</span></div>
+                                <div>Р <span>@Model.HomeStanding.all?.draw</span></div>
+                                <div>З <span>@Model.HomeStanding.all?.lose</span></div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.HomeStanding.form))
+                            {
+                                <div class="standing-form mt-2">
+                                    @foreach (var c in Model.HomeStanding.form.ToCharArray())
+                                    {
+                                        <span class="@(c=='W' ? "form-w" : c=='D' ? "form-d" : "form-l")">@c</span>
+                                    }
+                                </div>
+                            }
+                        }
+                        else { <div class="standing-rank" style="color:rgba(255,255,255,0.2);">—</div> }
+                    </div>
+
+                    <!-- VS center -->
+                    <div class="standing-vs-center">VS</div>
+
+                    <!-- Away team -->
+                    <div class="standing-team-block">
+                        <div class="standing-label">@Model.AwayTeam</div>
+                        @if (Model.AwayStanding != null)
+                        {
+                            <div class="standing-rank standing-rank-away">#@Model.AwayStanding.rank</div>
+                            <div class="standing-pts">@Model.AwayStanding.points т.</div>
+                            <div class="standing-stats-row">
+                                <div>МГ <span>@Model.AwayStanding.all?.played</span></div>
+                                <div>П <span>@Model.AwayStanding.all?.win</span></div>
+                                <div>Р <span>@Model.AwayStanding.all?.draw</span></div>
+                                <div>З <span>@Model.AwayStanding.all?.lose</span></div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.AwayStanding.form))
+                            {
+                                <div class="standing-form mt-2">
+                                    @foreach (var c in Model.AwayStanding.form.ToCharArray())
+                                    {
+                                        <span class="@(c=='W' ? "form-w" : c=='D' ? "form-d" : "form-l")">@c</span>
+                                    }
+                                </div>
+                            }
+                        }
+                        else { <div class="standing-rank" style="color:rgba(255,255,255,0.2);">—</div> }
+                    </div>
+                </div>
+            }
+
+            <!-- ⚔️ H2H -->
+            @if (Model.H2HMatches != null && Model.H2HMatches.Any())
+            {
+                    var h2hOrdered = Model.H2HMatches.OrderByDescending(m => m.fixture.date).ToList();
+                    int homeWins = h2hOrdered.Count(m =>
+                        m.goals.home.HasValue && m.goals.away.HasValue &&
+                        ((m.teams.home.name == Model.HomeTeam && m.goals.home > m.goals.away) ||
+                         (m.teams.away.name == Model.HomeTeam && m.goals.away > m.goals.home)));
+                    int awayWins = h2hOrdered.Count(m =>
+                        m.goals.home.HasValue && m.goals.away.HasValue &&
+                        ((m.teams.home.name == Model.AwayTeam && m.goals.home > m.goals.away) ||
+                         (m.teams.away.name == Model.AwayTeam && m.goals.away > m.goals.home)));
+                    int draws = h2hOrdered.Count(m =>
+                        m.goals.home.HasValue && m.goals.away.HasValue &&
+                        m.goals.home == m.goals.away);
+                <hr style="border-color:rgba(255,255,255,0.07); margin:1.5rem 0;" />
+                <h5 class="text-white fw-bold mb-3">⚔️ H2H — Последни @h2hOrdered.Count мача</h5>
+
+                <!-- Summary bubbles -->
+                <div class="h2h-summary mb-3">
+                    <div class="h2h-bubble home-wins">
+                        <div class="num">@homeWins</div>
+                        <div class="lbl">@Model.HomeTeam</div>
+                    </div>
+                    <div class="h2h-bubble draws">
+                        <div class="num">@draws</div>
+                        <div class="lbl">Равни</div>
+                    </div>
+                    <div class="h2h-bubble away-wins">
+                        <div class="num">@awayWins</div>
+                        <div class="lbl">@Model.AwayTeam</div>
+                    </div>
+                </div>
+
+                <!-- Match list -->
+                @foreach (var h in h2hOrdered)
+                {
+                    bool hasScore = h.goals.home.HasValue && h.goals.away.HasValue;
+                    string winner = "";
+                    if (hasScore)
+                    {
+                        if (h.goals.home > h.goals.away) winner = "home";
+                        else if (h.goals.away > h.goals.home) winner = "away";
+                        else winner = "draw";
+                    }
+
+                    <div class="h2h-match">
+                        <div class="h2h-date">@h.fixture.date.ToLocalTime().ToString("dd MMM yy")</div>
+                        <div class="h2h-team home" style="@(winner=="home" ? "color:#93c5fd;font-weight:700;" : "")">@h.teams.home.name</div>
+                        <div class="h2h-score">
+                            @if (hasScore) { <span>@h.goals.home — @h.goals.away</span> }
+                            else { <span>- vs -</span> }
+                        </div>
+                        <div class="h2h-team" style="@(winner=="away" ? "color:#f9a8d4;font-weight:700;" : "")">@h.teams.away.name</div>
+                    </div>
+                }
+            }
+
+
+            @if (Model.Statistics != null && Model.Statistics.Count >= 2)
+            {
+                var homeStats = Model.Statistics[0];
+                var awayStats = Model.Statistics[1];
+
+                <h5 class="text-white fw-bold mb-3">📊 Статистика на Мача</h5>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2" style="color:rgba(255,255,255,0.5); font-size:0.8rem;">
+                        <span style="color:#93c5fd; font-weight:700;">@homeStats.team?.name</span>
+                        <span></span>
+                        <span style="color:#f9a8d4; font-weight:700;">@awayStats.team?.name</span>
+                    </div>
+                    @{
+                        var statTypes = homeStats.statistics.Select(s => s.type).ToList();
+                        foreach (var statType in statTypes)
+                        {
+                            var homeStat = homeStats.statistics.FirstOrDefault(s => s.type == statType);
+                            var awayStat = awayStats.statistics.FirstOrDefault(s => s.type == statType);
+
+                            string homeValStr = homeStat?.value?.ToString() ?? "0";
+                            string awayValStr = awayStat?.value?.ToString() ?? "0";
+
+                            // Parse percentages or numbers
+                            bool isPercent = homeValStr?.Contains("%") == true || awayValStr?.Contains("%") == true;
+                            double hv = 0, av = 0;
+                            if (isPercent) {
+                                double.TryParse(homeValStr?.Replace("%","").Trim(), out hv);
+                                double.TryParse(awayValStr?.Replace("%","").Trim(), out av);
+                            } else {
+                                double.TryParse(homeValStr, out hv);
+                                double.TryParse(awayValStr, out av);
+                            }
+                            double total = hv + av;
+                            double homePct = total > 0 ? (hv / total * 100) : 50;
+                            double awayPct = total > 0 ? (av / total * 100) : 50;
+
+                            <div class="stat-row">
+                                <div class="stat-bar-wrap">
+                                    <span class="stat-val">@homeValStr</span>
+                                    <div class="stat-bar-bg">
+                                        <div class="stat-bar-home" style="width:@homePct.ToString("F0")%"></div>
+                                    </div>
+                                    <span class="stat-val away">@awayValStr</span>
+                                </div>
+                                <div class="stat-label">@statType</div>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+            else if (!isNS)
+            {
+                <div class="no-data-msg">
+                    <div class="icon">📊</div>
+                    <p>Статистика не е налична за този мач.</p>
+                </div>
+            }
+            else
+            {
+                <div class="no-data-msg">
+                    <div class="icon">⏰</div>
+                    <h5 class="text-white mb-2">Мачът не е започнал</h5>
+                    <p>Статистика ще бъде налична след началото на мача.</p>
+                </div>
+            }
+
+            <!-- Lineups Section -->
+            @if (Model.Lineups != null && Model.Lineups.Any())
+            {
+                <hr style="border-color:rgba(255,255,255,0.07); margin:2rem 0;" />
+                <h5 class="text-white fw-bold mb-3">👥 Съставите</h5>
+                <div class="lineup-grid">
+                    @foreach (var lineup in Model.Lineups)
+                    {
+                        <div class="lineup-team-card">
+                            <div class="lineup-team-header">
+                                <img src="@lineup.team?.logo" alt="@lineup.team?.name" class="lineup-team-logo" />
+                                <span class="lineup-team-name">@lineup.team?.name</span>
+                                @if (!string.IsNullOrEmpty(lineup.formation))
+                                {
+                                    <span class="formation-badge">@lineup.formation</span>
+                                }
+                            </div>
+
+                            @if (lineup.coach != null)
+                            {
+                                <div class="coach-row">
+                                    @if (!string.IsNullOrEmpty(lineup.coach.photo))
+                                    {
+                                        <img src="@lineup.coach.photo" class="coach-photo" alt="coach" />
+                                    }
+                                    <div>
+                                        <div class="coach-label">Треньор</div>
+                                        <div class="coach-name">@lineup.coach.name</div>
+                                    </div>
+                                </div>
+                            }
+
+                            @foreach (var pl in lineup.startXI ?? new())
+                            {
+                                <div class="player-item">
+                                    <div class="player-num">@pl.player?.number</div>
+                                    <span class="player-name">@pl.player?.name</span>
+                                    @if (!string.IsNullOrEmpty(pl.player?.pos))
+                                    {
+                                        <span class="player-pos">@pl.player.pos</span>
+                                    }
+                                </div>
+                            }
+
+                            @if (lineup.substitutes != null && lineup.substitutes.Any())
+                            {
+                                <div class="subs-label">↔️ Резерви</div>
+                                @foreach (var pl in lineup.substitutes)
+                                {
+                                    <div class="player-item" style="opacity:0.65;">
+                                        <div class="player-num" style="background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4);">@pl.player?.number</div>
+                                        <span class="player-name">@pl.player?.name</span>
+                                        @if (!string.IsNullOrEmpty(pl.player?.pos))
+                                        {
+                                            <span class="player-pos">@pl.player.pos</span>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else if (isNS)
+            {
+                <div class="no-data-msg mt-3">
+                    <div class="icon">👥</div>
+                    <p>Съставите ще бъдат обявени преди мача.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Back button -->
+    <div class="mt-4">
+        <a onclick="history.back()" style="cursor:pointer; color:rgba(255,255,255,0.4); font-size:0.88rem; text-decoration:none;">
+            ← Назад към мачовете
+        </a>
+    </div>
+</div>
+
+<script>
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('tab-' + tab + '-btn').classList.add('active');
+    }
+</script>

@@ -1,7 +1,10 @@
 @using PredictLeague.Controllers
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
 @{
     ViewData["Title"] = "Home Page";
     var newsList = ViewData["NewsList"] as List<FootballNews> ?? new List<FootballNews>();
+    var isLoggedIn = SignInManager.IsSignedIn(User);
 }
 
 <!-- HERO SECTION -->
@@ -20,7 +23,9 @@
                     Join thousands of fans, predict match scores, and compete for the top spot on the leaderboard. It's free, fun, and competitive.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
-                    <a href="/Matches" class="btn btn-warning btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold" style="background-color: #ffd700; color: #0f172a; border: none;">
+                    <a href="@(isLoggedIn ? "/Matches" : "/Identity/Account/Login")" 
+                       class="btn btn-warning btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold" 
+                       style="background-color: #ffd700; color: #0f172a; border: none;">
                         Start Predicting ⚽
                     </a>
                     <a href="#how-it-works" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill fw-bold" style="border-width: 2px; color: #fff;">

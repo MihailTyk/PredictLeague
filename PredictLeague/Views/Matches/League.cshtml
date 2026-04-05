@@ -94,7 +94,12 @@
 <div class="container py-4">
     <div class="league-banner">
         <h1 class="display-5 fw-bold mb-2">@ViewBag.LeagueName</h1>
-        <p class="lead mb-0 opacity-75">Сезон @ViewBag.Season</p>
+        <p class="lead mb-1 opacity-75">Сезон @ViewBag.Season</p>
+        <a href="@Url.Action("Standings", "Matches", new { leagueId = ViewBag.LeagueId, season = ViewBag.Season, leagueName = ViewBag.LeagueName })"
+           class="btn mt-2 px-4 py-2 fw-bold"
+           style="background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 30px; backdrop-filter: blur(10px); font-size: 0.9rem;">
+            🏆 Виж Класацията
+        </a>
     </div>
 
     @if (ViewBag.Error != null)
@@ -158,21 +163,32 @@
                         </div>
 
                         <div class="mt-auto">
-                            @if (status == "NS")
-                            {
-                                <form method="post" action="/Predictions/CreateFromApi">
-                                    <input type="hidden" name="homeTeam" value="@match.teams.home.name" />
-                                    <input type="hidden" name="awayTeam" value="@match.teams.away.name" />
-                                    <input type="hidden" name="startTime" value="@match.fixture.date.ToString("o")" />
-                                    <button type="submit" class="btn btn-predict">🎯 Направи Прогноза</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <button class="btn btn-secondary w-100 rounded-3 text-uppercase fw-bold" style="font-size: 0.85rem; padding: 0.7rem;" disabled>
-                                    🔒 Мачът е започнал
-                                </button>
-                            }
+                            <a href="@Url.Action("MatchDetail", "Matches", new {
+                                fixtureId = match.fixture.id,
+                                homeTeamId = match.teams.home.id,
+                                awayTeamId = match.teams.away.id,
+                                homeTeam = match.teams.home.name,
+                                awayTeam = match.teams.away.name,
+                                homeLogo = match.teams.home.logo,
+                                awayLogo = match.teams.away.logo,
+                                matchDate = match.fixture.date.ToLocalTime().ToString("dd MMM yyyy, HH:mm"),
+                                status = match.fixture.status.short_,
+                                leagueId = ViewBag.LeagueId,
+                                season = ViewBag.Season
+                            })" class="btn btn-predict d-block text-center text-decoration-none">
+                                @if (status == "NS")
+                                {
+                                    <span>🎯 Виж Мача</span>
+                                }
+                                else if (status == "FT")
+                                {
+                                    <span>📊 Статистика</span>
+                                }
+                                else
+                                {
+                                    <span>🔴 На живо — Детайли</span>
+                                }
+                            </a>
                         </div>
                     </div>
                 </div>

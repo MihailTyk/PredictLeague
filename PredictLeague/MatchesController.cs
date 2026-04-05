@@ -280,6 +280,7 @@ namespace PredictLeague.Controllers
                         
                         ViewBag.LeagueName = leagueName;
                         ViewBag.Season = season;
+                        ViewBag.LeagueId = leagueId;
                         return View("League", futureMatches);
                     }
                     else
@@ -330,6 +331,199 @@ namespace PredictLeague.Controllers
         {
             return await LoadLeagueMatches("Champions League", 2);
         }
+
+        // 📋 Детайли за мач от API (статистика + съставите + стадион + класация + H2H)
+        public async Task<IActionResult> MatchDetail(
+            int fixtureId, int homeTeamId, int awayTeamId,
+            string homeTeam, string awayTeam, string homeLogo, string awayLogo,
+            string matchDate, string status, int leagueId = 0, int season = 0)
+        {
+            var vm = new MatchDetailViewModel
+            {
+                FixtureId = fixtureId,
+                HomeTeamId = homeTeamId,
+                AwayTeamId = awayTeamId,
+                HomeTeam = homeTeam,
+                AwayTeam = awayTeam,
+                HomeLogo = homeLogo,
+                AwayLogo = awayLogo,
+                MatchDate = matchDate,
+                Status = status,
+                LeagueId = leagueId,
+                Season = season
+            };
+
+            try
+            {
+                var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+                string apiKey = configuration["ApiKeys:ApiSports"] ?? "";
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add("x-apisports-key", apiKey);
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.Timeout = TimeSpan.FromSeconds(30);
+
+                // 1️⃣ Стадион — от детайлите на мача
+                var fixtureUrl = $"https://v3.football.api-sports.io/fixtures?id={fixtureId}";
+                var fixtureResponse = await client.GetAsync(fixtureUrl);
+                if (fixtureResponse.IsSuccessStatusCode)
+                {
+                    var fixtureJson = await fixtureResponse.Content.ReadAsStringAsync();
+                    var fixtureResult = JsonConvert.DeserializeObject<FixtureDetailApiResponse>(fixtureJson);
+                    var detail = fixtureResult?.response?.FirstOrDefault();
+                    if (detail?.fixture != null)
+                    {
+                        if (detail.fixture.venue != null)
+                        {
+                            vm.VenueName = detail.fixture.venue.name;
+                            vm.VenueCity = detail.fixture.venue.city;
+                        }
+
+                        // Обновяваме статуса до актуален
+                        if (detail.fixture.status != null && !string.IsNullOrEmpty(detail.fixture.status.short_))
+                        {
+                            vm.Status = detail.fixture.status.short_;
+                        }
+
+                        // Обновяваме резултата в реално време
+                        if (detail.goals != null)
+                        {
+                            vm.HomeScore = detail.goals.home;
+                            vm.AwayScore = detail.goals.away;
+                        }
+                    }
+                }
+
+                // 2️⃣ Съставите
+                var lineupsUrl = $"https://v3.football.api-sports.io/fixtures/lineups?fixture={fixtureId}";
+                var lineupsResponse = await client.GetAsync(lineupsUrl);
+                if (lineupsResponse.IsSuccessStatusCode)
+                {
+                    var lineupsJson = await lineupsResponse.Content.ReadAsStringAsync();
+                    var lineupsResult = JsonConvert.DeserializeObject<LineupsApiResponse>(lineupsJson);
+                    vm.Lineups = lineupsResult?.response ?? new List<TeamLineup>();
+                }
+
+                // 3️⃣ Статистика
+                var statsUrl = $"https://v3.football.api-sports.io/fixtures/statistics?fixture={fixtureId}";
+                var statsResponse = await client.GetAsync(statsUrl);
+                if (statsResponse.IsSuccessStatusCode)
+                {
+                    var statsJson = await statsResponse.Content.ReadAsStringAsync();
+                    var statsResult = JsonConvert.DeserializeObject<StatisticsApiResponse>(statsJson);
+                    vm.Statistics = statsResult?.response ?? new List<TeamStatistics>();
+                }
+
+                // 4️⃣ Класация на лигата
+                if (leagueId > 0 && season > 0)
+                {
+                    var standUrl = $"https://v3.football.api-sports.io/standings?league={leagueId}&season={season}";
+                    var standResponse = await client.GetAsync(standUrl);
+                    if (standResponse.IsSuccessStatusCode)
+                    {
+                        var standJson = await standResponse.Content.ReadAsStringAsync();
+                        var standResult = JsonConvert.DeserializeObject<StandingsApiResponse>(standJson);
+                        var standings = standResult?.response?.FirstOrDefault()?.league?.standings?.FirstOrDefault();
+                        if (standings != null)
+                        {
+                            vm.Standings = standings;
+                            vm.HomeStanding = standings.FirstOrDefault(s => s.team?.id == homeTeamId);
+                            vm.AwayStanding = standings.FirstOrDefault(s => s.team?.id == awayTeamId);
+                        }
+                    }
+                }
+
+                // 5️⃣ H2H — последните 10 мача между двата отбора
+                if (homeTeamId > 0 && awayTeamId > 0)
+                {
+                    var h2hUrl = $"https://v3.football.api-sports.io/fixtures/headtohead?h2h={homeTeamId}-{awayTeamId}&last=10";
+                    var h2hResponse = await client.GetAsync(h2hUrl);
+                    if (h2hResponse.IsSuccessStatusCode)
+                    {
+                        var h2hJson = await h2hResponse.Content.ReadAsStringAsync();
+                        var h2hResult = JsonConvert.DeserializeObject<FootballApiResponse>(h2hJson);
+                        vm.H2HMatches = h2hResult?.response ?? new List<FootballMatch>();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading match detail for fixture {FixtureId}", fixtureId);
+                vm.ApiError = ex.Message;
+            }
+
+            return View("MatchDetail", vm);
+        }
+
+        // 🏆 Пълна класация на лигата
+        public async Task<IActionResult> Standings(int leagueId, int season, string leagueName)
+        {
+            var vm = new FullStandingsViewModel
+            {
+                LeagueId = leagueId,
+                Season = season,
+                LeagueName = leagueName
+            };
+
+            try
+            {
+                var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+                string apiKey = configuration["ApiKeys:ApiSports"] ?? "";
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add("x-apisports-key", apiKey);
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.Timeout = TimeSpan.FromSeconds(30);
+
+                var standUrl = $"https://v3.football.api-sports.io/standings?league={leagueId}&season={season}";
+                var standResponse = await client.GetAsync(standUrl);
+                
+                if (standResponse.IsSuccessStatusCode)
+                {
+                    var standJson = await standResponse.Content.ReadAsStringAsync();
+                    var standResult = JsonConvert.DeserializeObject<StandingsApiResponse>(standJson);
+                    
+                    // Проверка за API грешки
+                    if (standResult != null && standResult.errors != null)
+                    {
+                        var errorsJson = JsonConvert.SerializeObject(standResult.errors);
+                        if (errorsJson.Contains("requests") || errorsJson.Contains("plan"))
+                        {
+                            ViewBag.Error = "❌ Превишен лимит на API заявки или грешка в плана. Моля опитай пак по-късно.";
+                            return View(vm);
+                        }
+                    }
+
+                    var leagueData = standResult?.response?.FirstOrDefault()?.league;
+                    
+                    if (leagueData != null && leagueData.standings != null && leagueData.standings.Any())
+                    {
+                        vm.Standings = leagueData.standings.FirstOrDefault() ?? new List<StandingEntry>();
+                        vm.LeagueLogo = leagueData.logo;
+                        // Ако имаме държава като стринг, може да оставим флага празен или да го вземем от друго място
+                        // За момента спираме грешката при десериализация
+                        vm.Flag = null; 
+                    }
+                    else
+                    {
+                        ViewBag.Error = "❌ Няма намерени данни за класацията за този сезон.";
+                    }
+                }
+                else
+                {
+                    ViewBag.Error = $"❌ Грешка от API: {standResponse.StatusCode}";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading standings for league {LeagueId}", leagueId);
+                ViewBag.Error = $"❌ Системна грешка: {ex.Message}";
+            }
+
+            return View(vm);
+        }
     }
 
     // 🧩 Модели за Football API
@@ -350,6 +544,7 @@ namespace PredictLeague.Controllers
 
     public class Fixture
     {
+        public int id { get; set; }
         public DateTime date { get; set; }
         public Status status { get; set; }
     }
@@ -368,6 +563,7 @@ namespace PredictLeague.Controllers
 
     public class Team
     {
+        public int id { get; set; }
         public string name { get; set; }
         public string logo { get; set; }
     }
@@ -376,5 +572,192 @@ namespace PredictLeague.Controllers
     {
         public int? home { get; set; }
         public int? away { get; set; }
+    }
+
+    // 📋 ViewModel за детайлната страница на мач
+    public class MatchDetailViewModel
+    {
+        public int FixtureId { get; set; }
+        public int HomeTeamId { get; set; }
+        public int AwayTeamId { get; set; }
+        public string HomeTeam { get; set; }
+        public string AwayTeam { get; set; }
+        public string HomeLogo { get; set; }
+        public string AwayLogo { get; set; }
+        public string MatchDate { get; set; }
+        public string Status { get; set; }
+        public int? HomeScore { get; set; }
+        public int? AwayScore { get; set; }
+        public int LeagueId { get; set; }
+        public int Season { get; set; }
+        // Стадион
+        public string VenueName { get; set; }
+        public string VenueCity { get; set; }
+        // Съставите & Статистика
+        public List<TeamLineup> Lineups { get; set; } = new();
+        public List<TeamStatistics> Statistics { get; set; } = new();
+        // Класация
+        public List<StandingEntry> Standings { get; set; } = new();
+        public StandingEntry HomeStanding { get; set; }
+        public StandingEntry AwayStanding { get; set; }
+        // H2H
+        public List<FootballMatch> H2HMatches { get; set; } = new();
+        public string ApiError { get; set; }
+    }
+
+    public class FullStandingsViewModel
+    {
+        public int LeagueId { get; set; }
+        public int Season { get; set; }
+        public string LeagueName { get; set; }
+        public string LeagueLogo { get; set; }
+        public string Flag { get; set; }
+        public List<StandingEntry> Standings { get; set; } = new();
+    }
+
+    // 📋 Модели за Lineups API
+    public class LineupsApiResponse
+    {
+        public List<TeamLineup> response { get; set; }
+    }
+
+    public class TeamLineup
+    {
+        public LineupTeam team { get; set; }
+        public string formation { get; set; }
+        public List<LineupPlayer> startXI { get; set; } = new();
+        public List<LineupPlayer> substitutes { get; set; } = new();
+        public LineupCoach coach { get; set; }
+    }
+
+    public class LineupTeam
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public string logo { get; set; }
+        public object colors { get; set; }
+    }
+
+    public class LineupPlayer
+    {
+        public LineupPlayerInfo player { get; set; }
+    }
+
+    public class LineupPlayerInfo
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public int? number { get; set; }
+        public string pos { get; set; }
+        public string grid { get; set; }
+    }
+
+    public class LineupCoach
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public string photo { get; set; }
+    }
+
+    // 📊 Модели за Statistics API
+    public class StatisticsApiResponse
+    {
+        public List<TeamStatistics> response { get; set; }
+    }
+
+    public class TeamStatistics
+    {
+        public LineupTeam team { get; set; }
+        public List<StatisticItem> statistics { get; set; } = new();
+    }
+
+    public class StatisticItem
+    {
+        public string type { get; set; }
+        public object value { get; set; }
+    }
+
+    // 🏟️ Venue модел
+    public class Venue
+    {
+        public int? id { get; set; }
+        public string name { get; set; }
+        public string city { get; set; }
+    }
+
+    // Fixture Detail (вкл. venue)
+    public class FixtureDetail
+    {
+        public int id { get; set; }
+        public Venue venue { get; set; }
+        public DateTime date { get; set; }
+        public Status status { get; set; }
+    }
+
+    public class FixtureDetailMatch
+    {
+        public FixtureDetail fixture { get; set; }
+        public Teams teams { get; set; }
+        public Goals goals { get; set; }
+    }
+
+    public class FixtureDetailApiResponse
+    {
+        public List<FixtureDetailMatch> response { get; set; }
+    }
+
+    // 📊 Standings модели
+    public class StandingsApiResponse
+    {
+        public List<StandingsResponseItem> response { get; set; }
+        [JsonProperty("errors")]
+        public object errors { get; set; }
+    }
+
+    public class StandingsResponseItem
+    {
+        public LeagueStandings league { get; set; }
+    }
+
+    public class LeagueStandings
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public string logo { get; set; }
+        public string country { get; set; } // API връща стринг "Spain", не обект
+        public List<List<StandingEntry>> standings { get; set; }
+    }
+
+    public class Country
+    {
+        public string name { get; set; }
+        public string flag { get; set; }
+    }
+
+    public class StandingEntry
+    {
+        public int? rank { get; set; }
+        public Team team { get; set; }
+        public int? points { get; set; }
+        public int? goalsDiff { get; set; }
+        public string form { get; set; }
+        public string description { get; set; }
+        public StandingStats all { get; set; }
+    }
+
+    public class StandingStats
+    {
+        public int played { get; set; }
+        public int win { get; set; }
+        public int draw { get; set; }
+        public int lose { get; set; }
+        public StandingGoals goals { get; set; }
+    }
+
+    public class StandingGoals
+    {
+        [JsonProperty("for")]
+        public int goalsFor { get; set; }
+        public int against { get; set; }
     }
 }
