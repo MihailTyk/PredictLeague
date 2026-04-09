@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace PredictLeague.Models
 {
@@ -9,6 +9,7 @@ namespace PredictLeague.Models
         public string HomeTeam { get; set; } = string.Empty;
         public string AwayTeam { get; set; } = string.Empty;
 
+        public int? FixtureId { get; set; }
         public DateTime StartTime { get; set; }
         public bool IsFinished { get; set; } = false;
 

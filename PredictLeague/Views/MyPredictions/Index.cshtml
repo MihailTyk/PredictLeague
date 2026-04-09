@@ -1,145 +1,212 @@
-﻿@model IEnumerable<PredictLeague.Models.Prediction>
+@model IEnumerable<PredictLeague.Models.Prediction>
 
 @{
-    ViewData["Title"] = "My Predictions";
+    ViewData["Title"] = "Моите Прогнози";
+
+    // Показваме само най-новата прогноза за всеки мач, ако има дубликати
+    var uniquePredictions = Model
+        .GroupBy(p => p.MatchId)
+        .Select(g => g.OrderByDescending(x => x.CreatedAt).First())
+        .OrderByDescending(x => x.CreatedAt)
+        .ToList();
 }
 
-<div class="container mt-4">
-
-    <h2 class="fw-bold text-primary mb-4">
-        🎯 My Predictions
-    </h2>
-
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+<style>
+    .predictions-container {
+        padding: 2rem 0;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .header-section {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        margin-bottom: 2.5rem;
+        text-align: center;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        border: 1px solid rgba(255,255,255,0.05);
     }
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    .prediction-card {
+        background: rgba(18, 18, 18, 0.7);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
     }
 
-    @if (!Model.Any())
+    .prediction-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        border-color: rgba(255, 215, 0, 0.3);
+    }
+
+    .match-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .team-name {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #fff;
+        width: 40%;
+    }
+
+    .score-display {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .score-badge {
+        background: #000;
+        padding: 10px 25px;
+        border-radius: 14px;
+        font-size: 2rem;
+        font-weight: 900;
+        color: #ffd700;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        box-shadow: inset 0 0 15px rgba(255, 215, 0, 0.1);
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 2rem;
+        margin-top: 1.5rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .detail-label {
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.45);
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 700;
+    }
+
+    .detail-value {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.05rem;
+    }
+
+    .points-section {
+        background: linear-gradient(90deg, #ffd700, #ffa500);
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        color: #000;
+        font-weight: 900;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .status-badge {
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+
+    .new-tag {
+        position: absolute;
+        top: 20px;
+        right: -35px;
+        background: #e91e63;
+        color: #fff;
+        padding: 5px 40px;
+        transform: rotate(45deg);
+        font-size: 0.7rem;
+        font-weight: 900;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+</style>
+
+<div class="predictions-container">
+    <div class="header-section animate__animated animate__fadeInDown">
+        <h1 class="display-4 fw-bold text-white mb-2">🎯 Моите Прогнози</h1>
+        <p class="lead text-white-50">Брой мачове: @uniquePredictions.Count | Общо точки: @uniquePredictions.Sum(p => p.Points) ⭐</p>
+    </div>
+
+    @if (!uniquePredictions.Any())
     {
-        <div class="alert alert-info text-center">
-            You haven't made any predictions yet.
+        <div class="text-center py-5">
+            <h3 class="text-white-50">Все още нямате направени прогнози.</h3>
+            <a href="/Matches" class="btn btn-warning mt-4 px-5 py-3 rounded-pill fw-bold">Започни сега!</a>
         </div>
     }
     else
     {
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-muted">Total Predictions</h5>
-                        <h2 class="fw-bold text-primary">@Model.Count()</h2>
+        @foreach (var p in uniquePredictions)
+        {
+            var isNew = (DateTime.Now - p.CreatedAt).TotalMinutes < 5;
+            <div class="prediction-card animate__animated animate__fadeInUp">
+                @if (isNew) { <div class="new-tag">NEW!</div> }
+                
+                <div class="match-header">
+                    <div class="team-name">@p.Match.HomeTeam</div>
+                    
+                    <div class="score-display">
+                        <div class="detail-label mb-2">Вашата Прогноза</div>
+                        <div class="score-badge">@p.PredictedHomeScore : @p.PredictedAwayScore</div>
+                    </div>
+
+                    <div class="team-name text-end">@p.Match.AwayTeam</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-4">
+                    <div class="details-grid flex-grow-1">
+                        <div class="detail-item">
+                            <span class="detail-label">⚽ Голмайстор</span>
+                            <span class="detail-value">@(string.IsNullOrEmpty(p.AnytimeGoalscorer) ? "Няма" : p.AnytimeGoalscorer)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">⛳ Корнери</span>
+                            <span class="detail-value">@p.PredictedCorners</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">🟨 Картони</span>
+                            <span class="detail-value">@p.PredictedYellowCards ж. / @p.PredictedRedCards ч.</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">📅 Направена на</span>
+                            <span class="detail-value">@p.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                        </div>
+                    </div>
+
+                    <div class="points-section">
+                        @if (p.Match.IsFinished)
+                        {
+                            <span>@p.Points.ToString() PTS</span>
+                            @if (p.Points == 10) { <span>⚡ ТОЧЕН!</span> }
+                            else if (p.Points > 0) { <span>🧤 ЧАСТИЧЕН</span> }
+                            else { <span>❌ ПРОПУСК</span> }
+                        }
+                        else
+                        {
+                            <span>@p.Points.ToString() PTS</span>
+                            <span style="font-size: 0.8rem; opacity: 0.7;">(Очаква се)</span>
+                        }
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-muted">Total Points</h5>
-                        <h2 class="fw-bold text-success">@Model.Sum(p => p.Points) ⭐</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="table-responsive shadow-sm rounded">
-            <table class="table table-hover text-center align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Match</th>
-                        <th>Your Prediction</th>
-                        <th>Result</th>
-                        <th>Points</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var p in Model)
-                    {
-                        var isNew = (DateTime.Now - p.CreatedAt).TotalMinutes < 5;
-                        var rowClass = "";
-                        var badgeClass = "bg-info text-dark";
-
-                        if (p.Match.IsFinished)
-                        {
-                            if (p.Points > 0)
-                            {
-                                rowClass = "table-success";
-                                badgeClass = "bg-success";
-                            }
-                            else
-                            {
-                                rowClass = "table-danger";
-                                badgeClass = "bg-danger";
-                            }
-                        }
-                        else if (isNew)
-                        {
-                            rowClass = "table-info";
-                        }
-
-                        <tr class="@rowClass">
-                            <td>
-                                <b>@p.Match.HomeTeam</b> vs <b>@p.Match.AwayTeam</b>
-                                @if (isNew)
-                                {
-                                    <span class="badge @badgeClass ms-2">NEW!</span>
-                                }
-                            </td>
-
-                            <td>
-                                @p.PredictedHomeScore : @p.PredictedAwayScore
-                            </td>
-
-                            <td>
-                                @if (p.Match.IsFinished)
-                                {
-                                    <b>@p.Match.HomeScore - @p.Match.AwayScore</b>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Upcoming</span>
-                                }
-                            </td>
-
-                            <td>
-                                @if (p.Match.IsFinished)
-                                {
-                                    @if (p.Points == 10)
-                                    {
-                                        <span class="badge bg-warning text-dark">@p.Points ⭐ Exact!</span>
-                                    }
-                                    else if (p.Points == 3)
-                                    {
-                                        <span class="badge bg-info">@p.Points ⭐ Partial!</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">@p.Points ⭐ Miss!</span>
-                                    }
-                                }
-                                else
-                                {
-                                    <span class="badge bg-light text-dark">Pending</span>
-                                }
-                            </td>
-
-                            <td>@p.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+        }
     }
 </div>

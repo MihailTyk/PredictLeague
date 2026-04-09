@@ -156,32 +156,12 @@
                 </div>
             </div>
 
-            <div class="mb-5">
-                <label asp-for="PredictedWinner" class="form-label">Кой ще победи? (1X2)</label>
-                <select asp-for="PredictedWinner" class="form-select form-select-lg">
-                    <option value="">-- Избери победител --</option>
-                    <option value="Home">@match.HomeTeam 🏠</option>
-                    <option value="Draw">Равенство (Draw) 🤝</option>
-                    <option value="Away">@match.AwayTeam 🚩</option>
-                </select>
-                <span asp-validation-for="PredictedWinner" class="text-danger small"></span>
-            </div>
 
             <!-- Голмайстори -->
             <div class="section-title">
                 <span>⚽</span> Голове и Голмайстори
             </div>
 
-            <div class="mb-4">
-                <label asp-for="GoalScoringPrediction" class="form-label">Ще има ли голове от двата отбора?</label>
-                <select asp-for="GoalScoringPrediction" class="form-select form-select-lg">
-                    <option value="">-- Избери опция --</option>
-                    <option value="Both">И двата отбора (BTTS) ⚽⚽</option>
-                    <option value="Home Only">Само @match.HomeTeam 🏠</option>
-                    <option value="Away Only">Само @match.AwayTeam 🚩</option>
-                    <option value="None">Никой няма да вкара (0:0) ❌</option>
-                </select>
-            </div>
 
             <div class="mb-5">
                 <label asp-for="AnytimeGoalscorer" class="form-label">Играч да отбележи (Anytime Scorer)</label>

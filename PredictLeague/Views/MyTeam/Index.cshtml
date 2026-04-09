@@ -20,6 +20,8 @@
                 <!option value="4-3-3" @(Model.Settings.Formation == "4-3-3" ? "selected" : "")>4-3-3 Attack</!option>
                 <!option value="3-5-2" @(Model.Settings.Formation == "3-5-2" ? "selected" : "")>3-5-2 Dynamic</!option>
                 <!option value="5-3-2" @(Model.Settings.Formation == "5-3-2" ? "selected" : "")>5-3-2 Defensive</!option>
+                <!option value="4-2-3-1" @(Model.Settings.Formation == "4-2-3-1" ? "selected" : "")>4-2-3-1 Modern</!option>
+                <!option value="3-4-3" @(Model.Settings.Formation == "3-4-3" ? "selected" : "")>3-4-3 Total Attack</!option>
             </select>
         </form>
     </div>
@@ -48,12 +50,19 @@
                         <div class="player-slot @posClass" onclick="openPlayerSelector('@pos')">
                              @if (player != null)
                              {
-                                 <div class="player-token verified">
+                                 <div class="player-token verified @(player.Rating >= 85 ? "rare" : "")">
+                                     <!-- Player Photo Background -->
+                                     <img src="@(string.IsNullOrEmpty(player.PhotoUrl) ? "https://cdn-icons-png.flaticon.com/512/166/166344.png" : player.PhotoUrl)" 
+                                          alt="@player.PlayerName" class="player-image-bg" />
+                                     
                                      <div class="player-rating">@player.Rating.ToString("0")</div>
-                                     <div class="player-name text-truncate">@player.PlayerName</div>
                                      <div class="player-pos-badge">@pos</div>
                                      
-                                     <!-- Remove Button (visible on hover) -->
+                                     <div class="card-overlay">
+                                         <div class="player-name text-truncate">@player.PlayerName</div>
+                                     </div>
+                                     
+                                     <!-- Remove Button -->
                                      <form asp-action="RemovePlayer" class="remove-btn-form">
                                          <input type="hidden" name="playerId" value="@player.Id" />
                                          <button type="submit" class="btn-remove" onclick="event.stopPropagation()">×</button>
@@ -199,6 +208,58 @@
             if (pos == "ST") return "pos-st-c"; // Center Striker
             if (pos == "RW") return "pos-rw";
         }
+        else if (formation == "3-5-2")
+        {
+            if (pos == "CB1") return "pos-lcb";
+            if (pos == "CB2") return "pos-ccb";
+            if (pos == "CB3") return "pos-rcb";
+            if (pos == "LM") return "pos-lm";
+            if (pos == "RM") return "pos-rm";
+            if (pos == "CM1") return "pos-lcm";
+            if (pos == "CM2") return "pos-ccm";
+            if (pos == "CM3") return "pos-rcm";
+            if (pos == "ST1") return "pos-st1";
+            if (pos == "ST2") return "pos-st2";
+        }
+        else if (formation == "5-3-2")
+        {
+            if (pos == "LB") return "pos-lb";
+            if (pos == "RB") return "pos-rb";
+            if (pos == "CB1") return "pos-lcb";
+            if (pos == "CB2") return "pos-ccb";
+            if (pos == "CB3") return "pos-rcb";
+            if (pos == "CM1") return "pos-lcm";
+            if (pos == "CM2") return "pos-ccm";
+            if (pos == "CM3") return "pos-rcm";
+            if (pos == "ST1") return "pos-st1";
+            if (pos == "ST2") return "pos-st2";
+        }
+        else if (formation == "4-2-3-1")
+        {
+            if (pos == "LB") return "pos-lb";
+            if (pos == "RB") return "pos-rb";
+            if (pos == "CB1") return "pos-cb1";
+            if (pos == "CB2") return "pos-cb2";
+            if (pos == "DM1") return "pos-ldm";
+            if (pos == "DM2") return "pos-rdm";
+            if (pos == "LM") return "pos-lm";
+            if (pos == "CAM") return "pos-cam";
+            if (pos == "RM") return "pos-rm";
+            if (pos == "ST") return "pos-st-c";
+        }
+        else if (formation == "3-4-3")
+        {
+            if (pos == "CB1") return "pos-lcb";
+            if (pos == "CB2") return "pos-ccb";
+            if (pos == "CB3") return "pos-rcb";
+            if (pos == "LM") return "pos-lm";
+            if (pos == "RM") return "pos-rm";
+            if (pos == "CM1") return "pos-cm1";
+            if (pos == "CM2") return "pos-cm2";
+            if (pos == "LW") return "pos-lw";
+            if (pos == "RW") return "pos-rw";
+            if (pos == "ST") return "pos-st-c";
+        }
         
         return "pos-gk"; // fallback
     }
@@ -209,201 +270,223 @@
     .pitch-container {
         width: 100%;
         padding-top: 135%; /* Aspect Ratio of a pitch roughly */
-        background-color: #4ba852;
+        background-color: #2d5a27;
         position: relative;
-        border: 4px solid #fff;
-        box-shadow: inset 0 0 50px rgba(0,0,0,0.2);
+        border: 4px solid rgba(255,255,255,0.8);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        border-radius: 20px !important;
     }
     
     .pitch-grass {
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background: repeating-linear-gradient(
-            0deg,
-            #4ba852,
-            #4ba852 10%,
-            #52b759 10%,
-            #52b759 20%
-        );
-        opacity: 0.8;
+        background: 
+            linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
+            repeating-linear-gradient(
+                0deg,
+                #2d5a27,
+                #2d5a27 10%,
+                #34682e 10%,
+                #34682e 20%
+            );
+        opacity: 1;
     }
     
-    .pitch-lines {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        pointer-events: none;
+    /* Center circle and other lines with glowing effect */
+    .pitch-lines div {
+        border-color: rgba(255,255,255,0.4) !important;
+        box-shadow: 0 0 10px rgba(255,255,255,0.1);
     }
-    
+
     .pitch-lines .half-line {
         position: absolute;
         top: 50%;
         left: 0;
         right: 0;
         height: 2px;
-        background: rgba(255,255,255,0.6);
+        background: rgba(255,255,255,0.4);
     }
     
     .pitch-lines .center-circle {
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 20%;
-        padding-top: 20%;
-        border: 2px solid rgba(255,255,255,0.6);
+        width: 25%;
+        padding-top: 25%;
+        border: 2px solid rgba(255,255,255,0.4);
         border-radius: 50%;
         transform: translate(-50%, -50%);
     }
 
-    .box-area-top {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 40%;
-        height: 16%;
-        border: 2px solid rgba(255,255,255,0.6);
-        border-top: none;
-    }
-    
-    .box-area-bottom {
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 40%;
-        height: 16%;
-        border: 2px solid rgba(255,255,255,0.6);
-        border-bottom: none;
-    }
-
-    /* Player Slots */
+    /* Player Slots with Transitions */
     .player-slot {
         position: absolute;
         transform: translate(-50%, -50%);
-        width: 18%; /* Relative size */
-        height: 12%; 
+        width: 16%; 
+        height: 14%; 
         display: flex;
         justify-content: center;
         align-items: center;
         cursor: pointer;
-        transition: transform 0.2s;
+        transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* Smooth movement for formation change */
         z-index: 2;
     }
     
     .player-slot:hover {
-        transform: translate(-50%, -50%) scale(1.1);
         z-index: 10;
+        transform: translate(-50%, -50%) scale(1.15) !important;
     }
 
-    /* Token Styles */
+    /* FIFA STYLE CARD */
     .player-token {
         width: 100%;
         height: 100%;
-        border-radius: 8px;
+        border-radius: 6px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        justify-content: flex-end;
         position: relative;
+        overflow: hidden;
+        background-size: cover;
+        background-position: center;
+        transition: box-shadow 0.3s;
     }
-    
+
     .player-token.verified {
-        background: linear-gradient(135deg, #0b3d91 0%, #1e90ff 100%);
-        color: white;
+        background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
         border: 2px solid #ffd700;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
     }
-    
-    .player-token.empty {
-        background: rgba(255,255,255,0.3);
-        border: 2px dashed rgba(255,255,255,0.8);
-        color: white;
+
+    /* Gold Gradient for Rare Players (Rating > 85) */
+    .player-token.rare {
+        background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+        border: 2px solid #5d4a1e;
+        color: #1a1a1a !important;
     }
-    
-    .player-token.empty:hover {
-        background: rgba(255,255,255,0.5);
+
+    .player-image-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 1;
+        opacity: 0.85;
+        transition: opacity 0.3s;
     }
-    
+
+    .player-token:hover .player-image-bg {
+        opacity: 1;
+    }
+
+    .card-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+        padding: 5px;
+        z-index: 2;
+        text-align: center;
+    }
+
+    .player-token.rare .card-overlay {
+        background: linear-gradient(to top, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%);
+    }
+
     .player-rating {
+        position: absolute;
+        top: 5px;
+        left: 5px;
         font-weight: 900;
-        font-size: 1.2rem;
-        line-height: 1;
+        font-size: 1rem;
+        z-index: 3;
+        background: rgba(0,0,0,0.6);
         color: #ffd700;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        padding: 2px 4px;
+        border-radius: 4px;
+        line-height: 1;
+    }
+
+    .player-token.rare .player-rating {
+        background: #1a1a1a;
+        color: #fff;
     }
     
     .player-name {
-        font-size: 0.7rem;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        max-width: 90%;
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .player-token.rare .player-name {
+        color: #222;
+        text-shadow: none;
     }
     
     .player-pos-badge {
         position: absolute;
-        top: -8px;
-        background: #222;
+        top: 5px;
+        right: 5px;
+        background: #ffd700;
+        color: #000;
+        font-size: 0.55rem;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-weight: 900;
+        z-index: 3;
+    }
+    
+    .player-token.empty {
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(4px);
+        border: 2px dashed rgba(255,255,255,0.3);
+        color: rgba(255,255,255,0.5);
+    }
+    
+    .player-token.empty:hover {
+        background: rgba(255,255,255,0.2);
+        border-color: #fff;
         color: #fff;
-        font-size: 0.6rem;
-        padding: 1px 5px;
-        border-radius: 4px;
-        font-weight: bold;
-        text-transform: uppercase;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .remove-btn-form {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        opacity: 0;
-        transition: opacity 0.2s;
-    }
-    
-    .player-slot:hover .remove-btn-form {
-        opacity: 1;
-    }
-    
-    .btn-remove {
-        background: #dc3545;
-        color: white;
-        border: none;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        line-height: 1;
-        cursor: pointer;
     }
 
     /* POSITIONS CSS (Top% Left%) */
-    /* 4-4-2 */
-    .pos-gk { top: 92%; left: 50%; }
+    .pos-gk { top: 88%; left: 50%; }
     
-    .pos-lb { top: 75%; left: 15%; }
-    .pos-cb1 { top: 80%; left: 35%; }
-    .pos-cb2 { top: 80%; left: 65%; }
-    .pos-rb { top: 75%; left: 85%; }
+    .pos-lb { top: 72%; left: 15%; }
+    .pos-cb1 { top: 76%; left: 35%; }
+    .pos-cb2 { top: 76%; left: 65%; }
+    .pos-rb { top: 72%; left: 85%; }
     
-    .pos-lm { top: 45%; left: 15%; } /* Midfield line */
+    .pos-lm { top: 45%; left: 15%; }
     .pos-cm1 { top: 50%; left: 35%; }
     .pos-cm2 { top: 50%; left: 65%; }
     .pos-rm { top: 45%; left: 85%; }
     
-    .pos-st1 { top: 15%; left: 35%; }
-    .pos-st2 { top: 15%; left: 65%; }
+    /* 3-man defense / 5-man defense specials */
+    .pos-lcb { top: 76%; left: 25%; }
+    .pos-ccb { top: 80%; left: 50%; }
+    .pos-rcb { top: 76%; left: 75%; }
     
-    /* 4-3-3 Variants */
-    .pos-lcm { top: 50%; left: 25%; }
-    .pos-ccm { top: 55%; left: 50%; }
-    .pos-rcm { top: 50%; left: 75%; }
+    .pos-lcm { top: 52%; left: 28%; }
+    .pos-ccm { top: 58%; left: 50%; }
+    .pos-rcm { top: 52%; left: 72%; }
+
+    .pos-ldm { top: 62%; left: 35%; }
+    .pos-rdm { top: 62%; left: 65%; }
+    .pos-cam { top: 38%; left: 50%; }
+
+    .pos-st1 { top: 20%; left: 35%; }
+    .pos-st2 { top: 20%; left: 65%; }
     
-    .pos-lw { top: 15%; left: 15%; }
-    .pos-st-c { top: 10%; left: 50%; }
-    .pos-rw { top: 15%; left: 85%; }
+    .pos-lw { top: 18%; left: 18%; }
+    .pos-st-c { top: 12%; left: 50%; }
+    .pos-rw { top: 18%; left: 82%; }
 
 </style>

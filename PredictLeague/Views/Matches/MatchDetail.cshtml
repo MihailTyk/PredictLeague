@@ -680,12 +680,131 @@
                 <div class="team-name-lg">@Model.AwayTeam</div>
             </div>
         </div>
-        <div class="match-meta text-center mt-3">
-            🕒 @Model.MatchDate &nbsp;|&nbsp; Fixture #@Model.FixtureId
-        </div>
+    <!-- Match Meta Stats below Hero -->
+    <div class="match-meta text-center mt-3">
+        🕒 @Model.MatchDate &nbsp;|&nbsp; Fixture #@Model.FixtureId
     </div>
+</div>
 
-    <!-- Tabs Navigation -->
+@if (Model.UserPrediction != null)
+{
+    var p = Model.UserPrediction;
+    int currentLivePoints = 0;
+    string pointReason = "Miss!";
+    string badgeClass = "bg-danger";
+
+    if (Model.HomeScore.HasValue && Model.AwayScore.HasValue)
+    {
+        if (p.PredictedHomeScore == Model.HomeScore.Value && p.PredictedAwayScore == Model.AwayScore.Value)
+        {
+            currentLivePoints = 10;
+            pointReason = "Exact Score!";
+            badgeClass = "bg-warning text-dark";
+        }
+        else if (p.PredictedHomeScore == Model.HomeScore.Value || p.PredictedAwayScore == Model.AwayScore.Value)
+        {
+            currentLivePoints = 3;
+            pointReason = "Partial Match!";
+            badgeClass = "bg-info text-white";
+        }
+    }
+
+    <div class="live-tracker-card mb-4 animate__animated animate__fadeInUp">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="prediction-info">
+                    <div class="small-label">ТВОЯТА ПРОГНОЗА</div>
+                    <div class="prediction-value">@p.PredictedHomeScore : @p.PredictedAwayScore</div>
+                </div>
+                <div class="points-divider"></div>
+                <div class="current-standing">
+                    <div class="small-label">ТЕКУЩИ ТОЧКИ</div>
+                    <div class="points-value">@currentLivePoints <span class="pts-unit">PTS</span></div>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <span class="badge @badgeClass rounded-pill px-3 py-2">
+                    @(isLive ? "⏳ " : isFT ? "🏁 " : "📅 ") @pointReason
+                </span>
+            </div>
+        </div>
+        
+        @if (isLive)
+        {
+            <div class="live-progress-bar mt-3">
+                <div class="progress-fill"></div>
+            </div>
+            <div class="text-center mt-2 small text-muted">
+                Точките се променят в реално време спрямо резултата!
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .live-tracker-card {
+        background: rgba(30, 60, 114, 0.15);
+        border: 2px solid rgba(42, 82, 152, 0.3);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border-left: 6px solid #2a5298;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    
+    .small-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: rgba(255,255,255,0.5);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+    }
+    
+    .prediction-value {
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: #fff;
+    }
+    
+    .points-divider {
+        width: 1px;
+        height: 40px;
+        background: rgba(255,255,255,0.1);
+        margin: 0 1rem;
+    }
+    
+    .points-value {
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: #ffd700;
+        text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    }
+    
+    .pts-unit {
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+    
+    .live-progress-bar {
+        height: 4px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #2a5298, #e91e8c);
+        width: 100%;
+        animation: loading-bar 2s linear infinite;
+    }
+    
+    @@keyframes loading-bar {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+</style>
+
+<!-- Tabs Navigation -->
     <div class="tab-nav">
         <button class="tab-btn active" id="tab-predict-btn" onclick="switchTab('predict')">
             🎯 Направи Прогноза
@@ -707,7 +826,7 @@
                     <h5 class="text-white mb-3">Трябва да си влязъл в профила</h5>
                     <p class="mb-4">За да правиш прогнози, трябва да имаш акаунт.</p>
                     <div class="d-flex gap-3 justify-content-center flex-wrap">
-                        <a href="/Identity/Account/Login?returnUrl=@Uri.EscapeDataString(Context.Request.Path + Context.Request.QueryString)"
+                        <a href="/Identity/Account/Login?returnUrl=@Uri.EscapeDataString(Context.Request.Path)"
                            style="background:linear-gradient(135deg,#1e3c72,#2a5298); color:#fff; padding:0.75rem 2rem; border-radius:12px; font-weight:700; text-decoration:none;">
                             🔑 Влез в профила
                         </a>
@@ -725,6 +844,7 @@
                     <p class="text-center mb-3" style="color:rgba(255,255,255,0.45); font-size:0.88rem;">Познай точния резултат и спечели точки!</p>
 
                     <form method="post" action="/Predictions/CreateFromApi">
+                        <input type="hidden" name="fixtureId" value="@Model.FixtureId" />
                         <input type="hidden" name="homeTeam" value="@Model.HomeTeam" />
                         <input type="hidden" name="awayTeam" value="@Model.AwayTeam" />
                         <input type="hidden" name="startTime" value="@Model.MatchDate" />
@@ -733,13 +853,15 @@
                         <div class="score-input-row">
                             <div class="score-input-group">
                                 <label>@Model.HomeTeam</label>
-                                <input type="number" name="predictedHomeScore" min="0" max="20" value="0"
+                                <input type="number" name="predictedHomeScore" min="0" max="20" 
+                                       value="@(Model.UserPrediction?.PredictedHomeScore ?? 0)"
                                        class="score-number-input" id="homeScoreInput" />
                             </div>
                             <div class="score-separator">:</div>
                             <div class="score-input-group">
                                 <label>@Model.AwayTeam</label>
-                                <input type="number" name="predictedAwayScore" min="0" max="20" value="0"
+                                <input type="number" name="predictedAwayScore" min="0" max="20" 
+                                       value="@(Model.UserPrediction?.PredictedAwayScore ?? 0)"
                                        class="score-number-input" id="awayScoreInput" />
                             </div>
                         </div>
@@ -747,26 +869,24 @@
                         <!-- Extra options -->
                         <div class="extra-options">
                             <div class="option-group">
-                                <label>И двата отбора вкарват?</label>
-                                <select name="bothTeamsToScore" class="form-control-dark">
-                                    <option value="">-- Избери --</option>
-                                    <option value="true">✅ Да</option>
-                                    <option value="false">❌ Не</option>
-                                </select>
-                            </div>
-                            <div class="option-group">
                                 <label>Ъглови удара (прибл.)</label>
-                                <input type="number" name="predictedCorners" min="0" max="30" placeholder="напр. 9"
+                                <input type="number" name="predictedCorners" min="0" max="30" 
+                                       placeholder="напр. 9"
+                                       value="@(Model.UserPrediction?.PredictedCorners)"
                                        class="form-control-dark" />
                             </div>
                             <div class="option-group">
                                 <label>Жълти картони</label>
-                                <input type="number" name="predictedYellowCards" min="0" max="20" placeholder="напр. 3"
+                                <input type="number" name="predictedYellowCards" min="0" max="20" 
+                                       placeholder="напр. 3"
+                                       value="@(Model.UserPrediction?.PredictedYellowCards)"
                                        class="form-control-dark" />
                             </div>
                             <div class="option-group">
                                 <label>Червени картони</label>
-                                <input type="number" name="predictedRedCards" min="0" max="10" placeholder="напр. 0"
+                                <input type="number" name="predictedRedCards" min="0" max="10" 
+                                       placeholder="напр. 0"
+                                       value="@(Model.UserPrediction?.PredictedRedCards)"
                                        class="form-control-dark" />
                             </div>
                         </div>
@@ -783,7 +903,9 @@
                                             <optgroup label="@Model.HomeTeam">
                                                 @foreach (var pl in (Model.Lineups[0].startXI ?? new()).Concat(Model.Lineups[0].substitutes ?? new()))
                                                 {
-                                                    <option value="@pl.player?.name">@pl.player?.number — @pl.player?.name</option>
+                                                    <option value="@pl.player?.name" selected="@(Model.UserPrediction?.AnytimeGoalscorer == pl.player?.name)">
+                                                        @pl.player?.number — @pl.player?.name
+                                                    </option>
                                                 }
                                             </optgroup>
                                         }
@@ -792,7 +914,9 @@
                                             <optgroup label="@Model.AwayTeam">
                                                 @foreach (var pl in (Model.Lineups[1].startXI ?? new()).Concat(Model.Lineups[1].substitutes ?? new()))
                                                 {
-                                                    <option value="@pl.player?.name">@pl.player?.number — @pl.player?.name</option>
+                                                    <option value="@pl.player?.name" selected="@(Model.UserPrediction?.AnytimeGoalscorer == pl.player?.name)">
+                                                        @pl.player?.number — @pl.player?.name
+                                                    </option>
                                                 }
                                             </optgroup>
                                         }
@@ -801,13 +925,14 @@
                                 else
                                 {
                                     <input type="text" name="anytimeGoalscorer" placeholder="@firstPlayerName"
+                                           value="@Model.UserPrediction?.AnytimeGoalscorer"
                                            class="form-control-dark" />
                                 }
                             </div>
                         </div>
 
                         <button type="submit" class="btn-submit-predict">
-                            ✅ Завърши Прогнозата
+                            @(Model.UserPrediction != null ? "🔄 Актуализирай Прогнозата" : "✅ Завърши Прогнозата")
                         </button>
                     </form>
                 </div>

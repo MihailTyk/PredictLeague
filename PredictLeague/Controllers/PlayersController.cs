@@ -34,7 +34,11 @@ namespace PredictLeague.Controllers
                 { 140, "La Liga" },
                 { 135, "Serie A" },
                 { 78, "Bundesliga" },
-                { 2, "Champions League" }
+                { 2, "Champ. League" },
+                { 61, "Ligue 1" },
+                { 94, "Primeira Liga" },
+                { 88, "Eredivisie" },
+                { 172, "Parva Liga" }
             };
 
             ViewBag.CurrentLeagueId = leagueId;

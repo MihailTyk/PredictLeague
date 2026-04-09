@@ -1,55 +1,194 @@
-﻿@model IEnumerable<PredictLeague.Models.Prediction>
+@model IEnumerable<PredictLeague.Models.Prediction>
 
 @{
-    ViewData["Title"] = "Predictions";
+    ViewData["Title"] = "Моите Прогнози";
 }
 
-<h1>All Predictions</h1>
+<style>
+    .predictions-header {
+        background: linear-gradient(135deg, #0b1a2e 0%, #1e3c72 100%);
+        border-radius: 24px;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin-bottom: 3rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    .predictions-header::after {
+        content: '🎯';
+        position: absolute;
+        right: -30px;
+        top: -30px;
+        font-size: 12rem;
+        opacity: 0.1;
+        transform: rotate(15deg);
+    }
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
-</p>
+    .prediction-card-wide {
+        background: rgba(30, 60, 114, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    .prediction-card-wide:hover {
+        transform: translateY(-5px);
+        background: rgba(30, 60, 114, 0.2);
+        border-color: rgba(255,255,255,0.2);
+    }
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Match</th>
-            <th>Home Score</th>
-            <th>Away Score</th>
-            <th>Created At</th>
-            <th>Points</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
+    .match-info-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
 
-    <tbody>
-        @foreach (var item in Model)
+    .team-pill {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #fff;
+        width: 40%;
+    }
+    .team-pill.away { justify-content: flex-end; text-align: right; }
+
+    .score-box-mini {
+        background: #1a1a1a;
+        padding: 8px 20px;
+        border-radius: 12px;
+        font-weight: 900;
+        font-size: 1.4rem;
+        color: #ffd700;
+        border: 1px solid #ffd70033;
+    }
+
+    .stats-grid-mini {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .stat-item-mini {
+        display: flex;
+        flex-direction: column;
+    }
+    .stat-label-mini {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: rgba(255,255,255,0.4);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+    }
+    .stat-value-mini {
+        font-weight: 700;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .pts-badge-large {
+        background: linear-gradient(135deg, #ffd700, #b8860b);
+        color: #000;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 900;
+        box-shadow: 0 5px 15px rgba(218,165,32,0.3);
+    }
+
+    .action-btn-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .btn-action-mini {
+        padding: 8px 15px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+    .btn-edit { background: rgba(255,255,255,0.1); color: #fff; }
+    .btn-edit:hover { background: rgba(255,255,255,0.2); }
+    .btn-del { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .btn-del:hover { background: rgba(239,68,68,0.2); }
+    
+</style>
+
+<div class="container py-5">
+    <div class="predictions-header">
+        <h1 class="display-4 fw-bold text-white mb-2">📊 Моите Прогнози</h1>
+        <p class="lead opacity-75">История на твоите футболни познания</p>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div style="font-size: 5rem; margin-bottom: 1.5rem;"> vacío ⚽</div>
+            <h3 class="text-white">Все още нямаш направени прогнози.</h3>
+            <a href="/Matches" class="btn btn-primary btn-lg mt-3 rounded-pill px-5">Започни да прогнозираш!</a>
+        </div>
+    }
+    else
+    {
+        @foreach (var item in Model.OrderByDescending(p => p.CreatedAt))
         {
-            <tr>
-                <!-- Match -->
-                <td>
-                    @(item.Match != null
-                                    ? $"{item.Match.HomeTeam} 🆚 {item.Match.AwayTeam}"
-                                    : "Match not found")
-            </td>
+            <div class="prediction-card-wide animate__animated animate__fadeInUp">
+                <div class="match-info-strip">
+                    <div class="team-pill">
+                        @item.Match?.HomeTeam
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="stat-label-mini mb-1">Прогноза</div>
+                        <div class="score-box-mini">@item.PredictedHomeScore : @item.PredictedAwayScore</div>
+                    </div>
 
-                <!-- Predicted scores -->
-                <td>@item.PredictedHomeScore</td>
-                <td>@item.PredictedAwayScore</td>
+                    <div class="team-pill away">
+                        @item.Match?.AwayTeam
+                    </div>
+                </div>
 
-                <!-- Created date -->
-                <td>@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                <div class="d-flex flex-wrap justify-content-between align-items-end gap-4">
+                    <div class="stats-grid-mini flex-grow-1">
+                        <div class="stat-item-mini">
+                            <span class="stat-label-mini">⚽ Голмайстор</span>
+                            <span class="stat-value-mini">@(string.IsNullOrEmpty(item.AnytimeGoalscorer) ? "Няма" : item.AnytimeGoalscorer)</span>
+                        </div>
+                        <div class="stat-item-mini">
+                            <span class="stat-label-mini">⛳ Корнери</span>
+                            <span class="stat-value-mini">@item.PredictedCorners</span>
+                        </div>
+                        <div class="stat-item-mini">
+                            <span class="stat-label-mini">🟨 Картони</span>
+                            <span class="stat-value-mini">@(item.PredictedYellowCards)ж. / @(item.PredictedRedCards)ч.</span>
+                        </div>
+                        <div class="stat-item-mini">
+                            <span class="stat-label-mini">📅 Дата на залагане</span>
+                            <span class="stat-value-mini">@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                        </div>
+                    </div>
 
-                <!-- Points -->
-                <td>@item.Points</td>
-
-                <!-- Buttons -->
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Details</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
-                </td>
-            </tr>
-                }
-    </tbody>
-</table>
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="text-center">
+                            <div class="stat-label-mini">Спечелени</div>
+                            <div class="pts-badge-large">@item.Points PTS</div>
+                        </div>
+                        
+                        <div class="action-btn-group">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action-mini btn-edit">✏️</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action-mini btn-del">🗑️</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

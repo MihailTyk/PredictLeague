@@ -68,26 +68,80 @@ namespace PredictLeague.Controllers
 
         // 💡 Създаване на мач локално от API-то преди предсказване
         [HttpPost]
-        public async Task<IActionResult> CreateFromApi(string homeTeam, string awayTeam, DateTime startTime)
+        public async Task<IActionResult> CreateFromApi(int fixtureId, string homeTeam, string awayTeam, DateTime startTime, [Bind("PredictedHomeScore,PredictedAwayScore,PredictedCorners,PredictedYellowCards,PredictedRedCards,AnytimeGoalscorer")] Prediction prediction)
         {
-            var match = await _context.Match.FirstOrDefaultAsync(m => 
-                m.HomeTeam == homeTeam && 
-                m.AwayTeam == awayTeam && 
-                m.StartTime.Date == startTime.Date);
+            var match = await _context.Match.FirstOrDefaultAsync(m => m.FixtureId == fixtureId);
 
             if (match == null)
             {
-                match = new Match { 
-                    HomeTeam = homeTeam, 
-                    AwayTeam = awayTeam, 
-                    StartTime = startTime.ToLocalTime(), 
-                    IsFinished = false 
-                };
-                _context.Match.Add(match);
+                // Резервно търсене по имена и дата
+                match = await _context.Match.FirstOrDefaultAsync(m => 
+                    m.HomeTeam == homeTeam && 
+                    m.AwayTeam == awayTeam && 
+                    m.StartTime.Date == startTime.ToLocalTime().Date);
+                
+                if (match == null)
+                {
+                    match = new Match { 
+                        FixtureId = fixtureId,
+                        HomeTeam = homeTeam, 
+                        AwayTeam = awayTeam, 
+                        StartTime = startTime.ToLocalTime(), 
+                        IsFinished = false 
+                    };
+                    _context.Match.Add(match);
+                }
+                else
+                {
+                    match.FixtureId = fixtureId; // Пренасяме ID-то ако го е нямало
+                }
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToAction(nameof(Create), new { matchId = match.Id });
+            // 🛡️ Проверка за съществуваща прогноза за този потребител и мач
+            var currentUserId = _userManager.GetUserId(User);
+            var existing = await _context.Prediction
+                .FirstOrDefaultAsync(p => p.MatchId == match.Id && p.UserId == currentUserId);
+
+            if (existing != null)
+            {
+                // Актуализираме старата
+                existing.PredictedHomeScore = prediction.PredictedHomeScore;
+                existing.PredictedAwayScore = prediction.PredictedAwayScore;
+                existing.PredictedCorners = prediction.PredictedCorners;
+                existing.PredictedYellowCards = prediction.PredictedYellowCards;
+                existing.PredictedRedCards = prediction.PredictedRedCards;
+                existing.AnytimeGoalscorer = prediction.AnytimeGoalscorer;
+                existing.CreatedAt = DateTime.Now;
+
+                // Изчисляваме автоматично наново
+                if (existing.PredictedHomeScore > existing.PredictedAwayScore) existing.PredictedWinner = "Home";
+                else if (existing.PredictedHomeScore < existing.PredictedAwayScore) existing.PredictedWinner = "Away";
+                else existing.PredictedWinner = "Draw";
+
+                existing.BothTeamsToScore = (existing.PredictedHomeScore > 0 && existing.PredictedAwayScore > 0);
+                
+                _context.Update(existing);
+            }
+            else
+            {
+                // Записваме новата
+                prediction.MatchId = match.Id;
+                prediction.UserId = currentUserId;
+                prediction.CreatedAt = DateTime.Now;
+
+                if (prediction.PredictedHomeScore > prediction.PredictedAwayScore) prediction.PredictedWinner = "Home";
+                else if (prediction.PredictedHomeScore < prediction.PredictedAwayScore) prediction.PredictedWinner = "Away";
+                else prediction.PredictedWinner = "Draw";
+
+                prediction.BothTeamsToScore = (prediction.PredictedHomeScore > 0 && prediction.PredictedAwayScore > 0);
+
+                _context.Add(prediction);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "✅ Прогнозата е записана!";
+            return RedirectToAction("Index", "MyPredictions");
         }
 
         // 💾 Създаване на Prediction (POST)
@@ -111,6 +165,26 @@ namespace PredictLeague.Controllers
                 // 👉 записваме кой user прави предикта
                 prediction.UserId = _userManager.GetUserId(User);
                 prediction.CreatedAt = DateTime.Now;
+
+                // 🔄 Автоматично изчисляваме победителя и дали двата отбора вкарват
+                if (prediction.PredictedHomeScore > prediction.PredictedAwayScore)
+                    prediction.PredictedWinner = "Home";
+                else if (prediction.PredictedHomeScore < prediction.PredictedAwayScore)
+                    prediction.PredictedWinner = "Away";
+                else
+                    prediction.PredictedWinner = "Draw";
+
+                prediction.BothTeamsToScore = (prediction.PredictedHomeScore > 0 && prediction.PredictedAwayScore > 0);
+                
+                // За GoalScoringPrediction също автоматизираме
+                if (prediction.PredictedHomeScore > 0 && prediction.PredictedAwayScore > 0)
+                    prediction.GoalScoringPrediction = "Both";
+                else if (prediction.PredictedHomeScore > 0)
+                    prediction.GoalScoringPrediction = "Home Only";
+                else if (prediction.PredictedAwayScore > 0)
+                    prediction.GoalScoringPrediction = "Away Only";
+                else
+                    prediction.GoalScoringPrediction = "None";
 
                 _context.Prediction.Add(prediction);
                 await _context.SaveChangesAsync();

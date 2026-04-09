@@ -8,11 +8,13 @@ namespace PredictLeague.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly FootballNewsService _newsService;
+        private readonly FootballTransferService _transferService;
 
-        public HomeController(ILogger<HomeController> logger, FootballNewsService newsService)
+        public HomeController(ILogger<HomeController> logger, FootballNewsService newsService, FootballTransferService transferService)
         {
             _logger = logger;
             _newsService = newsService;
+            _transferService = transferService;
         }
 
         public async Task<IActionResult> Index()
@@ -20,8 +22,10 @@ namespace PredictLeague.Controllers
             try
             {
                 var newsList = await _newsService.GetNewsAsync();
-                // Използваме ViewData за да избегнем проблеми с динамични обекти
                 ViewData["NewsList"] = newsList;
+
+                var transfers = await _transferService.GetRecentTransfersAsync();
+                ViewData["Transfers"] = transfers;
             }
             catch (Exception ex)
             {

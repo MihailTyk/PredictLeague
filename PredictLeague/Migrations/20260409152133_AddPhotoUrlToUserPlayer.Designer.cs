@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PredictLeague.Data;
 
@@ -11,9 +12,11 @@ using PredictLeague.Data;
 namespace PredictLeague.Migrations
 {
     [DbContext(typeof(PredictLeagueContext))]
-    partial class PredictLeagueContextModelSnapshot : ModelSnapshot
+    [Migration("20260409152133_AddPhotoUrlToUserPlayer")]
+    partial class AddPhotoUrlToUserPlayer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -238,9 +241,6 @@ namespace PredictLeague.Migrations
                     b.Property<string>("AwayTeam")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("FixtureId")
-                        .HasColumnType("int");
 
                     b.Property<int?>("HomeScore")
                         .HasColumnType("int");

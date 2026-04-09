@@ -17,6 +17,7 @@ namespace PredictLeague.Models
         public string TeamName { get; set; } // Real life team
         
         public string? FieldPosition { get; set; } // e.g. "GK", "ST1", "CM2". Null if on bench.
+        public string? PhotoUrl { get; set; } // URL for player image
         public bool IsStarter => !string.IsNullOrEmpty(FieldPosition);
     }
 }

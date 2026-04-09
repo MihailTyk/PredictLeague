@@ -29,6 +29,7 @@ builder.Services.AddRazorPages();
 
 // ✅ Контролери и изгледи
 builder.Services.AddControllersWithViews();
+builder.Services.AddMemoryCache(); // 🚀 За по-бързо зареждане на трансфери
 
 // ✅ HttpClient за външни API заявки
 builder.Services.AddHttpClient();
@@ -36,6 +37,10 @@ builder.Services.AddHttpClient<FootballNewsService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("User-Agent", "PredictLeague/1.0");
+});
+builder.Services.AddHttpClient<FootballTransferService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
 });
 
 

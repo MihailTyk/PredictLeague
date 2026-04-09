@@ -1,64 +1,63 @@
 @model List<PredictLeague.Controllers.PlayerEntry>
 
 @{
-    ViewData["Title"] = "Топ Играчи";
+    ViewData["Title"] = "Футболен Пазар";
     var userPlayerIds = ViewBag.UserPlayerIds as HashSet<int> ?? new HashSet<int>();
 }
 
-<div class="container mt-4 mb-5">
-    <div class="text-center mb-4">
-        <h1 class="display-4 fw-bold" style="color: #0b3d91;">🏃 Всички Играчи</h1>
-        <p class="lead text-muted">Играчи от @ViewBag.CurrentLeagueName (Сезон @ViewBag.CurrentSeason)</p>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@700;900&display=swap" rel="stylesheet">
+
+<div class="elite-market-container">
+    <div class="market-header animate__animated animate__fadeIn">
+        <h1 class="market-title">⚽ ЕЛИТЕН СКAУТИНГ</h1>
+        <p class="market-subtitle">Открий следващата си суперзвезда от @ViewBag.CurrentLeagueName</p>
     </div>
 
-    <!-- League Selector -->
-    <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+    <!-- 🌐 League Navigation -->
+    <div class="league-pills-container animate__animated animate__fadeInUp">
         @if (ViewBag.Leagues != null)
         {
             foreach (var league in ViewBag.Leagues as Dictionary<int, string>)
             {
                 var isActive = ViewBag.CurrentLeagueId == league.Key;
-                var btnClass = isActive ? "btn-primary active-league scale-110" : "btn-outline-primary opacity-75";
-                
                 <a href="@Url.Action("Index", new { leagueId = league.Key, page = 1 })" 
-                   class="btn @btnClass rounded-pill px-4 fw-bold d-flex align-items-center shadow-sm transition-all">
-                    @if(league.Key == 39) { <span class="me-2">🏴</span> }
-                    else if(league.Key == 140) { <span class="me-2">🇪🇸</span> }
-                    else if(league.Key == 135) { <span class="me-2">🇮🇹</span> }
-                    else if(league.Key == 78) { <span class="me-2">🇩🇪</span> }
-                    else if(league.Key == 2) { <span class="me-2">🏆</span> }
+                   class="league-pill @(isActive ? "active" : "")">
+                    <span class="flag-icon">
+                        @if(league.Key == 39) { @("🏴") }
+                        else if(league.Key == 140) { @("🇪🇸") }
+                        else if(league.Key == 135) { @("🇮🇹") }
+                        else if(league.Key == 78) { @("🇩🇪") }
+                        else if(league.Key == 2) { @("🏆") }
+                        else if(league.Key == 61) { @("🇫🇷") }
+                        else if(league.Key == 94) { @("🇵🇹") }
+                        else if(league.Key == 88) { @("🇳🇱") }
+                        else if(league.Key == 172) { @("🇧🇬") }
+                    </span>
                     @league.Value
                 </a>
             }
         }
     </div>
 
-    <!-- 🔍 Search Bar -->
-    <div class="row justify-content-center mb-4">
-        <div class="col-md-8 col-lg-6">
-            <form method="get" asp-action="Index" class="d-flex input-group">
+    <!-- 🔍 Smart Search -->
+    <div class="search-wrapper row justify-content-center">
+        <div class="col-md-7">
+            <form method="get" asp-action="Index" class="search-form">
                 <input type="hidden" name="leagueId" value="@ViewBag.CurrentLeagueId" />
-                <input type="text" name="search" class="form-control rounded-pill rounded-end-0 border-end-0 ps-4 py-2" 
-                       placeholder="Търси играч..." 
-                       value="@ViewBag.SearchTerm" minlength="3">
-                <button type="submit" class="btn btn-primary rounded-pill rounded-start-0 px-4 fw-bold">Търси</button>
-            </form>
-            <div class="text-muted small mt-2 ms-3">
-                ℹ️ Моля, пишете имената на латиница (напр. <i>Yamal</i>, <i>Bellingham</i>)
-            </div>
-            @if (!string.IsNullOrEmpty(ViewBag.SearchTerm as string))
-            {
-                <div class="text-center mt-2">
-                    <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId })" class="text-danger text-decoration-none small">
-                        ❌ Изчисти търсенето
-                    </a>
+                <div class="search-input-group">
+                    <i class="search-icon">🔍</i>
+                    <input type="text" name="search" class="search-field" 
+                           placeholder="Потърси по име (напр. Haaland, Bellingham)..." 
+                           value="@ViewBag.SearchTerm">
+                    <button type="submit" class="search-btn">ТЪРСИ</button>
                 </div>
-            }
+            </form>
         </div>
     </div>
 
-    <!-- Pagination Controls (Top) -->
-    <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+    <!-- Pagination Stats -->
+    <div class="pagination-overview d-flex justify-content-between align-items-center">
         @{
             var currentPage = (int)(ViewBag.CurrentPage ?? 1);
             var totalPages = (int)(ViewBag.TotalPages ?? 1);
@@ -66,277 +65,369 @@
             var nextPage = currentPage + 1;
             var isFirstPage = currentPage == 1;
             var isLastPage = currentPage >= totalPages;
-            
-            // За следене на дубликати
             var shownPlayerIds = new HashSet<int>();
         }
 
         <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId, page = prevPage, search = ViewBag.SearchTerm })" 
-           class="btn btn-outline-secondary btn-sm @(isFirstPage ? "disabled" : "")">
-           ⬅️ Предишна
-        </a>
+           class="nav-btn @(isFirstPage ? "disabled" : "")">⬅️ Предишна</a>
 
-        <span class="text-muted small fw-bold">Стр. @currentPage / @totalPages</span>
+        <div class="page-indicator">Страница <span>@currentPage</span> от @totalPages</div>
 
         <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId, page = nextPage, search = ViewBag.SearchTerm })" 
-           class="btn btn-outline-primary btn-sm @(isLastPage ? "disabled" : "")">
-           Следваща ➡️
-        </a>
+           class="nav-btn @(isLastPage ? "disabled" : "")">Следваща ➡️</a>
     </div>
 
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success shadow-sm rounded-3 d-flex align-items-center justify-content-between">
-             <span>✅ @TempData["Success"]</span>
-             <a asp-controller="MyTeam" asp-action="Index" class="btn btn-sm btn-success fw-bold text-white shadow-sm">📋 Go to My Team ➡️</a>
+        <div class="market-alert success animate__animated animate__bounceIn">
+            <span>🚀 @TempData["Success"]</span>
+            <a asp-controller="MyTeam" asp-action="Index" class="alert-action">КЪМ МОЯ ОТБОР →</a>
         </div>
     }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger shadow-sm rounded-3">
-             ⚠️ @TempData["Error"]
-        </div>
-    }
-    @if (ViewBag.Error != null)
-    {
-        <div class="alert alert-danger shadow-sm rounded-3">
-            <i class="fs-4 me-2">⚠️</i> @ViewBag.Error
-        </div>
-    }
-    else if (ViewBag.Warning != null)
-    {
-        <div class="alert alert-warning shadow-sm rounded-3">
-             ℹ️ @ViewBag.Warning
-        </div>
-    }
-    else if (Model == null || !Model.Any())
-    {
-        <div class="alert alert-info shadow-sm rounded-3">
-            ⏳ Все още няма заредени играчи или всички на текущата страница са с 0 мача. Опитайте следващата страница.
-        </div>
-    }
-    else
-    {
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
-            
-            @* 1. ПОКАЗВАМЕ ТОП ГОЛМАЙСТОРИТЕ НАЙ-ОТГОРЕ *@
-            @if (ViewBag.TopScorers != null && string.IsNullOrEmpty(ViewBag.SearchTerm as string) && currentPage == 1)
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4 mt-2">
+        
+        @* 🏆 GOLD CARDS (Top Scorers) *@
+        @if (ViewBag.TopScorers != null && string.IsNullOrEmpty(ViewBag.SearchTerm as string) && currentPage == 1)
+        {
+            var topScorers = ViewBag.TopScorers as List<PredictLeague.Controllers.PlayerEntry>;
+            @foreach (var entry in topScorers)
             {
-                var topScorers = ViewBag.TopScorers as List<PredictLeague.Controllers.PlayerEntry>;
-                @foreach (var entry in topScorers)
-                {
-                     var player = entry.Player;
-                     var stats = entry.Statistics.FirstOrDefault();
-                     if (stats == null || shownPlayerIds.Contains(player.Id)) continue;
-                     
-                     shownPlayerIds.Add(player.Id); // Маркираме като показан
+                 var player = entry.Player;
+                 var stats = entry.Statistics.FirstOrDefault();
+                 if (stats == null || shownPlayerIds.Contains(player.Id)) continue;
+                 shownPlayerIds.Add(player.Id);
 
-                     int playerCost = 10;
-                     if (double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) && r > 0)
-                     {
-                         playerCost = (int)Math.Max(10, Math.Round(r * 5));
-                     }
+                 int playerCost = (int)Math.Max(10, Math.Round((double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) ? r : 0) * 5));
 
-                     <div class="col">
-                        <div class="card h-100 border-warning border-2 shadow player-card position-relative overflow-hidden" style="background: #fffdf5;">
-                            <div class="position-absolute top-0 end-0 bg-warning text-dark px-2 py-1 rounded-bottom-start fw-bold small shadow-sm z-1">
-                                👑 Top Scorer
-                            </div>
-                            <!-- Header -->
-                            <div class="text-center pt-4 pb-3 rounded-top" style="background: linear-gradient(135deg, #fff3cd 0%, #ffecb3 100%);">
-                                <img src="@player.Photo" class="rounded-circle border border-4 border-white shadow profile-img" alt="@player.Name">
-                            </div>
-                            <!-- Body -->
-                            <div class="card-body text-center pt-2">
-                                <h5 class="card-title fw-bold text-dark mb-1 text-truncate">@player.Name</h5>
-                                <div class="badge bg-white text-warning border border-warning mb-3">@stats.Team.Name</div>
-                                
-                                <div class="row text-center g-2 mb-3">
-                                    <div class="col-4">
-                                        <div class="p-2 rounded bg-white border border-warning h-100">
-                                            <div class="fw-bold text-warning fs-5">@(stats.Goals.Total ?? 0)</div>
-                                            <small class="text-muted d-block" style="font-size: 0.7rem;">ГОЛОВЕ</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="p-2 rounded bg-white border h-100">
-                                            <div class="fw-bold text-primary fs-5">@(stats.Goals.Assists ?? 0)</div>
-                                            <small class="text-muted d-block" style="font-size: 0.7rem;">АСИСТИ</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="p-2 rounded bg-white border h-100">
-                                            <div class="fw-bold text-secondary fs-5">
-                                                @(stats.Games.Rating != null && stats.Games.Rating.Length >= 3 ? stats.Games.Rating.Substring(0, 3) : "-")
-                                            </div>
-                                            <small class="text-muted d-block" style="font-size: 0.7rem;">РЕЙТИНГ</small>
-                                        </div>
-                                    </div>
+                 <div class="col">
+                    <div class="player-card rare">
+                        <div class="rare-ribbon">🏆 ТОП ГОЛМАЙСТОР</div>
+                        <div class="card-header-visual">
+                            <img src="@player.Photo" class="player-photo" alt="@player.Name">
+                            <img src="@stats.Team.Logo" class="team-mini-logo" alt="team">
+                        </div>
+                        <div class="card-content">
+                            <h3 class="player-name">@player.Name</h3>
+                            <div class="player-meta">@stats.Team.Name • <span class="pos-badge">@stats.Games.Position</span></div>
+                            
+                            <div class="stats-row">
+                                <div class="stat-box">
+                                    <span class="stat-num">@(stats.Goals.Total ?? 0)</span>
+                                    <span class="stat-label">ГОЛА</span>
                                 </div>
-                                
-                                @if (userPlayerIds.Contains(player.Id))
-                                {
-                                     <button class="btn btn-sm btn-secondary w-100 fw-bold" disabled>✅ In My Team</button>
-                                }
-                                else
-                                {
-                                    <form method="post" asp-action="AddToTeam" asp-controller="Players">
-                                        <input type="hidden" name="playerId" value="@player.Id" />
-                                        <input type="hidden" name="playerName" value="@player.Name" />
-                                        <input type="hidden" name="position" value="@stats.Games.Position" />
-                                        <input type="hidden" name="rating" value="@stats.Games.Rating" />
-                                        <input type="hidden" name="teamName" value="@stats.Team.Name" />
-                                        <button type="submit" class="btn btn-sm btn-outline-success w-100 fw-bold">Add to My Team (@playerCost pts)</button>
-                                    </form>
-                                }
+                                <div class="stat-box">
+                                    <span class="stat-num">@(stats.Goals.Assists ?? 0)</span>
+                                    <span class="stat-label">АСИСТИ</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-num highlight">@(stats.Games.Rating?.Substring(0, 3) ?? "-")</span>
+                                    <span class="stat-label">РЕЙТИНГ</span>
+                                </div>
                             </div>
+                            
+                            @if (userPlayerIds.Contains(player.Id)) {
+                                <button class="action-btn owned" disabled>В ОТБОРА ТИ</button>
+                            } else {
+                                <form method="post" asp-action="AddToTeam" asp-controller="Players">
+                                    <input type="hidden" name="playerId" value="@player.Id" />
+                                    <input type="hidden" name="playerName" value="@player.Name" />
+                                    <input type="hidden" name="position" value="@stats.Games.Position" />
+                                    <input type="hidden" name="rating" value="@stats.Games.Rating" />
+                                    <input type="hidden" name="teamName" value="@stats.Team.Name" />
+                                    <button type="submit" class="action-btn gold">ВЗЕМИ ЗА @playerCost PTS</button>
+                                </form>
+                            }
                         </div>
                     </div>
-                }
+                </div>
             }
+        }
 
-            @* 2. ОСТАНАЛИТЕ ИГРАЧИ *@
-            @if (Model != null)
+        @* 🥈 REGULAR CARDS *@
+        @if (Model != null)
+        {
+            @foreach (var entry in Model)
             {
-                @foreach (var entry in Model)
-                {
-                    var player = entry.Player;
-                    var stats = entry.Statistics.FirstOrDefault();
+                var player = entry.Player;
+                var stats = entry.Statistics.FirstOrDefault();
+                if (stats == null || shownPlayerIds.Contains(player.Id)) continue;
+                shownPlayerIds.Add(player.Id);
 
-                    if (stats == null || shownPlayerIds.Contains(player.Id)) continue;
-                     
-                    shownPlayerIds.Add(player.Id);
+                int playerCost = (int)Math.Max(10, Math.Round((double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double rValue) ? rValue : 0) * 5));
 
-                    int playerCost = 10;
-                    if (double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) && r > 0)
-                    {
-                        playerCost = (int)Math.Max(10, Math.Round(r * 5));
-                    }
-
-                    <div class="col">
-                        <div class="card h-100 border-0 shadow-sm player-card">
-                            <!-- Header with gradient and Photo -->
-                            <div class="position-relative text-center pt-4 pb-3 rounded-top card-header-custom">
-                                <div class="team-badge position-absolute top-0 end-0 m-2 bg-white rounded-circle p-1 shadow-sm" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                    <img src="@stats.Team.Logo" alt="@stats.Team.Name" title="@stats.Team.Name" style="width: 30px; height: 30px; object-fit: contain;">
+                <div class="col">
+                    <div class="player-card">
+                        <div class="card-header-visual standard">
+                            <img src="@player.Photo" class="player-photo" alt="@player.Name">
+                            <div class="nationality-tag">🏳️ @player.Nationality</div>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="player-name">@player.Name</h3>
+                            <div class="player-meta">@stats.Team.Name • <span class="pos-badge">@stats.Games.Position</span></div>
+                            
+                            <div class="stats-row">
+                                <div class="stat-box">
+                                    <span class="stat-num">@(stats.Goals.Total ?? 0)</span>
+                                    <span class="stat-label">ГОЛА</span>
                                 </div>
-                                
-                                <img src="@player.Photo" class="rounded-circle border border-4 border-white shadow profile-img" alt="@player.Name">
+                                <div class="stat-box">
+                                    <span class="stat-num">@(stats.Goals.Assists ?? 0)</span>
+                                    <span class="stat-label">АСИСТИ</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-num">@(stats.Games.Rating?.Substring(0, 3) ?? "-")</span>
+                                    <span class="stat-label">РЕЙТИНГ</span>
+                                </div>
                             </div>
 
-                            <div class="card-body text-center pt-2">
-                                <h5 class="card-title fw-bold text-dark mb-1 text-truncate" title="@player.Name">@player.Name</h5>
-                                <div class="badge bg-light text-secondary mb-3 border text-truncate w-75">@stats.Team.Name</div>
-                                
-                                <!-- Stats Grid -->
-                                <div class="row text-center g-2 mb-3">
-                                    <div class="col-4">
-                                        <div class="p-2 rounded bg-light border h-100">
-                                            <div class="fw-bold text-success fs-5">@(stats.Goals.Total ?? 0)</div>
-                                            <small class="text-muted d-block" style="font-size: 0.7rem;">ГОЛОВЕ</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="p-2 rounded bg-light border h-100">
-                                            <div class="fw-bold text-primary fs-5">@(stats.Goals.Assists ?? 0)</div>
-                                            <small class="text-muted d-block" style="font-size: 0.7rem;">АСИСТИ</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="p-2 rounded bg-light border h-100">
-                                            <div class="fw-bold text-warning fs-5">
-                                                @(stats.Games.Rating != null && stats.Games.Rating.Length >= 3 ? stats.Games.Rating.Substring(0, 3) : "-")
-                                            </div>
-                                            <small class="text-muted d-block" style="font-size: 0.7rem;">РЕЙТИНГ</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <hr class="my-3 opacity-10">
-                                
-                                <div class="d-flex justify-content-between align-items-center small text-muted px-2">
-                                    <span>🏳️ @player.Nationality</span>
-                                    <span title="Изиграни минути: @stats.Games.Minutes">⏱️ @(stats.Games.Appearences ?? 0) Мача</span>
-                                </div>
-                                
-                                @if (userPlayerIds.Contains(player.Id))
-                                {
-                                     <div class="mt-3">
-                                         <button class="btn btn-sm btn-secondary w-100 fw-bold shadow-sm" disabled>✅ In My Team</button>
-                                     </div>
-                                }
-                                else
-                                {
-                                    <form method="post" asp-action="AddToTeam" asp-controller="Players" class="mt-3">
-                                        <input type="hidden" name="playerId" value="@player.Id" />
-                                        <input type="hidden" name="playerName" value="@player.Name" />
-                                        <input type="hidden" name="position" value="@stats.Games.Position" />
-                                        <input type="hidden" name="rating" value="@stats.Games.Rating" />
-                                        <input type="hidden" name="teamName" value="@stats.Team.Name" />
-                                        <button type="submit" class="btn btn-sm btn-success w-100 fw-bold shadow-sm">➕ Добави (@playerCost pts)</button>
-                                    </form>
-                                }
-                            </div>
+                            @if (userPlayerIds.Contains(player.Id)) {
+                                <button class="action-btn owned" disabled>В ОТБОРА ТИ</button>
+                            } else {
+                                <form method="post" asp-action="AddToTeam" asp-controller="Players">
+                                    <input type="hidden" name="playerId" value="@player.Id" />
+                                    <input type="hidden" name="playerName" value="@player.Name" />
+                                    <input type="hidden" name="position" value="@stats.Games.Position" />
+                                    <input type="hidden" name="rating" value="@stats.Games.Rating" />
+                                    <input type="hidden" name="teamName" value="@stats.Team.Name" />
+                                    <button type="submit" class="action-btn">ДОБАВИ (@playerCost PTS)</button>
+                                </form>
+                            }
                         </div>
                     </div>
-                }
+                </div>
             }
-        </div>
-
-        <!-- Pagination Controls (Bottom) -->
-        <div class="d-flex justify-content-center align-items-center mt-5 gap-3">
-             <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId, page = prevPage, search = ViewBag.SearchTerm })" 
-               class="btn btn-outline-primary px-4 @(isFirstPage ? "disabled" : "")">
-               ⬅️ Предишна
-            </a>
-
-            <span class="fw-bold text-muted">Страница @currentPage от @totalPages</span>
-
-            <a href="@Url.Action("Index", new { leagueId = ViewBag.CurrentLeagueId, page = nextPage, search = ViewBag.SearchTerm })" 
-               class="btn btn-primary px-4 @(isLastPage ? "disabled" : "")">
-               Следваща ➡️
-            </a>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 <style>
-    .card-header-custom {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    :root {
+        --dark-bg: #0a0e17;
+        --card-bg: rgba(255, 255, 255, 0.03);
+        --accent-gold: #ffd700;
+        --accent-blue: #007bff;
+        --text-muted: rgba(255, 255, 255, 0.5);
     }
-    
-    .player-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    body {
+        background-color: var(--dark-bg);
+        color: white;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .elite-market-container {
+        padding: 40px 0;
+    }
+
+    .market-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 3.5rem;
+        background: linear-gradient(to right, #fff, #666);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        letter-spacing: -1px;
+    }
+
+    .market-subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        margin-top: -5px;
+        margin-bottom: 40px;
+    }
+
+    /* 💊 League Pills */
+    .league-pills-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 50px;
+        flex-wrap: wrap;
+    }
+
+    .league-pill {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px 25px;
+        border-radius: 100px;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(10px);
+    }
+
+    .league-pill:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-3px);
+        color: white;
+        border-color: var(--accent-blue);
+    }
+
+    .league-pill.active {
+        background: var(--accent-blue);
+        border-color: var(--accent-blue);
+        box-shadow: 0 10px 20px rgba(0, 123, 255, 0.3);
+    }
+
+    /* 🔍 Search */
+    .search-wrapper { margin-bottom: 60px; }
+    .search-form { width: 100%; }
+    .search-input-group {
+        position: relative;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 20px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+    }
+    .search-field {
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 10px 15px;
+        width: 100%;
+        outline: none;
+    }
+    .search-btn {
+        background: white;
+        color: black;
+        border: none;
+        padding: 10px 30px;
         border-radius: 15px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .search-btn:hover { transform: scale(1.05); }
+
+    /* 🃏 Player Cards */
+    .player-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 28px;
         overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(20px);
+        height: 100%;
+        position: relative;
     }
-    
+
     .player-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 15px 30px rgba(11, 61, 145, 0.15) !important;
+        transform: translateY(-12px);
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.4);
     }
 
-    .profile-img {
-        width: 100px;
-        height: 100px;
+    .rare-ribbon {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: var(--accent-gold);
+        color: black;
+        font-weight: 900;
+        font-size: 0.7rem;
+        padding: 4px 12px;
+        border-radius: 50px;
+        z-index: 10;
+        box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+    }
+
+    .card-header-visual {
+        background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+        padding: 30px 20px 10px;
+        text-align: center;
+        position: relative;
+    }
+
+    .player-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
         object-fit: cover;
-        background-color: white;
+        border: 4px solid rgba(255,255,255,0.1);
     }
 
-    .scale-110 {
-        transform: scale(1.05);
+    .team-mini-logo {
+        position: absolute;
+        bottom: 5px;
+        right: 25%;
+        width: 35px;
+        height: 35px;
+        background: white;
+        border-radius: 50%;
+        padding: 5px;
     }
 
-    .transition-all {
-        transition: all 0.3s ease;
-    }
+    .card-content { padding: 20px; text-align: center; }
+    .player-name { font-weight: 800; font-size: 1.3rem; margin-bottom: 5px; }
+    .player-meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
+    .pos-badge { color: var(--accent-blue); font-weight: 700; }
 
-    .opacity-75 {
-        opacity: 0.75;
+    .stats-row {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 25px;
+        background: rgba(255,255,255,0.02);
+        padding: 15px 5px;
+        border-radius: 20px;
     }
+    .stat-box { display: flex; flex-direction: column; }
+    .stat-num { font-weight: 900; font-size: 1.2rem; }
+    .stat-num.highlight { color: var(--accent-gold); }
+    .stat-label { font-size: 0.6rem; color: var(--text-muted); font-weight: 800; margin-top: 2px; }
+
+    .action-btn {
+        width: 100%;
+        padding: 12px;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.05);
+        color: white;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .action-btn:hover { background: white; color: black; }
+    .action-btn.gold { background: var(--accent-gold); color: black; border: none; }
+    .action-btn.gold:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
+    .action-btn.owned { background: rgba(255,255,255,0.1); color: var(--text-muted); cursor: default; }
+
+    /* 📄 Pagination */
+    .pagination-overview { margin-bottom: 30px; }
+    .nav-btn {
+        padding: 8px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.08);
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.05); }
+    .nav-btn.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+    .page-indicator { color: var(--text-muted); font-weight: 700; }
+    .page-indicator span { color: white; }
+
+    .market-alert {
+        padding: 15px 25px;
+        border-radius: 18px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 700;
+    }
+    .market-alert.success { background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.2); color: #4ade80; }
+    .alert-action { color: white; text-decoration: none; background: #22c55e; padding: 5px 15px; border-radius: 10px; font-size: 0.8rem; }
     
-    .opacity-75:hover {
-        opacity: 1;
-        transform: translateY(-2px);
-    }
+    .nationality-tag { position: absolute; top: 15px; right: 15px; font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 50px; }
 </style>

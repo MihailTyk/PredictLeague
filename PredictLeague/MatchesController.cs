@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
 
 namespace PredictLeague.Controllers
 {
@@ -19,11 +20,13 @@ namespace PredictLeague.Controllers
     {
         private readonly PredictLeagueContext _context;
         private readonly ILogger<MatchesController> _logger;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public MatchesController(PredictLeagueContext context, ILogger<MatchesController> logger)
+        public MatchesController(PredictLeagueContext context, ILogger<MatchesController> logger, UserManager<IdentityUser> userManager)
         {
             _context = context;
             _logger = logger;
+            _userManager = userManager;
         }
 
         // 🏟️ Всички мачове — достъпно за всички
@@ -207,7 +210,6 @@ namespace PredictLeague.Controllers
                     {
                         var errorContent = await response.Content.ReadAsStringAsync();
                         _logger.LogError($"API request failed for season {season}. Status: {response.StatusCode}, Response: {errorContent}");
-                        
                         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                         {
                             ViewBag.Error = $"❌ API ключът е невалиден или изтекъл. Провери API ключа за {leagueName}.";
@@ -332,6 +334,30 @@ namespace PredictLeague.Controllers
             return await LoadLeagueMatches("Champions League", 2);
         }
 
+        // 🇫🇷 Ligue 1
+        public async Task<IActionResult> Ligue1()
+        {
+            return await LoadLeagueMatches("Ligue 1", 61);
+        }
+
+        // 🇵🇹 Primeira Liga
+        public async Task<IActionResult> PrimeiraLiga()
+        {
+            return await LoadLeagueMatches("Primeira Liga", 94);
+        }
+
+        // 🇳🇱 Eredivisie
+        public async Task<IActionResult> Eredivisie()
+        {
+            return await LoadLeagueMatches("Eredivisie", 88);
+        }
+
+        // 🇧🇬 Parva Liga
+        public async Task<IActionResult> ParvaLiga()
+        {
+            return await LoadLeagueMatches("Parva Liga", 172);
+        }
+
         // 📋 Детайли за мач от API (статистика + съставите + стадион + класация + H2H)
         public async Task<IActionResult> MatchDetail(
             int fixtureId, int homeTeamId, int awayTeamId,
@@ -444,6 +470,35 @@ namespace PredictLeague.Controllers
                         var h2hJson = await h2hResponse.Content.ReadAsStringAsync();
                         var h2hResult = JsonConvert.DeserializeObject<FootballApiResponse>(h2hJson);
                         vm.H2HMatches = h2hResult?.response ?? new List<FootballMatch>();
+                    }
+                }
+
+                // 6️⃣ Fetch User Prediction if exists
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    // Най-сигурното търсене: по FixtureId
+                    var dbMatch = await _context.Match.FirstOrDefaultAsync(m => m.FixtureId == fixtureId);
+                    
+                    // Резервен вариант по имена (ако датата се разминава заради часовата зона или FixtureId липсва)
+                    if (dbMatch == null)
+                    {
+                        dbMatch = await _context.Match.FirstOrDefaultAsync(m => 
+                            m.HomeTeam == homeTeam && 
+                            m.AwayTeam == awayTeam);
+                            
+                        // Ако сме намерили мача по стари данни, го "ъпгрейдваме" с новия FixtureId за бъдещето
+                        if (dbMatch != null && dbMatch.FixtureId == null)
+                        {
+                            dbMatch.FixtureId = fixtureId;
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+                        
+                    if (dbMatch != null)
+                    {
+                        vm.UserPrediction = await _context.Prediction.FirstOrDefaultAsync(p => 
+                            p.MatchId == dbMatch.Id && p.UserId == user.Id);
                     }
                 }
             }
@@ -602,6 +657,7 @@ namespace PredictLeague.Controllers
         public StandingEntry AwayStanding { get; set; }
         // H2H
         public List<FootballMatch> H2HMatches { get; set; } = new();
+        public PredictLeague.Models.Prediction? UserPrediction { get; set; }
         public string ApiError { get; set; }
     }
 

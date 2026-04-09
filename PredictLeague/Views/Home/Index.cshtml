@@ -105,6 +105,72 @@
     </div>
 </div>
 
+<!-- 🔄 TRANSFER HUB SECTION -->
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 fade-in-up">
+        <div>
+            <h2 class="fw-bold mb-0" style="color: #0f172a;">🌍 European Transfer Hub</h2>
+            <p class="text-muted mb-0">Latest major moves from top 5 European leagues</p>
+        </div>
+        <div class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">LIVE UPDATES</div>
+    </div>
+
+    @{
+        var transfers = ViewData["Transfers"] as List<TransferEntry> ?? new List<TransferEntry>();
+    }
+
+    @if (transfers == null || !transfers.Any())
+    {
+        <div class="alert alert-light border shadow-sm text-center p-4 rounded-4">
+            <p class="text-muted mb-0">Checking for latest transfers...</p>
+        </div>
+    }
+    else
+    {
+        <div class="transfer-scroll-container pb-3" style="overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+            <div class="d-flex gap-4">
+                @foreach (var t in transfers)
+                {
+                    var detail = t.Transfers.FirstOrDefault();
+                    if (detail == null) continue;
+
+                    <div class="transfer-card-premium" style="flex: 0 0 320px; display: inline-block; background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.03);">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-light text-primary shadow-sm px-3 py-2 rounded-pill">
+                                @if (DateTime.TryParse(detail.Date, out DateTime dt)) {
+                                    @dt.ToString("dd MMM yyyy")
+                                } else {
+                                    @detail.Date
+                                }
+                            </span>
+                            <span class="text-success small fw-bold">@detail.Type</span>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <h5 class="fw-bold mb-1" style="color: #0f172a;">@t.Player.Name</h5>
+                            <hr class="w-25 mx-auto my-2 opacity-10">
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <div class="text-center" style="width: 45%;">
+                                <img src="@(detail.Teams.Out?.Logo ?? "https://via.placeholder.com/40")" style="width: 45px; height: 45px; object-fit: contain;" class="mb-2">
+                                <p class="small text-muted text-wrap mb-0" style="font-size: 0.7rem;">@detail.Teams.Out?.Name</p>
+                            </div>
+                            
+                            <div class="text-primary fw-bold">➡️</div>
+
+                            <div class="text-center" style="width: 45%;">
+                                <img src="@(detail.Teams.In?.Logo ?? "https://via.placeholder.com/40")" style="width: 45px; height: 45px; object-fit: contain;" class="mb-2">
+                                <p class="small fw-bold text-wrap mb-0" style="font-size: 0.7rem; color: #0f172a;">@detail.Teams.In?.Name</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
 <!-- NEWS SECTION -->
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4 fade-in-up delay-300">

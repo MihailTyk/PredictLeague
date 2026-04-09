@@ -136,6 +136,12 @@ namespace PredictLeague.Controllers
                  case "5-3-2":
                      positions.AddRange(new[] { "LB", "CB1", "CB2", "CB3", "RB", "CM1", "CM2", "CM3", "ST1", "ST2" });
                     break;
+                case "4-2-3-1":
+                     positions.AddRange(new[] { "LB", "CB1", "CB2", "RB", "DM1", "DM2", "LM", "CAM", "RM", "ST" });
+                    break;
+                case "3-4-3":
+                     positions.AddRange(new[] { "CB1", "CB2", "CB3", "LM", "CM1", "CM2", "RM", "LW", "ST", "RW" });
+                    break;
                 default: // 4-4-2 default
                      positions.AddRange(new[] { "LB", "CB1", "CB2", "RB", "LM", "CM1", "CM2", "RM", "ST1", "ST2" });
                     break;
