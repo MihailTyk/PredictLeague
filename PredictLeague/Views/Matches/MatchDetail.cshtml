@@ -665,6 +665,11 @@
                 @if (isNS)
                 {
                     <div class="vs-text mt-2">VS</div>
+                    <div id="match-countdown" class="badge bg-dark border border-secondary text-info mt-2 px-3 py-2 fw-bold shadow-sm" 
+                         style="font-size: 1rem; letter-spacing: 1px;"
+                         data-start="@Model.MatchDate">
+                        ЗАРЕЖДАНЕ...
+                    </div>
                 }
                 else
                 {
@@ -682,7 +687,7 @@
         </div>
     <!-- Match Meta Stats below Hero -->
     <div class="match-meta text-center mt-3">
-        🕒 @Model.MatchDate &nbsp;|&nbsp; Fixture #@Model.FixtureId
+        🕒 @(DateTime.TryParse(Model.MatchDate, out var dt) ? dt.ToString("dd.MM.yyyy HH:mm") : Model.MatchDate) &nbsp;|&nbsp; Мач #@Model.FixtureId
     </div>
 </div>
 
@@ -690,22 +695,25 @@
 {
     var p = Model.UserPrediction;
     int currentLivePoints = 0;
-    string pointReason = "Miss!";
-    string badgeClass = "bg-danger";
-
+    string pointReason = "Очаква се";
+    string badgeClass = "bg-secondary";
     if (Model.HomeScore.HasValue && Model.AwayScore.HasValue)
     {
         if (p.PredictedHomeScore == Model.HomeScore.Value && p.PredictedAwayScore == Model.AwayScore.Value)
         {
             currentLivePoints = 10;
-            pointReason = "Exact Score!";
+            pointReason = "Точен резултат!";
             badgeClass = "bg-warning text-dark";
         }
         else if (p.PredictedHomeScore == Model.HomeScore.Value || p.PredictedAwayScore == Model.AwayScore.Value)
         {
             currentLivePoints = 3;
-            pointReason = "Partial Match!";
+            pointReason = "Частичен резултат!";
             badgeClass = "bg-info text-white";
+        }
+        else
+        {
+            pointReason = "Пропуск!";
         }
     }
 
@@ -719,7 +727,7 @@
                 <div class="points-divider"></div>
                 <div class="current-standing">
                     <div class="small-label">ТЕКУЩИ ТОЧКИ</div>
-                    <div class="points-value">@currentLivePoints <span class="pts-unit">PTS</span></div>
+                    <div class="points-value">@currentLivePoints <span class="pts-unit">ТОЧКИ</span></div>
                 </div>
             </div>
             <div class="status-indicator">
@@ -1242,5 +1250,35 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
         document.getElementById('tab-' + tab + '-btn').classList.add('active');
+    }
+
+    // Countdown Logic
+    const countdownEl = document.getElementById('match-countdown');
+    if (countdownEl) {
+        const startTimeStr = countdownEl.getAttribute('data-start');
+        const startTime = new Date(startTimeStr).getTime();
+
+        setInterval(() => {
+            const now = new Date().getTime();
+            const distance = startTime - now;
+
+            if (distance < 0) {
+                countdownEl.innerHTML = "МАЧЪТ ЗАПОЧНА!";
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            let res = "";
+            if(days > 0) res += days + "д ";
+            res += hours.toString().padStart(2, '0') + "ч " + 
+                   minutes.toString().padStart(2, '0') + "м " + 
+                   seconds.toString().padStart(2, '0') + "с";
+            
+            countdownEl.innerHTML = res;
+        }, 1000);
     }
 </script>

@@ -7,23 +7,37 @@
 
 <div class="container mt-4 mb-5">
     <!-- Header & Formation Selector -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="fw-bold mb-0">📋 My Squad</h1>
-            <p class="text-muted small">Manage your starting XI and tactics</p>
+    <div class="row mb-5 align-items-center bg-white p-4 rounded-4 shadow-sm border">
+        <div class="col-md-6 d-flex align-items-center gap-4">
+            <div class="position-relative">
+                <img src="@Model.Settings.TeamBadgeUrl" alt="Badge" class="rounded-circle shadow" style="width: 100px; height: 100px; object-fit: contain; background: #f8f9fa; padding: 10px; border: 3px solid #eee;">
+                <button class="btn btn-sm btn-dark position-absolute bottom-0 end-0 rounded-circle" data-bs-toggle="modal" data-bs-target="#editTeamModal">
+                    <i class="bi bi-pencil-fill">✏️</i>
+                </button>
+            </div>
+            <div>
+                <h1 class="fw-bold mb-1 text-dark">@Model.Settings.TeamName</h1>
+                <p class="text-muted mb-0 d-flex align-items-center gap-2">
+                    <span class="badge bg-success" title="Обща стойност на отбора (базирана на рейтингите)">📈 @Model.TotalTeamValue.ToString("N0") точки</span>
+                    <span class="text-secondary opacity-50">|</span>
+                    <span>@Model.Settings.Formation Тактика</span>
+                </p>
+            </div>
         </div>
         
-        <form asp-action="UpdateFormation" class="d-flex align-items-center gap-2 bg-white p-2 rounded shadow-sm border">
-            <span class="fw-bold text-secondary small">FORMATION:</span>
-            <select name="formation" class="form-select form-select-sm fw-bold border-0 bg-light" style="width: auto;" onchange="this.form.submit()">
-                <!option value="4-4-2" @(Model.Settings.Formation == "4-4-2" ? "selected" : "")>4-4-2 Classical</!option>
-                <!option value="4-3-3" @(Model.Settings.Formation == "4-3-3" ? "selected" : "")>4-3-3 Attack</!option>
-                <!option value="3-5-2" @(Model.Settings.Formation == "3-5-2" ? "selected" : "")>3-5-2 Dynamic</!option>
-                <!option value="5-3-2" @(Model.Settings.Formation == "5-3-2" ? "selected" : "")>5-3-2 Defensive</!option>
-                <!option value="4-2-3-1" @(Model.Settings.Formation == "4-2-3-1" ? "selected" : "")>4-2-3-1 Modern</!option>
-                <!option value="3-4-3" @(Model.Settings.Formation == "3-4-3" ? "selected" : "")>3-4-3 Total Attack</!option>
-            </select>
-        </form>
+        <div class="col-md-6 d-flex justify-content-md-end align-items-center gap-3 mt-3 mt-md-0">
+            <form asp-action="UpdateFormation" class="d-flex align-items-center gap-2 bg-light p-2 rounded-pill border px-3">
+                <span class="fw-bold text-secondary small">ФОРМАЦИЯ:</span>
+                <select name="formation" class="form-select form-select-sm fw-bold border-0 bg-transparent" style="width: auto;" onchange="this.form.submit()">
+                    <!option value="4-4-2" @(Model.Settings.Formation == "4-4-2" ? "selected" : "")>4-4-2 Класическа</!option>
+                    <!option value="4-3-3" @(Model.Settings.Formation == "4-3-3" ? "selected" : "")>4-3-3 Атакуваща</!option>
+                    <!option value="3-5-2" @(Model.Settings.Formation == "3-5-2" ? "selected" : "")>3-5-2 Динамична</!option>
+                    <!option value="5-3-2" @(Model.Settings.Formation == "5-3-2" ? "selected" : "")>5-3-2 Дефанзивна</!option>
+                    <!option value="4-2-3-1" @(Model.Settings.Formation == "4-2-3-1" ? "selected" : "")>4-2-3-1 Модерна</!option>
+                    <!option value="3-4-3" @(Model.Settings.Formation == "3-4-3" ? "selected" : "")>3-4-3 Тотална Атака</!option>
+                </select>
+            </form>
+        </div>
     </div>
 
     <div class="row g-4">
@@ -86,16 +100,16 @@
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-light fw-bold py-3 d-flex justify-content-between align-items-center">
-                    <span>💺 Bench (@Model.Bench.Count)</span>
-                    <a asp-controller="Players" asp-action="Index" class="btn btn-sm btn-primary rounded-pill px-3">+ Scout</a>
+                    <span>💺 Резервна скамейка (@Model.Bench.Count)</span>
+                    <a asp-controller="Players" asp-action="Index" class="btn btn-sm btn-primary rounded-pill px-3">+ Скаутинг</a>
                 </div>
                 <div class="card-body p-0 overflow-auto" style="max-height: 600px;">
                     @if (!Model.Bench.Any())
                     {
                         <div class="text-center p-5 text-muted">
                             <p class="mb-2">👻</p>
-                            <p>No players on bench.</p>
-                            <a asp-controller="Players" asp-action="Index" class="small">Find players</a>
+                            <p>Няма играчи на резервната скамейка.</p>
+                            <a asp-controller="Players" asp-action="Index" class="small">Намери играчи</a>
                         </div>
                     }
                     else
@@ -124,7 +138,7 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Select Player for <span id="targetPosName" class="text-primary"></span></h5>
+                <h5 class="modal-title fw-bold">Избери играч за <span id="targetPosName" class="text-primary"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -143,14 +157,14 @@
                                         <div class="small text-muted">@p.TeamName • <span class="text-info">@p.Position</span></div>
                                     </div>
                                 </div>
-                                <span class="btn btn-sm btn-outline-primary rounded-pill">Select</span>
+                                <span class="btn btn-sm btn-outline-primary rounded-pill">Избери</span>
                             </button>
                         </form>
                     }
                     @if (!Model.Bench.Any())
                     {
                          <div class="text-center py-4 text-muted">
-                             No players available on bench.
+                             Няма налични играчи на резервната скамейка.
                          </div>
                     }
                 </div>
@@ -158,6 +172,99 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for Team Customization -->
+<div class="modal fade" id="editTeamModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 bg-light rounded-top-4">
+                <h5 class="modal-title fw-bold">⚙️ Настройки на отбора</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="UpdateTeamNameAndBadge" method="post">
+                <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary small">ИМЕ НА ОТБОРА (незадължително)</label>
+                        <input type="text" name="teamName" class="form-control form-control-lg fw-bold rounded-3" value="@Model.Settings.TeamName" placeholder="Въведи име..." maxlength="30">
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label class="form-label fw-bold text-secondary small">ИЗБЕРИ ЕМБЛЕМА</label>
+                        <input type="hidden" name="teamBadgeUrl" id="selectedBadgeUrl" value="@Model.Settings.TeamBadgeUrl">
+                        <div class="badge-selector-grid d-flex flex-wrap gap-3 justify-content-center p-3 bg-light rounded-3 overflow-auto" style="max-height: 300px;">
+                            @{
+                                var clubsData = new[] {
+                                    new { n = "Real Madrid", id = 541 }, new { n = "Barcelona", id = 529 },
+                                    new { n = "Liverpool", id = 40 }, new { n = "Man City", id = 50 },
+                                    new { n = "Man Utd", id = 33 }, new { n = "Arsenal", id = 42 },
+                                    new { n = "Bayern", id = 157 }, new { n = "Dortmund", id = 165 },
+                                    new { n = "PSG", id = 85 }, new { n = "Juventus", id = 496 },
+                                    new { n = "Milan", id = 489 }, new { n = "Inter", id = 505 },
+                                    new { n = "Porto", id = 212 }, new { n = "Ajax", id = 194 },
+                                    new { n = "Ludogorets", id = 560 }, new { n = "Levski", id = 562 },
+                                    new { n = "CSKA", id = 561 }, new { n = "Botev Plovdiv", id = 563 }
+                                };
+                            }
+                            @foreach (var club in clubsData)
+                            {
+                                var url = $"https://media.api-sports.io/football/teams/{club.id}.png";
+                                <div class="badge-option @(Model.Settings.TeamBadgeUrl == url ? "active" : "")" onclick="selectBadge(this, '@url')">
+                                    <img src="@url" alt="@club.n" title="@club.n">
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Отказ</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow">Запази промените</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-selector-grid {
+        scrollbar-width: thin;
+    }
+    .badge-option {
+        width: 70px;
+        height: 70px;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 12px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    .badge-option:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border-color: #eee;
+    }
+    .badge-option.active {
+        border-color: #28a745;
+        background: #f0fff4;
+        box-shadow: 0 0 0 3px rgba(40,167,69,0.2);
+    }
+    .badge-option img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+</style>
+
+<script>
+    function selectBadge(element, url) {
+        document.querySelectorAll('.badge-option').forEach(opt => opt.classList.remove('active'));
+        element.classList.add('active');
+        document.getElementById('selectedBadgeUrl').value = url;
+    }
+</script>
 
 <script>
     function openPlayerSelector(positionCode) {

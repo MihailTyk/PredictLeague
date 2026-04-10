@@ -6,16 +6,16 @@
 
 <div class="container mt-5 mb-5">
     <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold text-primary">🏆 Team Leaderboard</h1>
-        <p class="lead text-muted">Who has the strongest squad?</p>
+        <h1 class="display-4 fw-bold text-primary">🏆 Класация на отборите</h1>
+        <p class="lead text-muted">Кой притежава най-силния състав?</p>
     </div>
 
     @if (Model == null || !Model.Any())
     {
         <div class="text-center py-5">
             <div class="display-1 mb-3">👻</div>
-            <h3>No squads yet!</h3>
-            <p>Go to <a asp-controller="Players" asp-action="Index">Players</a> to build your team.</p>
+            <h3>Все още няма отбори!</h3>
+            <p>Отиди на <a asp-controller="Players" asp-action="Index">Пазара</a>, за да изградиш своя отбор.</p>
         </div>
     }
     else
@@ -23,10 +23,10 @@
         <div class="card shadow border-0 overflow-hidden rounded-4">
             <div class="card-header bg-gradient-primary text-white p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="row align-items-center fw-bold text-uppercase small letter-spacing-1">
-                    <div class="col-1 text-center">Rank</div>
-                    <div class="col-5">Manager</div>
-                    <div class="col-2 text-center">Players</div>
-                    <div class="col-4">Best Player</div>
+                    <div class="col-1 text-center">Място</div>
+                    <div class="col-5">Мениджър</div>
+                    <div class="col-2 text-center">Играчи</div>
+                    <div class="col-4">Най-добър играч</div>
                 </div>
             </div>
             <div class="list-group list-group-flush">
@@ -53,13 +53,13 @@
                                     </div>
                                     <div>
                                         <h5 class="mb-0 fw-bold">@entry.UserName</h5>
-                                        <small class="text-muted">Manager</small>
+                                        <small class="text-muted">Мениджър</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-2 text-center">
                                 <span class="badge bg-white text-primary border border-primary px-3 py-2 rounded-pill">
-                                    @entry.PlayerCount Players
+                                    @entry.PlayerCount Играчи
                                 </span>
                             </div>
                             <div class="col-4 text-truncate">

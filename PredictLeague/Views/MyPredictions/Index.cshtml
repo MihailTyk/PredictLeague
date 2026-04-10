@@ -191,18 +191,27 @@
                         </div>
                     </div>
 
-                    <div class="points-section">
-                        @if (p.Match.IsFinished)
+                    <div class="d-flex flex-column align-items-end gap-2">
+                        <div class="points-section">
+                            @if (p.Match.IsFinished)
+                            {
+                                <span>@p.Points.ToString() PTS</span>
+                                @if (p.Points == 10) { <span>⚡ ТОЧЕН!</span> }
+                                else if (p.Points > 0) { <span>🧤 ЧАСТИЧЕН</span> }
+                                else { <span>❌ ПРОПУСК</span> }
+                            }
+                            else
+                            {
+                                <span>@p.Points.ToString() PTS</span>
+                                <span style="font-size: 0.8rem; opacity: 0.7;">(Очаква се)</span>
+                            }
+                        </div>
+                        
+                        @if (!p.Match.IsFinished)
                         {
-                            <span>@p.Points.ToString() PTS</span>
-                            @if (p.Points == 10) { <span>⚡ ТОЧЕН!</span> }
-                            else if (p.Points > 0) { <span>🧤 ЧАСТИЧЕН</span> }
-                            else { <span>❌ ПРОПУСК</span> }
-                        }
-                        else
-                        {
-                            <span>@p.Points.ToString() PTS</span>
-                            <span style="font-size: 0.8rem; opacity: 0.7;">(Очаква се)</span>
+                            <a href="/Predictions/Create?matchId=@p.MatchId" class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold">
+                                ✏️ Редактирай
+                            </a>
                         }
                     </div>
                 </div>

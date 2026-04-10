@@ -226,13 +226,20 @@
 
                             <li class="nav-item">
                                 <div class="points-badge px-3 py-1 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2" title="Налични точки за играчи">
-                                    <span class="fs-5">💰</span> <span>@points pts</span>
+                                    <span class="fs-5">💰</span> <span>@points точки</span>
                                 </div>
                             </li>
                             <li class="nav-item dropdown user-dropdown">
                                 <a class="nav-link dropdown-toggle text-white fw-semibold d-flex align-items-center gap-2 px-3 rounded-pill" style="background: rgba(255,255,255,0.1);" href="#" role="button" data-bs-toggle="dropdown">
-                                    <div class="user-avatar bg-white text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 28px; height: 28px;">
-                                        @(displayUserName.Length > 0 ? displayUserName.Substring(0, 1).ToUpper() : "U")
+                                    <div class="user-avatar bg-white border border-light rounded-circle shadow-sm overflow-hidden d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                        @if (teamSettings != null && !string.IsNullOrEmpty(teamSettings.TeamBadgeUrl))
+                                        {
+                                            <img src="@teamSettings.TeamBadgeUrl" alt="Badge" style="width: 100%; height: 100%; object-fit: contain; padding: 2px;">
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-bold text-primary">@(displayUserName.Length > 0 ? displayUserName.Substring(0, 1).ToUpper() : "U")</span>
+                                        }
                                     </div>
                                     @displayUserName
                                 </a>

@@ -105,12 +105,13 @@ namespace PredictLeague.Controllers
 
                     foreach (var prediction in predictions)
                     {
-                        prediction.Points = 0;
+                        int oldPoints = prediction.Points;
+                        int newPoints = 0;
 
                         if (prediction.PredictedHomeScore == match.HomeScore &&
                             prediction.PredictedAwayScore == match.AwayScore)
                         {
-                            prediction.Points = 3; // Точно познат резултат
+                            newPoints = 10; // Точно познат резултат (Променено на 10 за по-голям бонус)
                         }
                         else if (
                             (match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
@@ -118,9 +119,21 @@ namespace PredictLeague.Controllers
                             (match.HomeScore == match.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore)
                         )
                         {
-                            prediction.Points = 1; // Познат изход (победа/загуба/равен)
+                            newPoints = 5; // Познат изход (победа/загуба/равен)
                         }
 
+                        // Обновяване на "портфейла" на потребителя
+                        if (newPoints != oldPoints)
+                        {
+                            var userSettings = await _context.UserTeamSettings.FirstOrDefaultAsync(s => s.UserId == prediction.UserId);
+                            if (userSettings != null)
+                            {
+                                userSettings.Points += (newPoints - oldPoints);
+                                _context.Update(userSettings);
+                            }
+                        }
+
+                        prediction.Points = newPoints;
                         _context.Update(prediction);
                     }
 

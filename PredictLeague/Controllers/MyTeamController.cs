@@ -53,7 +53,8 @@ namespace PredictLeague.Controllers
                 Settings = teamSettings,
                 AllPlayers = myPlayers,
                 StartingLineup = myPlayers.Where(p => p.IsStarter).ToList(),
-                Bench = myPlayers.Where(p => !p.IsStarter).ToList()
+                Bench = myPlayers.Where(p => !p.IsStarter).ToList(),
+                TotalTeamValue = myPlayers.Sum(up => up.Rating)
             };
 
             ViewBag.Positions = GetFormationPositions(teamSettings.Formation);
@@ -70,10 +71,21 @@ namespace PredictLeague.Controllers
             if (settings != null)
             {
                 settings.Formation = formation;
-                // Optional: Reset positions if they don't fit? Or try to adapt?
-                // For now, let's keep them, but user might see weird slots.
-                // Better approach: Clear positions that don't exist in new formation?
-                // Or simply let the UI handle empty slots.
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateTeamNameAndBadge(string teamName, string teamBadgeUrl)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var settings = await _context.UserTeamSettings.FirstOrDefaultAsync(ts => ts.UserId == user.Id);
+            
+            if (settings != null)
+            {
+                if (!string.IsNullOrEmpty(teamName)) settings.TeamName = teamName;
+                if (!string.IsNullOrEmpty(teamBadgeUrl)) settings.TeamBadgeUrl = teamBadgeUrl;
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction("Index");
@@ -156,5 +168,6 @@ namespace PredictLeague.Controllers
         public List<UserPlayer> AllPlayers { get; set; }
         public List<UserPlayer> StartingLineup { get; set; }
         public List<UserPlayer> Bench { get; set; }
+        public double TotalTeamValue { get; set; }
     }
 }
