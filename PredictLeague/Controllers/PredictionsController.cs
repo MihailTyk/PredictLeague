@@ -68,7 +68,8 @@ namespace PredictLeague.Controllers
 
         // 💡 Създаване на мач локално от API-то преди предсказване
         [HttpPost]
-        public async Task<IActionResult> CreateFromApi(int fixtureId, string homeTeam, string awayTeam, DateTime startTime, [Bind("PredictedHomeScore,PredictedAwayScore,PredictedCorners,PredictedYellowCards,PredictedRedCards,AnytimeGoalscorer")] Prediction prediction)
+        public async Task<IActionResult> CreateFromApi(int fixtureId, string homeTeam, string awayTeam, DateTime startTime, 
+            int predictedHomeScore, int predictedAwayScore, int? predictedCorners, int? predictedYellowCards, int? predictedRedCards, string? anytimeGoalscorer)
         {
             var match = await _context.Match.FirstOrDefaultAsync(m => m.FixtureId == fixtureId);
 
@@ -101,17 +102,19 @@ namespace PredictLeague.Controllers
             // 🛡️ Проверка за съществуваща прогноза за този потребител и мач
             var currentUserId = _userManager.GetUserId(User);
             var existing = await _context.Prediction
-                .FirstOrDefaultAsync(p => p.MatchId == match.Id && p.UserId == currentUserId);
+                .Where(p => p.MatchId == match.Id && p.UserId == currentUserId)
+                .OrderByDescending(p => p.CreatedAt)
+                .FirstOrDefaultAsync();
 
             if (existing != null)
             {
                 // Актуализираме старата
-                existing.PredictedHomeScore = prediction.PredictedHomeScore;
-                existing.PredictedAwayScore = prediction.PredictedAwayScore;
-                existing.PredictedCorners = prediction.PredictedCorners;
-                existing.PredictedYellowCards = prediction.PredictedYellowCards;
-                existing.PredictedRedCards = prediction.PredictedRedCards;
-                existing.AnytimeGoalscorer = prediction.AnytimeGoalscorer;
+                existing.PredictedHomeScore = predictedHomeScore;
+                existing.PredictedAwayScore = predictedAwayScore;
+                existing.PredictedCorners = predictedCorners;
+                existing.PredictedYellowCards = predictedYellowCards;
+                existing.PredictedRedCards = predictedRedCards;
+                existing.AnytimeGoalscorer = anytimeGoalscorer;
                 existing.CreatedAt = DateTime.Now;
 
                 // Изчисляваме автоматично наново
@@ -126,17 +129,26 @@ namespace PredictLeague.Controllers
             else
             {
                 // Записваме новата
-                prediction.MatchId = match.Id;
-                prediction.UserId = currentUserId;
-                prediction.CreatedAt = DateTime.Now;
+                var newPrediction = new Prediction
+                {
+                    MatchId = match.Id,
+                    UserId = currentUserId,
+                    PredictedHomeScore = predictedHomeScore,
+                    PredictedAwayScore = predictedAwayScore,
+                    PredictedCorners = predictedCorners,
+                    PredictedYellowCards = predictedYellowCards,
+                    PredictedRedCards = predictedRedCards,
+                    AnytimeGoalscorer = anytimeGoalscorer,
+                    CreatedAt = DateTime.Now
+                };
 
-                if (prediction.PredictedHomeScore > prediction.PredictedAwayScore) prediction.PredictedWinner = "Home";
-                else if (prediction.PredictedHomeScore < prediction.PredictedAwayScore) prediction.PredictedWinner = "Away";
-                else prediction.PredictedWinner = "Draw";
+                if (newPrediction.PredictedHomeScore > newPrediction.PredictedAwayScore) newPrediction.PredictedWinner = "Home";
+                else if (newPrediction.PredictedHomeScore < newPrediction.PredictedAwayScore) newPrediction.PredictedWinner = "Away";
+                else newPrediction.PredictedWinner = "Draw";
 
-                prediction.BothTeamsToScore = (prediction.PredictedHomeScore > 0 && prediction.PredictedAwayScore > 0);
+                newPrediction.BothTeamsToScore = (newPrediction.PredictedHomeScore > 0 && newPrediction.PredictedAwayScore > 0);
 
-                _context.Add(prediction);
+                _context.Add(newPrediction);
             }
 
             await _context.SaveChangesAsync();

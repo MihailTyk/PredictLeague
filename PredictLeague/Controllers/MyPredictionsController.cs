@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,17 +11,19 @@ namespace PredictLeague.Controllers
     {
         private readonly PredictLeagueContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<MyPredictionsController> _logger;
 
-        public MyPredictionsController(PredictLeagueContext context, UserManager<IdentityUser> userManager)
+        public MyPredictionsController(PredictLeagueContext context, UserManager<IdentityUser> userManager, IConfiguration configuration, ILogger<MyPredictionsController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
         {
-            var userName = User.Identity.Name;
-
             var userId = _userManager.GetUserId(User);
 
             var predictions = await _context.Prediction
@@ -30,8 +32,8 @@ namespace PredictLeague.Controllers
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
-
             return View(predictions);
         }
+
     }
 }

@@ -426,10 +426,63 @@ namespace PredictLeague.Controllers
                         }
 
                         // Обновяваме резултата в реално време
-                        if (detail.goals != null)
+                        if (detail.goals != null && detail.goals.home != null && detail.goals.away != null)
                         {
                             vm.HomeScore = detail.goals.home;
                             vm.AwayScore = detail.goals.away;
+
+                            // Записваме в базата, ако има промяна или е приключил
+                            string matchStatus = detail.fixture.status?.short_;
+                            bool isFinished = (matchStatus == "FT" || matchStatus == "AET" || matchStatus == "PEN");
+
+                            var dbMatch = await _context.Match.FirstOrDefaultAsync(m => m.FixtureId == fixtureId);
+                            if (dbMatch != null && (!dbMatch.IsFinished && isFinished))
+                            {
+                                dbMatch.HomeScore = detail.goals.home;
+                                dbMatch.AwayScore = detail.goals.away;
+                                dbMatch.IsFinished = isFinished;
+                                _context.Update(dbMatch);
+
+                                // Обновяваме точките за всички предсказания за този мач
+                                var predictions = await _context.Prediction.Where(p => p.MatchId == dbMatch.Id).ToListAsync();
+                                foreach (var prediction in predictions)
+                                {
+                                    int oldPoints = prediction.Points;
+                                    int newPoints = 0;
+
+                                    if (prediction.PredictedHomeScore == dbMatch.HomeScore &&
+                                        prediction.PredictedAwayScore == dbMatch.AwayScore)
+                                    {
+                                        newPoints = 10;
+                                    }
+                                    else if (
+                                        (dbMatch.HomeScore > dbMatch.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
+                                        (dbMatch.HomeScore < dbMatch.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore) ||
+                                        (dbMatch.HomeScore == dbMatch.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore)
+                                    )
+                                    {
+                                        newPoints = 5;
+                                    }
+                                    else if (prediction.PredictedHomeScore == dbMatch.HomeScore ||
+                                             prediction.PredictedAwayScore == dbMatch.AwayScore)
+                                    {
+                                        newPoints = 3;
+                                    }
+
+                                    if (newPoints != oldPoints)
+                                    {
+                                        var userSettings = await _context.UserTeamSettings.FirstOrDefaultAsync(s => s.UserId == prediction.UserId);
+                                        if (userSettings != null)
+                                        {
+                                            userSettings.Points += (newPoints - oldPoints);
+                                            _context.Update(userSettings);
+                                        }
+                                        prediction.Points = newPoints;
+                                        _context.Update(prediction);
+                                    }
+                                }
+                                await _context.SaveChangesAsync();
+                            }
                         }
                     }
                 }
@@ -510,8 +563,10 @@ namespace PredictLeague.Controllers
                         
                     if (dbMatch != null)
                     {
-                        vm.UserPrediction = await _context.Prediction.FirstOrDefaultAsync(p => 
-                            p.MatchId == dbMatch.Id && p.UserId == user.Id);
+                        vm.UserPrediction = await _context.Prediction
+                            .Where(p => p.MatchId == dbMatch.Id && p.UserId == user.Id)
+                            .OrderByDescending(p => p.CreatedAt)
+                            .FirstOrDefaultAsync();
                     }
                 }
             }

@@ -847,8 +847,22 @@
             }
             else if (isNS)
             {
+                @if (Model.UserPrediction != null)
+                {
+                    <div class="predict-card mb-4" style="background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); padding: 1.5rem;">
+                        <h5 class="text-white text-center mb-3 fw-bold">✅ Твоята Настояща Прогноза</h5>
+                        <div class="d-flex justify-content-center flex-wrap gap-4 text-center">
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Резултат</small><span class="fs-4 fw-bold text-white">@Model.UserPrediction.PredictedHomeScore : @Model.UserPrediction.PredictedAwayScore</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Голмайстор</small><span class="fs-5 text-white">@(string.IsNullOrEmpty(Model.UserPrediction.AnytimeGoalscorer) ? "-" : Model.UserPrediction.AnytimeGoalscorer)</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Корнери</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedCorners?.ToString() ?? "-")</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Ж. Картони</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedYellowCards?.ToString() ?? "-")</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Ч. Картони</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedRedCards?.ToString() ?? "-")</span></div>
+                        </div>
+                    </div>
+                }
+
                 <div class="predict-card">
-                    <h4 class="text-white text-center mb-1 fw-bold">🎯 Твоята Прогноза</h4>
+                    <h4 class="text-white text-center mb-1 fw-bold">@(Model.UserPrediction != null ? "🔄 Промени Прогнозата" : "🎯 Направи Прогноза")</h4>
                     <p class="text-center mb-3" style="color:rgba(255,255,255,0.45); font-size:0.88rem;">Познай точния резултат и спечели точки!</p>
 
                     <form method="post" action="/Predictions/CreateFromApi">
@@ -947,10 +961,24 @@
             }
             else
             {
-                <div class="no-data-msg">
+                @if (Model.UserPrediction != null)
+                {
+                    <div class="predict-card mb-4" style="background: rgba(30,60,114,0.2); border-color: rgba(30,60,114,0.4); padding: 1.5rem;">
+                        <h4 class="text-white text-center mb-3 fw-bold">📝 Твоята Направена Прогноза</h4>
+                        <div class="d-flex justify-content-center flex-wrap gap-4 text-center">
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Резултат</small><span class="fs-4 fw-bold text-white">@Model.UserPrediction.PredictedHomeScore : @Model.UserPrediction.PredictedAwayScore</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Голмайстор</small><span class="fs-5 text-white">@(string.IsNullOrEmpty(Model.UserPrediction.AnytimeGoalscorer) ? "-" : Model.UserPrediction.AnytimeGoalscorer)</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Корнери</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedCorners?.ToString() ?? "-")</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Ж. Картони</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedYellowCards?.ToString() ?? "-")</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Ч. Картони</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedRedCards?.ToString() ?? "-")</span></div>
+                        </div>
+                    </div>
+                }
+
+                <div class="no-data-msg pb-4 pt-2">
                     <div class="icon">🔒</div>
                     <h5 class="text-white mb-2">Прогнозата е заключена</h5>
-                    <p>@(isFT ? "Мачът е вече завършил." : "Мачът е в момента на живо. Не можеш да правиш прогнози.")</p>
+                    <p>@(isFT ? "Мачът е вече завършил." : "Мачът е в момента на живо. Не можеш да правиш или променяш прогнози.")</p>
                 </div>
             }
         </div>

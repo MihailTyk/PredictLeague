@@ -43,6 +43,9 @@ builder.Services.AddHttpClient<FootballTransferService>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+builder.Services.AddScoped<MatchService>();
+builder.Services.AddHostedService<MatchSyncBackgroundService>();
+
 
 var app = builder.Build();
 
