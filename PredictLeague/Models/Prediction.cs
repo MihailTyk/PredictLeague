@@ -40,6 +40,8 @@ namespace PredictLeague.Models
         
         public string? AnytimeGoalscorer { get; set; } // Име на играч
 
+        public bool? PredictedPenalty { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

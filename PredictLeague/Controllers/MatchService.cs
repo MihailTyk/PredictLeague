@@ -57,6 +57,15 @@ namespace PredictLeague.Controllers
                                 match.IsFinished = true;
                                 match.HomeScore = detail.goals.home;
                                 match.AwayScore = detail.goals.away;
+                                
+                                // Проверяваме за дузпа
+                                if (detail.events != null)
+                                {
+                                    match.HadPenalty = detail.events.Any(e => 
+                                        !string.IsNullOrEmpty(e.detail) && 
+                                        e.detail.Contains("Penalty", StringComparison.OrdinalIgnoreCase));
+                                }
+                                
                                 _context.Update(match);
 
                                 // Обновяваме точките за всички предсказания
@@ -108,6 +117,15 @@ namespace PredictLeague.Controllers
                      prediction.PredictedAwayScore == match.AwayScore)
             {
                 newPoints = 3;
+            }
+
+            // Бонус точки за позната дузпа (добавени върху основния резултат)
+            if (match.HadPenalty.HasValue && prediction.PredictedPenalty.HasValue)
+            {
+                if (prediction.PredictedPenalty.Value == match.HadPenalty.Value)
+                {
+                    newPoints += 3; // +3 точки ако са познали за дузпа!
+                }
             }
 
             if (newPoints != oldPoints)

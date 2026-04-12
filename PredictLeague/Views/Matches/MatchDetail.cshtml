@@ -647,6 +647,13 @@
 </style>
 
 
+    <!-- Back Button -->
+    <div class="mb-3 animate__animated animate__fadeInDown">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary text-white border-0 py-2 px-3" style="background: rgba(255,255,255,0.05); border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem;">
+            ← Назад
+        </a>
+    </div>
+
     <!-- Match Hero Header -->
     <div class="match-hero">
         <div class="d-flex align-items-center justify-content-between">
@@ -855,8 +862,10 @@
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Резултат</small><span class="fs-4 fw-bold text-white">@Model.UserPrediction.PredictedHomeScore : @Model.UserPrediction.PredictedAwayScore</span></div>
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Голмайстор</small><span class="fs-5 text-white">@(string.IsNullOrEmpty(Model.UserPrediction.AnytimeGoalscorer) ? "-" : Model.UserPrediction.AnytimeGoalscorer)</span></div>
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Корнери</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedCorners?.ToString() ?? "-")</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Засади</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedOffsides?.ToString() ?? "-")</span></div>
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Ж. Картони</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedYellowCards?.ToString() ?? "-")</span></div>
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Ч. Картони</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedRedCards?.ToString() ?? "-")</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Дузпа</small><span class="fs-5 border rounded px-2 @(Model.UserPrediction.PredictedPenalty == true ? "border-success text-success" : "border-danger text-danger")">@(Model.UserPrediction.PredictedPenalty.HasValue ? (Model.UserPrediction.PredictedPenalty.Value ? "Да" : "Не") : "-")</span></div>
                         </div>
                     </div>
                 }
@@ -898,6 +907,13 @@
                                        class="form-control-dark" />
                             </div>
                             <div class="option-group">
+                                <label>Засади (прибл.)</label>
+                                <input type="number" name="predictedOffsides" min="0" max="20" 
+                                       placeholder="напр. 4"
+                                       value="@(Model.UserPrediction?.PredictedOffsides)"
+                                       class="form-control-dark" />
+                            </div>
+                            <div class="option-group">
                                 <label>Жълти картони</label>
                                 <input type="number" name="predictedYellowCards" min="0" max="20" 
                                        placeholder="напр. 3"
@@ -910,6 +926,14 @@
                                        placeholder="напр. 0"
                                        value="@(Model.UserPrediction?.PredictedRedCards)"
                                        class="form-control-dark" />
+                            </div>
+                            <div class="option-group">
+                                <label>Ще има ли дузпа?</label>
+                                <select name="predictedPenalty" class="form-control-dark">
+                                    <option value="" selected="@(Model.UserPrediction?.PredictedPenalty == null)">-- Избери --</option>
+                                    <option value="true" selected="@(Model.UserPrediction?.PredictedPenalty == true)">Да, ще има дузпа</option>
+                                    <option value="false" selected="@(Model.UserPrediction?.PredictedPenalty == false)">Не, без дузпа</option>
+                                </select>
                             </div>
                         </div>
 
@@ -953,9 +977,14 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn-submit-predict">
-                            @(Model.UserPrediction != null ? "🔄 Актуализирай Прогнозата" : "✅ Завърши Прогнозата")
-                        </button>
+                        <div class="d-flex gap-3 mt-3">
+                            <a href="javascript:history.back()" class="btn-submit-predict text-center" style="background: rgba(255,255,255,0.1); width: auto; padding: 1rem 1.5rem; text-decoration: none;">
+                                ← Назад
+                            </a>
+                            <button type="submit" class="btn-submit-predict" style="flex: 1; margin-top: 0;">
+                                @(Model.UserPrediction != null ? "🔄 Актуализирай Прогнозата" : "✅ Завърши Прогнозата")
+                            </button>
+                        </div>
                     </form>
                 </div>
             }
@@ -969,8 +998,10 @@
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Резултат</small><span class="fs-4 fw-bold text-white">@Model.UserPrediction.PredictedHomeScore : @Model.UserPrediction.PredictedAwayScore</span></div>
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Голмайстор</small><span class="fs-5 text-white">@(string.IsNullOrEmpty(Model.UserPrediction.AnytimeGoalscorer) ? "-" : Model.UserPrediction.AnytimeGoalscorer)</span></div>
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Корнери</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedCorners?.ToString() ?? "-")</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Засади</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedOffsides?.ToString() ?? "-")</span></div>
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Ж. Картони</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedYellowCards?.ToString() ?? "-")</span></div>
                             <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Ч. Картони</small><span class="fs-5 text-white">@(Model.UserPrediction.PredictedRedCards?.ToString() ?? "-")</span></div>
+                            <div><small class="text-white-50 d-block text-uppercase" style="font-size:0.7rem; letter-spacing:1px;">Дузпа</small><span class="fs-5 border rounded px-2 @(Model.UserPrediction.PredictedPenalty == true ? "border-success text-success" : "border-danger text-danger")">@(Model.UserPrediction.PredictedPenalty.HasValue ? (Model.UserPrediction.PredictedPenalty.Value ? "Да" : "Не") : "-")</span></div>
                         </div>
                     </div>
                 }

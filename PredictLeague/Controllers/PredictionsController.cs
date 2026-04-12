@@ -159,7 +159,7 @@ namespace PredictLeague.Controllers
         // 💾 Създаване на Prediction (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,MatchId,PredictedHomeScore,PredictedAwayScore,PredictedWinner,BothTeamsToScore,PredictedCorners,PredictedYellowCards,PredictedRedCards,PredictedOffsides,GoalScoringPrediction,AnytimeGoalscorer")] Prediction prediction)
+        public async Task<IActionResult> Create([Bind("Id,MatchId,PredictedHomeScore,PredictedAwayScore,PredictedWinner,BothTeamsToScore,PredictedCorners,PredictedYellowCards,PredictedRedCards,PredictedOffsides,GoalScoringPrediction,AnytimeGoalscorer,PredictedPenalty")] Prediction prediction)
         {
             // махаме ModelState за Match
             ModelState.Remove("Match");
@@ -198,7 +198,34 @@ namespace PredictLeague.Controllers
                 else
                     prediction.GoalScoringPrediction = "None";
 
-                _context.Prediction.Add(prediction);
+                // 🔍 Проверяваме дали потребителят вече има прогноза за този мач
+                var existingPrediction = await _context.Prediction
+                    .FirstOrDefaultAsync(p => p.MatchId == prediction.MatchId && p.UserId == prediction.UserId);
+
+                if (existingPrediction != null)
+                {
+                    // Обновяваме само нужните полета
+                    existingPrediction.PredictedHomeScore = prediction.PredictedHomeScore;
+                    existingPrediction.PredictedAwayScore = prediction.PredictedAwayScore;
+                    existingPrediction.PredictedWinner = prediction.PredictedWinner;
+                    existingPrediction.BothTeamsToScore = prediction.BothTeamsToScore;
+                    existingPrediction.PredictedCorners = prediction.PredictedCorners;
+                    existingPrediction.PredictedYellowCards = prediction.PredictedYellowCards;
+                    existingPrediction.PredictedRedCards = prediction.PredictedRedCards;
+                    existingPrediction.PredictedOffsides = prediction.PredictedOffsides;
+                    existingPrediction.GoalScoringPrediction = prediction.GoalScoringPrediction;
+                    existingPrediction.AnytimeGoalscorer = prediction.AnytimeGoalscorer;
+                    existingPrediction.PredictedPenalty = prediction.PredictedPenalty;
+                    existingPrediction.CreatedAt = DateTime.Now;
+
+                    _context.Update(existingPrediction);
+                    prediction = existingPrediction; // за по-нататъшната логика за точки
+                }
+                else
+                {
+                    _context.Prediction.Add(prediction);
+                }
+
                 await _context.SaveChangesAsync();
 
                 // 🔍 Намираме мача
@@ -223,6 +250,17 @@ namespace PredictLeague.Controllers
                     else
                     {
                         points = 0;
+                    }
+
+                    // Актуализираме точките на потребителя (Бюджета), ако се налага
+                    if (points != prediction.Points)
+                    {
+                        var userSettings = _context.UserTeamSettings.FirstOrDefault(s => s.UserId == prediction.UserId);
+                        if (userSettings != null)
+                        {
+                            userSettings.Points += (points - prediction.Points);
+                            _context.Update(userSettings);
+                        }
                     }
 
                     prediction.Points = points;

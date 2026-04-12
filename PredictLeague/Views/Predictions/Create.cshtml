@@ -174,13 +174,21 @@
             </div>
 
             <div class="row mb-4">
-                <div class="col-md-6 mb-3 mb-md-0">
+                <div class="col-md-4 mb-3 mb-md-0">
                     <label asp-for="PredictedCorners" class="form-label">Корнери ⛳</label>
-                    <input asp-for="PredictedCorners" class="form-control form-control-lg" type="number" min="0" placeholder="Общо корнери в мача" />
+                    <input asp-for="PredictedCorners" class="form-control form-control-lg" type="number" min="0" placeholder="Общо корнери" />
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4 mb-3 mb-md-0">
                     <label asp-for="PredictedOffsides" class="form-label">Засади 🛑</label>
-                    <input asp-for="PredictedOffsides" class="form-control form-control-lg" type="number" min="0" placeholder="Общо засади в мача" />
+                    <input asp-for="PredictedOffsides" class="form-control form-control-lg" type="number" min="0" placeholder="Общо засади" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="PredictedPenalty" class="form-label">Ще има ли дузпа? 🎯</label>
+                    <select asp-for="PredictedPenalty" class="form-select form-control-lg">
+                        <option value="">-- Избери --</option>
+                        <option value="true">Да, ще има дузпа</option>
+                        <option value="false">Не, без дузпа</option>
+                    </select>
                 </div>
             </div>
 

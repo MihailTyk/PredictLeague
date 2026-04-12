@@ -441,6 +441,14 @@ namespace PredictLeague.Controllers
                                 dbMatch.HomeScore = detail.goals.home;
                                 dbMatch.AwayScore = detail.goals.away;
                                 dbMatch.IsFinished = isFinished;
+
+                                // Дузпи
+                                if (detail.events != null)
+                                {
+                                    dbMatch.HadPenalty = detail.events.Any(e => 
+                                        !string.IsNullOrEmpty(e.detail) && 
+                                        e.detail.Contains("Penalty", StringComparison.OrdinalIgnoreCase));
+                                }
                                 _context.Update(dbMatch);
 
                                 // Обновяваме точките за всички предсказания за този мач
@@ -467,6 +475,15 @@ namespace PredictLeague.Controllers
                                              prediction.PredictedAwayScore == dbMatch.AwayScore)
                                     {
                                         newPoints = 3;
+                                    }
+
+                                    // Бонус точки за позната дузпа
+                                    if (dbMatch.HadPenalty.HasValue && prediction.PredictedPenalty.HasValue)
+                                    {
+                                        if (prediction.PredictedPenalty.Value == dbMatch.HadPenalty.Value)
+                                        {
+                                            newPoints += 3;
+                                        }
                                     }
 
                                     if (newPoints != oldPoints)
@@ -823,6 +840,13 @@ namespace PredictLeague.Controllers
         public FixtureDetail fixture { get; set; }
         public Teams teams { get; set; }
         public Goals goals { get; set; }
+        public List<FixtureEvent> events { get; set; }
+    }
+
+    public class FixtureEvent
+    {
+        public string type { get; set; }
+        public string detail { get; set; }
     }
 
     public class FixtureDetailApiResponse

@@ -15,5 +15,7 @@ namespace PredictLeague.Models
 
         public int? HomeScore { get; set; }
         public int? AwayScore { get; set; }
+
+        public bool? HadPenalty { get; set; }
     }
 }

@@ -233,8 +233,12 @@
                             <span class="detail-value">@p.PredictedYellowCards ж. / @p.PredictedRedCards ч.</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">📅 Направена на</span>
-                            <span class="detail-value">@p.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                            <span class="detail-label">🎯 Дузпа</span>
+                            <span class="detail-value">@(p.PredictedPenalty.HasValue ? (p.PredictedPenalty.Value ? "Да" : "Не") : "Няма")</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">📅 Дата</span>
+                            <span class="detail-value">@p.CreatedAt.ToString("dd.MM HH:mm")</span>
                         </div>
                     </div>
 
