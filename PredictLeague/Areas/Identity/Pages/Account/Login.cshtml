@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model LoginModel
 @{
     ViewData["Title"] = "Вход";
@@ -14,20 +14,20 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="mb-3">
-                <label asp-for="Input.Email" class="form-label fw-semibold"></label>
+                <label class="form-label fw-semibold">Имейл</label>
                 <input asp-for="Input.Email" class="form-control" placeholder="email@example.com" />
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Input.Password" class="form-label fw-semibold"></label>
+                <label class="form-label fw-semibold">Парола</label>
                 <input asp-for="Input.Password" class="form-control" placeholder="••••••••" />
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
 
             <div class="mb-3 form-check">
                 <input asp-for="Input.RememberMe" class="form-check-input" />
-                <label asp-for="Input.RememberMe" class="form-check-label fw-semibold"></label>
+                <label class="form-check-label fw-semibold">Запомни ме?</label>
             </div>
 
             <button type="submit" class="btn btn-primary w-100 fw-bold py-2" style="border-radius: 8px;">

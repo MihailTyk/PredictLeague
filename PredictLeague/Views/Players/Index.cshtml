@@ -24,15 +24,9 @@
                 <a href="@Url.Action("Index", new { leagueId = league.Key, page = 1 })" 
                    class="league-pill @(isActive ? "active" : "")">
                     <span class="flag-icon">
-                        @if(league.Key == 39) { @("🏴") }
-                        else if(league.Key == 140) { @("🇪🇸") }
-                        else if(league.Key == 135) { @("🇮🇹") }
-                        else if(league.Key == 78) { @("🇩🇪") }
+                        @if(league.Key == 39) { @("⚽") }
                         else if(league.Key == 2) { @("🏆") }
-                        else if(league.Key == 61) { @("🇫🇷") }
-                        else if(league.Key == 94) { @("🇵🇹") }
-                        else if(league.Key == 88) { @("🇳🇱") }
-                        else if(league.Key == 172) { @("🇧🇬") }
+                        else { @("🔥") }
                     </span>
                     @league.Value
                 </a>

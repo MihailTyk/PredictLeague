@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,13 +29,13 @@ namespace PredictLeague.Controllers
             _userManager = userManager;
         }
 
-        // 🏟️ Всички мачове — достъпно за всички
+        // рџЏџпёЏ Р’СЃРёС‡РєРё РјР°С‡РѕРІРµ вЂ” РґРѕСЃС‚СЉРїРЅРѕ Р·Р° РІСЃРёС‡РєРё
         public IActionResult Index()
         {
             return View();
         }
 
-        // 🔍 Детайли за мач — достъпно за всички
+        // рџ”Ќ Р”РµС‚Р°Р№Р»Рё Р·Р° РјР°С‡ вЂ” РґРѕСЃС‚СЉРїРЅРѕ Р·Р° РІСЃРёС‡РєРё
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -48,14 +48,14 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // ➕ Създаване на нов мач — само за Admin
+        // вћ• РЎСЉР·РґР°РІР°РЅРµ РЅР° РЅРѕРІ РјР°С‡ вЂ” СЃР°РјРѕ Р·Р° Admin
         [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
         }
 
-        // 💾 Създаване (POST) — само за Admin
+        // рџ’ѕ РЎСЉР·РґР°РІР°РЅРµ (POST) вЂ” СЃР°РјРѕ Р·Р° Admin
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -70,7 +70,7 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // ✏️ Редакция на мач — само за Admin
+        // вњЏпёЏ Р РµРґР°РєС†РёСЏ РЅР° РјР°С‡ вЂ” СЃР°РјРѕ Р·Р° Admin
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -84,7 +84,7 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // 💾 Записване на редакцията — само за Admin
+        // рџ’ѕ Р—Р°РїРёСЃРІР°РЅРµ РЅР° СЂРµРґР°РєС†РёСЏС‚Р° вЂ” СЃР°РјРѕ Р·Р° Admin
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -100,7 +100,7 @@ namespace PredictLeague.Controllers
                     _context.Update(match);
                     await _context.SaveChangesAsync();
 
-                    // 🏆 Изчисляваме точките след приключване на мача
+                    // рџЏ† РР·С‡РёСЃР»СЏРІР°РјРµ С‚РѕС‡РєРёС‚Рµ СЃР»РµРґ РїСЂРёРєР»СЋС‡РІР°РЅРµ РЅР° РјР°С‡Р°
                     var predictions = await _context.Prediction.Where(p => p.MatchId == match.Id).ToListAsync();
 
                     foreach (var prediction in predictions)
@@ -111,7 +111,7 @@ namespace PredictLeague.Controllers
                         if (prediction.PredictedHomeScore == match.HomeScore &&
                             prediction.PredictedAwayScore == match.AwayScore)
                         {
-                            newPoints = 10; // Точно познат резултат (Променено на 10 за по-голям бонус)
+                            newPoints = 10; // РўРѕС‡РЅРѕ РїРѕР·РЅР°С‚ СЂРµР·СѓР»С‚Р°С‚ (РџСЂРѕРјРµРЅРµРЅРѕ РЅР° 10 Р·Р° РїРѕ-РіРѕР»СЏРј Р±РѕРЅСѓСЃ)
                         }
                         else if (
                             (match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
@@ -119,10 +119,10 @@ namespace PredictLeague.Controllers
                             (match.HomeScore == match.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore)
                         )
                         {
-                            newPoints = 5; // Познат изход (победа/загуба/равен)
+                            newPoints = 5; // РџРѕР·РЅР°С‚ РёР·С…РѕРґ (РїРѕР±РµРґР°/Р·Р°РіСѓР±Р°/СЂР°РІРµРЅ)
                         }
 
-                        // Обновяване на "портфейла" на потребителя
+                        // РћР±РЅРѕРІСЏРІР°РЅРµ РЅР° "РїРѕСЂС‚С„РµР№Р»Р°" РЅР° РїРѕС‚СЂРµР±РёС‚РµР»СЏ
                         if (newPoints != oldPoints)
                         {
                             var userSettings = await _context.UserTeamSettings.FirstOrDefaultAsync(s => s.UserId == prediction.UserId);
@@ -153,7 +153,7 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // ❌ Изтриване на мач — само за Admin
+        // вќЊ РР·С‚СЂРёРІР°РЅРµ РЅР° РјР°С‡ вЂ” СЃР°РјРѕ Р·Р° Admin
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -167,7 +167,7 @@ namespace PredictLeague.Controllers
             return View(match);
         }
 
-        // 💣 Потвърждение на изтриването — само за Admin
+        // рџ’Ј РџРѕС‚РІСЉСЂР¶РґРµРЅРёРµ РЅР° РёР·С‚СЂРёРІР°РЅРµС‚Рѕ вЂ” СЃР°РјРѕ Р·Р° Admin
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -186,7 +186,7 @@ namespace PredictLeague.Controllers
             return _context.Match.Any(e => e.Id == id);
         }
 
-        // ⚽ Универсален метод за зареждане на мачове по лига
+        // вљЅ РЈРЅРёРІРµСЂСЃР°Р»РµРЅ РјРµС‚РѕРґ Р·Р° Р·Р°СЂРµР¶РґР°РЅРµ РЅР° РјР°С‡РѕРІРµ РїРѕ Р»РёРіР°
         private async Task<IActionResult> LoadLeagueMatches(string leagueName, int leagueId)
         {
             try
@@ -194,8 +194,8 @@ namespace PredictLeague.Controllers
                 var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
                 string apiKey = configuration["ApiKeys:ApiSports"] ?? "";
                 
-                // Безплатният план на API-Sports.io (ако има промяна) или нормален ключ
-                // Използваме най-новите достъпни сезони спрямо 2026-та година
+                // Р‘РµР·РїР»Р°С‚РЅРёСЏС‚ РїР»Р°РЅ РЅР° API-Sports.io (Р°РєРѕ РёРјР° РїСЂРѕРјСЏРЅР°) РёР»Рё РЅРѕСЂРјР°Р»РµРЅ РєР»СЋС‡
+                // РР·РїРѕР»Р·РІР°РјРµ РЅР°Р№-РЅРѕРІРёС‚Рµ РґРѕСЃС‚СЉРїРЅРё СЃРµР·РѕРЅРё СЃРїСЂСЏРјРѕ 2026-С‚Р° РіРѕРґРёРЅР°
                 int[] seasonsToTry = { 2026, 2025, 2024, 2023, 2022, 2021 };
 
                 string url = "";
@@ -225,18 +225,18 @@ namespace PredictLeague.Controllers
                         _logger.LogError($"API request failed for season {season}. Status: {response.StatusCode}, Response: {errorContent}");
                         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                         {
-                            ViewBag.Error = $"❌ API ключът е невалиден или изтекъл. Провери API ключа за {leagueName}.";
+                            ViewBag.Error = $"вќЊ API РєР»СЋС‡СЉС‚ Рµ РЅРµРІР°Р»РёРґРµРЅ РёР»Рё РёР·С‚РµРєСЉР». РџСЂРѕРІРµСЂРё API РєР»СЋС‡Р° Р·Р° {leagueName}.";
                             return View("League", new List<FootballMatch>());
                         }
                         
-                        // Опитай следващия сезон
+                        // РћРїРёС‚Р°Р№ СЃР»РµРґРІР°С‰РёСЏ СЃРµР·РѕРЅ
                         continue;
                     }
 
                     json = await response.Content.ReadAsStringAsync();
                     _logger.LogInformation($"Response received for season {season}. Length: {json.Length} characters");
                     
-                    // Логваме първите 500 символа за дебъгване
+                    // Р›РѕРіРІР°РјРµ РїСЉСЂРІРёС‚Рµ 500 СЃРёРјРІРѕР»Р° Р·Р° РґРµР±СЉРіРІР°РЅРµ
                     if (json.Length > 0)
                     {
                         _logger.LogInformation($"Response preview (first 500 chars): {json.Substring(0, Math.Min(500, json.Length))}");
@@ -244,12 +244,12 @@ namespace PredictLeague.Controllers
                     
                     result = JsonConvert.DeserializeObject<FootballApiResponse>(json);
 
-                    // Проверяваме дали има errors в response-а
+                    // РџСЂРѕРІРµСЂСЏРІР°РјРµ РґР°Р»Рё РёРјР° errors РІ response-Р°
                     if (result != null && result.errors != null)
                     {
                         string errorMessage = "";
                         
-                        // Обработваме errors като обект или масив
+                        // РћР±СЂР°Р±РѕС‚РІР°РјРµ errors РєР°С‚Рѕ РѕР±РµРєС‚ РёР»Рё РјР°СЃРёРІ
                         if (result.errors is Newtonsoft.Json.Linq.JObject errorsObj)
                         {
                             var errorValues = errorsObj.Properties()
@@ -275,11 +275,11 @@ namespace PredictLeague.Controllers
                         {
                             _logger.LogWarning($"API returned errors for season {season}: {errorMessage}");
                             
-                            // Ако грешката е за плана, показваме по-ясно съобщение
+                            // РђРєРѕ РіСЂРµС€РєР°С‚Р° Рµ Р·Р° РїР»Р°РЅР°, РїРѕРєР°Р·РІР°РјРµ РїРѕ-СЏСЃРЅРѕ СЃСЉРѕР±С‰РµРЅРёРµ
                             if (errorMessage.Contains("Free plans") || errorMessage.Contains("plan"))
                             {
                                 _logger.LogInformation($"Skipping season {season} due to plan restrictions");
-                                continue; // Опитай следващия сезон
+                                continue; // РћРїРёС‚Р°Р№ СЃР»РµРґРІР°С‰РёСЏ СЃРµР·РѕРЅ
                             }
                         }
                     }
@@ -304,74 +304,83 @@ namespace PredictLeague.Controllers
                     }
                 }
 
-                // Ако стигнем тук, не сме намерили мачове в никой от сезоните
-                ViewBag.Error = $"❌ Няма налични мачове за {leagueName} за сезоните {string.Join(", ", seasonsToTry)}.";
+                // РђРєРѕ СЃС‚РёРіРЅРµРј С‚СѓРє, РЅРµ СЃРјРµ РЅР°РјРµСЂРёР»Рё РјР°С‡РѕРІРµ РІ РЅРёРєРѕР№ РѕС‚ СЃРµР·РѕРЅРёС‚Рµ
+                ViewBag.Error = $"вќЊ РќСЏРјР° РЅР°Р»РёС‡РЅРё РјР°С‡РѕРІРµ Р·Р° {leagueName} Р·Р° СЃРµР·РѕРЅРёС‚Рµ {string.Join(", ", seasonsToTry)}.";
                 return View("League", new List<FootballMatch>());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error loading {leagueName} matches");
                 
-                ViewBag.Error = $"❌ Грешка при зареждане на {leagueName}: {ex.Message}";
+                ViewBag.Error = $"вќЊ Р“СЂРµС€РєР° РїСЂРё Р·Р°СЂРµР¶РґР°РЅРµ РЅР° {leagueName}: {ex.Message}";
                 return View("League", new List<FootballMatch>());
             }
         }
 
-        // 🏴 Premier League
+        // рџЏґ Premier League
+        [Authorize]
         public async Task<IActionResult> PremierLeague()
         {
             return await LoadLeagueMatches("Premier League", 39);
         }
 
-        // 🇪🇸 La Liga
+        // рџ‡Єрџ‡ё La Liga
+        [Authorize]
         public async Task<IActionResult> LaLiga()
         {
             return await LoadLeagueMatches("La Liga", 140);
         }
 
-        // 🇮🇹 Serie A
+        // рџ‡®рџ‡№ Serie A
+        [Authorize]
         public async Task<IActionResult> SerieA()
         {
             return await LoadLeagueMatches("Serie A", 135);
         }
 
-        // 🇩🇪 Bundesliga
+        // рџ‡©рџ‡Є Bundesliga
+        [Authorize]
         public async Task<IActionResult> Bundesliga()
         {
             return await LoadLeagueMatches("Bundesliga", 78);
         }
 
-        // 🏆 Champions League
+        // рџЏ† Champions League
+        [Authorize]
         public async Task<IActionResult> ChampionsLeague()
         {
             return await LoadLeagueMatches("Champions League", 2);
         }
 
-        // 🇫🇷 Ligue 1
+        // рџ‡«рџ‡· Ligue 1
+        [Authorize]
         public async Task<IActionResult> Ligue1()
         {
             return await LoadLeagueMatches("Ligue 1", 61);
         }
 
-        // 🇵🇹 Primeira Liga
+        // рџ‡µрџ‡№ Primeira Liga
+        [Authorize]
         public async Task<IActionResult> PrimeiraLiga()
         {
             return await LoadLeagueMatches("Primeira Liga", 94);
         }
 
-        // 🇳🇱 Eredivisie
+        // рџ‡ірџ‡± Eredivisie
+        [Authorize]
         public async Task<IActionResult> Eredivisie()
         {
             return await LoadLeagueMatches("Eredivisie", 88);
         }
 
-        // 🇧🇬 Parva Liga
+        // рџ‡§рџ‡¬ Parva Liga
+        [Authorize]
         public async Task<IActionResult> ParvaLiga()
         {
             return await LoadLeagueMatches("Parva Liga", 172);
         }
 
-        // 📋 Детайли за мач от API (статистика + съставите + стадион + класация + H2H)
+        // рџ“‹ Р”РµС‚Р°Р№Р»Рё Р·Р° РјР°С‡ РѕС‚ API (СЃС‚Р°С‚РёСЃС‚РёРєР° + СЃСЉСЃС‚Р°РІРёС‚Рµ + СЃС‚Р°РґРёРѕРЅ + РєР»Р°СЃР°С†РёСЏ + H2H)
         public async Task<IActionResult> MatchDetail(
             int fixtureId, int homeTeamId, int awayTeamId,
             string homeTeam, string awayTeam, string homeLogo, string awayLogo,
@@ -403,7 +412,7 @@ namespace PredictLeague.Controllers
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.Timeout = TimeSpan.FromSeconds(30);
 
-                // 1️⃣ Стадион — от детайлите на мача
+                // 1пёЏвѓЈ РЎС‚Р°РґРёРѕРЅ вЂ” РѕС‚ РґРµС‚Р°Р№Р»РёС‚Рµ РЅР° РјР°С‡Р°
                 var fixtureUrl = $"https://v3.football.api-sports.io/fixtures?id={fixtureId}";
                 var fixtureResponse = await client.GetAsync(fixtureUrl);
                 if (fixtureResponse.IsSuccessStatusCode)
@@ -419,19 +428,19 @@ namespace PredictLeague.Controllers
                             vm.VenueCity = detail.fixture.venue.city;
                         }
 
-                        // Обновяваме статуса до актуален
+                        // РћР±РЅРѕРІСЏРІР°РјРµ СЃС‚Р°С‚СѓСЃР° РґРѕ Р°РєС‚СѓР°Р»РµРЅ
                         if (detail.fixture.status != null && !string.IsNullOrEmpty(detail.fixture.status.short_))
                         {
                             vm.Status = detail.fixture.status.short_;
                         }
 
-                        // Обновяваме резултата в реално време
+                        // РћР±РЅРѕРІСЏРІР°РјРµ СЂРµР·СѓР»С‚Р°С‚Р° РІ СЂРµР°Р»РЅРѕ РІСЂРµРјРµ
                         if (detail.goals != null && detail.goals.home != null && detail.goals.away != null)
                         {
                             vm.HomeScore = detail.goals.home;
                             vm.AwayScore = detail.goals.away;
 
-                            // Записваме в базата, ако има промяна или е приключил
+                            // Р—Р°РїРёСЃРІР°РјРµ РІ Р±Р°Р·Р°С‚Р°, Р°РєРѕ РёРјР° РїСЂРѕРјСЏРЅР° РёР»Рё Рµ РїСЂРёРєР»СЋС‡РёР»
                             string matchStatus = detail.fixture.status?.short_;
                             bool isFinished = (matchStatus == "FT" || matchStatus == "AET" || matchStatus == "PEN");
 
@@ -442,16 +451,11 @@ namespace PredictLeague.Controllers
                                 dbMatch.AwayScore = detail.goals.away;
                                 dbMatch.IsFinished = isFinished;
 
-                                // Дузпи
-                                if (detail.events != null)
-                                {
-                                    dbMatch.HadPenalty = detail.events.Any(e => 
-                                        !string.IsNullOrEmpty(e.detail) && 
-                                        e.detail.Contains("Penalty", StringComparison.OrdinalIgnoreCase));
-                                }
+                                // Р”СѓР·РїРё
+                                if (detail.events != null) { dbMatch.HadPenalty = detail.events.Any(e => !string.IsNullOrEmpty(e.detail) && e.detail.Contains("Penalty", StringComparison.OrdinalIgnoreCase)); var scorers = detail.events.Where(e => e.type == "Goal" && e.player != null && !string.IsNullOrEmpty(e.player.name)).Select(e => e.player.name).Distinct(); dbMatch.ActualGoalscorers = string.Join(", ", scorers); } if (vm.Statistics != null && vm.Statistics.Count >= 1) { int totalCorners = 0, totalOffsides = 0, totalYellow = 0, totalRed = 0; foreach (var teamStat in vm.Statistics) { foreach (var stat in teamStat.statistics) { int val = 0; int.TryParse(stat.value?.ToString(), out val); if (stat.type == "Corner Kicks") totalCorners += val; if (stat.type == "Offsides") totalOffsides += val; if (stat.type == "Yellow Cards") totalYellow += val; if (stat.type == "Red Cards") totalRed += val; } } dbMatch.ActualCorners = totalCorners; dbMatch.ActualOffsides = totalOffsides; dbMatch.ActualYellowCards = totalYellow; dbMatch.ActualRedCards = totalRed; }
                                 _context.Update(dbMatch);
 
-                                // Обновяваме точките за всички предсказания за този мач
+                                // РћР±РЅРѕРІСЏРІР°РјРµ С‚РѕС‡РєРёС‚Рµ Р·Р° РІСЃРёС‡РєРё РїСЂРµРґСЃРєР°Р·Р°РЅРёСЏ Р·Р° С‚РѕР·Рё РјР°С‡
                                 var predictions = await _context.Prediction.Where(p => p.MatchId == dbMatch.Id).ToListAsync();
                                 foreach (var prediction in predictions)
                                 {
@@ -463,33 +467,38 @@ namespace PredictLeague.Controllers
                                     {
                                         newPoints = 10;
                                     }
-                                    else if (
-                                        (dbMatch.HomeScore > dbMatch.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
-                                        (dbMatch.HomeScore < dbMatch.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore) ||
-                                        (dbMatch.HomeScore == dbMatch.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore)
-                                    )
+                                    else 
                                     {
-                                        newPoints = 5;
-                                    }
-                                    else if (prediction.PredictedHomeScore == dbMatch.HomeScore ||
-                                             prediction.PredictedAwayScore == dbMatch.AwayScore)
-                                    {
-                                        newPoints = 3;
-                                    }
+                                        if (prediction.PredictedHomeScore == dbMatch.HomeScore) newPoints += 3;
+                                        if (prediction.PredictedAwayScore == dbMatch.AwayScore) newPoints += 3;
 
-                                    // Бонус точки за позната дузпа
-                                    if (dbMatch.HadPenalty.HasValue && prediction.PredictedPenalty.HasValue)
-                                    {
-                                        if (prediction.PredictedPenalty.Value == dbMatch.HadPenalty.Value)
+                                        // 1 С‚РѕС‡РєР° Р·Р° РїРѕР·РЅР°С‚ Р·РЅР°Рє (РїРѕР±РµРґРёС‚РµР»/СЂР°РІРµРЅ), Р°РєРѕ РЅСЏРјР° РїРѕР·РЅР°С‚Рё РіРѕР»РѕРІРµ
+                                        if (newPoints == 0)
                                         {
-                                            newPoints += 3;
+                                            bool outcomeMatches = (dbMatch.HomeScore > dbMatch.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
+                                                                 (dbMatch.HomeScore < dbMatch.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore) ||
+                                                                 (dbMatch.HomeScore == dbMatch.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore);
+                                            if (outcomeMatches) newPoints = 1;
                                         }
                                     }
+
+                                    // Р‘РѕРЅСѓСЃ С‚РѕС‡РєРё Р·Р° РїРѕР·РЅР°С‚Р° РґСѓР·РїР°
+                                    if (dbMatch.HadPenalty == true && prediction.PredictedPenalty == true) { newPoints += 3; } if (!string.IsNullOrEmpty(prediction.AnytimeGoalscorer) && !string.IsNullOrEmpty(dbMatch.ActualGoalscorers)) { var scorersList = dbMatch.ActualGoalscorers.Split(", ", StringSplitOptions.RemoveEmptyEntries); if (scorersList.Any(s => s.Contains(prediction.AnytimeGoalscorer, StringComparison.OrdinalIgnoreCase) || prediction.AnytimeGoalscorer.Contains(s, StringComparison.OrdinalIgnoreCase))) newPoints += 5; } if (prediction.PredictedCorners.HasValue && dbMatch.ActualCorners.HasValue && prediction.PredictedCorners == dbMatch.ActualCorners) newPoints += 3; if (prediction.PredictedOffsides.HasValue && dbMatch.ActualOffsides.HasValue && prediction.PredictedOffsides == dbMatch.ActualOffsides) newPoints += 2; if (prediction.PredictedYellowCards.HasValue && dbMatch.ActualYellowCards.HasValue && prediction.PredictedYellowCards == dbMatch.ActualYellowCards) newPoints += 2; if (prediction.PredictedRedCards.HasValue && dbMatch.ActualRedCards.HasValue && prediction.PredictedRedCards == dbMatch.ActualRedCards) newPoints += 2;
 
                                     if (newPoints != oldPoints)
                                     {
                                         var userSettings = await _context.UserTeamSettings.FirstOrDefaultAsync(s => s.UserId == prediction.UserId);
-                                        if (userSettings != null)
+                                        if (userSettings == null)
+                                        {
+                                            userSettings = new Models.UserTeamSettings 
+                                            { 
+                                                UserId = prediction.UserId, 
+                                                Points = newPoints, 
+                                                Formation = "4-4-2" 
+                                            };
+                                            _context.UserTeamSettings.Add(userSettings);
+                                        }
+                                        else
                                         {
                                             userSettings.Points += (newPoints - oldPoints);
                                             _context.Update(userSettings);
@@ -504,7 +513,7 @@ namespace PredictLeague.Controllers
                     }
                 }
 
-                // 2️⃣ Съставите
+                // 2пёЏвѓЈ РЎСЉСЃС‚Р°РІРёС‚Рµ
                 var lineupsUrl = $"https://v3.football.api-sports.io/fixtures/lineups?fixture={fixtureId}";
                 var lineupsResponse = await client.GetAsync(lineupsUrl);
                 if (lineupsResponse.IsSuccessStatusCode)
@@ -514,7 +523,7 @@ namespace PredictLeague.Controllers
                     vm.Lineups = lineupsResult?.response ?? new List<TeamLineup>();
                 }
 
-                // 3️⃣ Статистика
+                // 3пёЏвѓЈ РЎС‚Р°С‚РёСЃС‚РёРєР°
                 var statsUrl = $"https://v3.football.api-sports.io/fixtures/statistics?fixture={fixtureId}";
                 var statsResponse = await client.GetAsync(statsUrl);
                 if (statsResponse.IsSuccessStatusCode)
@@ -524,7 +533,7 @@ namespace PredictLeague.Controllers
                     vm.Statistics = statsResult?.response ?? new List<TeamStatistics>();
                 }
 
-                // 4️⃣ Класация на лигата
+                // 4пёЏвѓЈ РљР»Р°СЃР°С†РёСЏ РЅР° Р»РёРіР°С‚Р°
                 if (leagueId > 0 && season > 0)
                 {
                     var standUrl = $"https://v3.football.api-sports.io/standings?league={leagueId}&season={season}";
@@ -543,7 +552,7 @@ namespace PredictLeague.Controllers
                     }
                 }
 
-                // 5️⃣ H2H — последните 10 мача между двата отбора
+                // 5пёЏвѓЈ H2H вЂ” РїРѕСЃР»РµРґРЅРёС‚Рµ 10 РјР°С‡Р° РјРµР¶РґСѓ РґРІР°С‚Р° РѕС‚Р±РѕСЂР°
                 if (homeTeamId > 0 && awayTeamId > 0)
                 {
                     var h2hUrl = $"https://v3.football.api-sports.io/fixtures/headtohead?h2h={homeTeamId}-{awayTeamId}&last=10";
@@ -556,21 +565,21 @@ namespace PredictLeague.Controllers
                     }
                 }
 
-                // 6️⃣ Fetch User Prediction if exists
+                // 6пёЏвѓЈ Fetch User Prediction if exists
                 var user = await _userManager.GetUserAsync(User);
                 if (user != null)
                 {
-                    // Най-сигурното търсене: по FixtureId
+                    // РќР°Р№-СЃРёРіСѓСЂРЅРѕС‚Рѕ С‚СЉСЂСЃРµРЅРµ: РїРѕ FixtureId
                     var dbMatch = await _context.Match.FirstOrDefaultAsync(m => m.FixtureId == fixtureId);
                     
-                    // Резервен вариант по имена (ако датата се разминава заради часовата зона или FixtureId липсва)
+                    // Р РµР·РµСЂРІРµРЅ РІР°СЂРёР°РЅС‚ РїРѕ РёРјРµРЅР° (Р°РєРѕ РґР°С‚Р°С‚Р° СЃРµ СЂР°Р·РјРёРЅР°РІР° Р·Р°СЂР°РґРё С‡Р°СЃРѕРІР°С‚Р° Р·РѕРЅР° РёР»Рё FixtureId Р»РёРїСЃРІР°)
                     if (dbMatch == null)
                     {
                         dbMatch = await _context.Match.FirstOrDefaultAsync(m => 
                             m.HomeTeam == homeTeam && 
                             m.AwayTeam == awayTeam);
                             
-                        // Ако сме намерили мача по стари данни, го "ъпгрейдваме" с новия FixtureId за бъдещето
+                        // РђРєРѕ СЃРјРµ РЅР°РјРµСЂРёР»Рё РјР°С‡Р° РїРѕ СЃС‚Р°СЂРё РґР°РЅРЅРё, РіРѕ "СЉРїРіСЂРµР№РґРІР°РјРµ" СЃ РЅРѕРІРёСЏ FixtureId Р·Р° Р±СЉРґРµС‰РµС‚Рѕ
                         if (dbMatch != null && dbMatch.FixtureId == null)
                         {
                             dbMatch.FixtureId = fixtureId;
@@ -580,6 +589,7 @@ namespace PredictLeague.Controllers
                         
                     if (dbMatch != null)
                     {
+                        vm.HadPenalty = dbMatch.HadPenalty;
                         vm.UserPrediction = await _context.Prediction
                             .Where(p => p.MatchId == dbMatch.Id && p.UserId == user.Id)
                             .OrderByDescending(p => p.CreatedAt)
@@ -596,7 +606,7 @@ namespace PredictLeague.Controllers
             return View("MatchDetail", vm);
         }
 
-        // 🏆 Пълна класация на лигата
+        // рџЏ† РџСЉР»РЅР° РєР»Р°СЃР°С†РёСЏ РЅР° Р»РёРіР°С‚Р°
         public async Task<IActionResult> Standings(int leagueId, int season, string leagueName)
         {
             var vm = new FullStandingsViewModel
@@ -625,13 +635,13 @@ namespace PredictLeague.Controllers
                     var standJson = await standResponse.Content.ReadAsStringAsync();
                     var standResult = JsonConvert.DeserializeObject<StandingsApiResponse>(standJson);
                     
-                    // Проверка за API грешки
+                    // РџСЂРѕРІРµСЂРєР° Р·Р° API РіСЂРµС€РєРё
                     if (standResult != null && standResult.errors != null)
                     {
                         var errorsJson = JsonConvert.SerializeObject(standResult.errors);
                         if (errorsJson.Contains("requests") || errorsJson.Contains("plan"))
                         {
-                            ViewBag.Error = "❌ Превишен лимит на API заявки или грешка в плана. Моля опитай пак по-късно.";
+                            ViewBag.Error = "вќЊ РџСЂРµРІРёС€РµРЅ Р»РёРјРёС‚ РЅР° API Р·Р°СЏРІРєРё РёР»Рё РіСЂРµС€РєР° РІ РїР»Р°РЅР°. РњРѕР»СЏ РѕРїРёС‚Р°Р№ РїР°Рє РїРѕ-РєСЉСЃРЅРѕ.";
                             return View(vm);
                         }
                     }
@@ -642,31 +652,31 @@ namespace PredictLeague.Controllers
                     {
                         vm.Standings = leagueData.standings.FirstOrDefault() ?? new List<StandingEntry>();
                         vm.LeagueLogo = leagueData.logo;
-                        // Ако имаме държава като стринг, може да оставим флага празен или да го вземем от друго място
-                        // За момента спираме грешката при десериализация
+                        // РђРєРѕ РёРјР°РјРµ РґСЉСЂР¶Р°РІР° РєР°С‚Рѕ СЃС‚СЂРёРЅРі, РјРѕР¶Рµ РґР° РѕСЃС‚Р°РІРёРј С„Р»Р°РіР° РїСЂР°Р·РµРЅ РёР»Рё РґР° РіРѕ РІР·РµРјРµРј РѕС‚ РґСЂСѓРіРѕ РјСЏСЃС‚Рѕ
+                        // Р—Р° РјРѕРјРµРЅС‚Р° СЃРїРёСЂР°РјРµ РіСЂРµС€РєР°С‚Р° РїСЂРё РґРµСЃРµСЂРёР°Р»РёР·Р°С†РёСЏ
                         vm.Flag = null; 
                     }
                     else
                     {
-                        ViewBag.Error = "❌ Няма намерени данни за класацията за този сезон.";
+                        ViewBag.Error = "вќЊ РќСЏРјР° РЅР°РјРµСЂРµРЅРё РґР°РЅРЅРё Р·Р° РєР»Р°СЃР°С†РёСЏС‚Р° Р·Р° С‚РѕР·Рё СЃРµР·РѕРЅ.";
                     }
                 }
                 else
                 {
-                    ViewBag.Error = $"❌ Грешка от API: {standResponse.StatusCode}";
+                    ViewBag.Error = $"вќЊ Р“СЂРµС€РєР° РѕС‚ API: {standResponse.StatusCode}";
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading standings for league {LeagueId}", leagueId);
-                ViewBag.Error = $"❌ Системна грешка: {ex.Message}";
+                ViewBag.Error = $"вќЊ РЎРёСЃС‚РµРјРЅР° РіСЂРµС€РєР°: {ex.Message}";
             }
 
             return View(vm);
         }
     }
 
-    // 🧩 Модели за Football API
+    // рџ§© РњРѕРґРµР»Рё Р·Р° Football API
     public class FootballApiResponse
     {
         public List<FootballMatch> response { get; set; }
@@ -714,7 +724,7 @@ namespace PredictLeague.Controllers
         public int? away { get; set; }
     }
 
-    // 📋 ViewModel за детайлната страница на мач
+    // рџ“‹ ViewModel Р·Р° РґРµС‚Р°Р№Р»РЅР°С‚Р° СЃС‚СЂР°РЅРёС†Р° РЅР° РјР°С‡
     public class MatchDetailViewModel
     {
         public int FixtureId { get; set; }
@@ -730,13 +740,13 @@ namespace PredictLeague.Controllers
         public int? AwayScore { get; set; }
         public int LeagueId { get; set; }
         public int Season { get; set; }
-        // Стадион
+        // РЎС‚Р°РґРёРѕРЅ
         public string VenueName { get; set; }
         public string VenueCity { get; set; }
-        // Съставите & Статистика
+        // РЎСЉСЃС‚Р°РІРёС‚Рµ & РЎС‚Р°С‚РёСЃС‚РёРєР°
         public List<TeamLineup> Lineups { get; set; } = new();
         public List<TeamStatistics> Statistics { get; set; } = new();
-        // Класация
+        // РљР»Р°СЃР°С†РёСЏ
         public List<StandingEntry> Standings { get; set; } = new();
         public StandingEntry HomeStanding { get; set; }
         public StandingEntry AwayStanding { get; set; }
@@ -744,6 +754,7 @@ namespace PredictLeague.Controllers
         public List<FootballMatch> H2HMatches { get; set; } = new();
         public PredictLeague.Models.Prediction? UserPrediction { get; set; }
         public string ApiError { get; set; }
+        public bool? HadPenalty { get; set; }
     }
 
     public class FullStandingsViewModel
@@ -756,7 +767,7 @@ namespace PredictLeague.Controllers
         public List<StandingEntry> Standings { get; set; } = new();
     }
 
-    // 📋 Модели за Lineups API
+    // рџ“‹ РњРѕРґРµР»Рё Р·Р° Lineups API
     public class LineupsApiResponse
     {
         public List<TeamLineup> response { get; set; }
@@ -800,7 +811,7 @@ namespace PredictLeague.Controllers
         public string photo { get; set; }
     }
 
-    // 📊 Модели за Statistics API
+    // рџ“Љ РњРѕРґРµР»Рё Р·Р° Statistics API
     public class StatisticsApiResponse
     {
         public List<TeamStatistics> response { get; set; }
@@ -818,7 +829,7 @@ namespace PredictLeague.Controllers
         public object value { get; set; }
     }
 
-    // 🏟️ Venue модел
+    // рџЏџпёЏ Venue РјРѕРґРµР»
     public class Venue
     {
         public int? id { get; set; }
@@ -826,7 +837,7 @@ namespace PredictLeague.Controllers
         public string city { get; set; }
     }
 
-    // Fixture Detail (вкл. venue)
+    // Fixture Detail (РІРєР». venue)
     public class FixtureDetail
     {
         public int id { get; set; }
@@ -847,6 +858,13 @@ namespace PredictLeague.Controllers
     {
         public string type { get; set; }
         public string detail { get; set; }
+        public PlayerEventInfo player { get; set; }
+    }
+
+    public class PlayerEventInfo
+    {
+        public int? id { get; set; }
+        public string name { get; set; }
     }
 
     public class FixtureDetailApiResponse
@@ -854,7 +872,7 @@ namespace PredictLeague.Controllers
         public List<FixtureDetailMatch> response { get; set; }
     }
 
-    // 📊 Standings модели
+    // рџ“Љ Standings РјРѕРґРµР»Рё
     public class StandingsApiResponse
     {
         public List<StandingsResponseItem> response { get; set; }
@@ -872,7 +890,7 @@ namespace PredictLeague.Controllers
         public int id { get; set; }
         public string name { get; set; }
         public string logo { get; set; }
-        public string country { get; set; } // API връща стринг "Spain", не обект
+        public string country { get; set; } // API РІСЂСЉС‰Р° СЃС‚СЂРёРЅРі "Spain", РЅРµ РѕР±РµРєС‚
         public List<List<StandingEntry>> standings { get; set; }
     }
 
@@ -909,3 +927,7 @@ namespace PredictLeague.Controllers
         public int against { get; set; }
     }
 }
+
+
+
+

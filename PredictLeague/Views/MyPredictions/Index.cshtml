@@ -220,22 +220,38 @@
 
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-4">
                     <div class="details-grid flex-grow-1">
-                        <div class="detail-item">
-                            <span class="detail-label">⚽ Голмайстор</span>
-                            <span class="detail-value">@(string.IsNullOrEmpty(p.AnytimeGoalscorer) ? "Няма" : p.AnytimeGoalscorer)</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">⛳ Корнери</span>
-                            <span class="detail-value">@p.PredictedCorners</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">🟨 Картони</span>
-                            <span class="detail-value">@p.PredictedYellowCards ж. / @p.PredictedRedCards ч.</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">🎯 Дузпа</span>
-                            <span class="detail-value">@(p.PredictedPenalty.HasValue ? (p.PredictedPenalty.Value ? "Да" : "Не") : "Няма")</span>
-                        </div>
+                        @if (!string.IsNullOrEmpty(p.AnytimeGoalscorer) && p.AnytimeGoalscorer != "Няма" && p.AnytimeGoalscorer != "None")
+                        {
+                            <div class="detail-item">
+                                <span class="detail-label">⚽ Голмайстор</span>
+                                <span class="detail-value">@p.AnytimeGoalscorer</span>
+                            </div>
+                        }
+                        
+                        @if (p.PredictedCorners > 0)
+                        {
+                            <div class="detail-item">
+                                <span class="detail-label">⛳ Корнери</span>
+                                <span class="detail-value">@p.PredictedCorners</span>
+                            </div>
+                        }
+
+                        @if (p.PredictedYellowCards > 0 || p.PredictedRedCards > 0)
+                        {
+                            <div class="detail-item">
+                                <span class="detail-label">🟨 Картони</span>
+                                <span class="detail-value">@p.PredictedYellowCards ж. / @p.PredictedRedCards ч.</span>
+                            </div>
+                        }
+
+                        @if (p.PredictedPenalty.HasValue)
+                        {
+                            <div class="detail-item">
+                                <span class="detail-label">🎯 Дузпа</span>
+                                <span class="detail-value">@(p.PredictedPenalty.Value ? "Да" : "Не")</span>
+                            </div>
+                        }
+
                         <div class="detail-item">
                             <span class="detail-label">📅 Дата</span>
                             <span class="detail-value">@p.CreatedAt.ToString("dd.MM HH:mm")</span>
@@ -248,7 +264,7 @@
                             {
                                 <span>@p.Points.ToString() PTS</span>
                                 @if (p.Points == 10) { <span>⚡ ТОЧЕН!</span> }
-                                else if (p.Points > 0) { <span>🧤 ЧАСТИЧЕН</span> }
+                                else if (p.Points > 0) { <span>🧤 СПЕЧЕЛЕНИ</span> }
                                 else { <span>❌ ПРОПУСК</span> }
                             }
                             else

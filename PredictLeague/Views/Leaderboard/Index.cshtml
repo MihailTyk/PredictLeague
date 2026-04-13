@@ -22,11 +22,12 @@
     {
         <div class="card shadow border-0 overflow-hidden rounded-4">
             <div class="card-header bg-gradient-primary text-white p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="row align-items-center fw-bold text-uppercase small letter-spacing-1">
-                    <div class="col-1 text-center">Място</div>
-                    <div class="col-5">Мениджър</div>
-                    <div class="col-2 text-center">Играчи</div>
-                    <div class="col-4">Най-добър играч</div>
+                <div class="row align-items-center fw-bold text-uppercase small letter-spacing-1 text-center">
+                    <div class="col-1">Място</div>
+                    <div class="col-4 text-start">Отбор / Мениджър</div>
+                    <div class="col-2">Играчи</div>
+                    <div class="col-2">Стойност</div>
+                    <div class="col-3">Звезда</div>
                 </div>
             </div>
             <div class="list-group list-group-flush">
@@ -45,34 +46,43 @@
                                 else if (rank == 3) { <span class="fs-2">🥉</span> }
                                 else { <span class="badge bg-light text-dark rounded-circle p-2 fs-6 shadow-sm" style="width:32px;height:32px;">@rank</span> }
                             </div>
-                            <div class="col-5">
+                            <div class="col-4">
                                 <div class="d-flex align-items-center">
                                     <div class="avatar bg-gradient rounded-circle text-white d-flex align-items-center justify-content-center me-3 shadow-sm"
-                                         style="width: 40px; height: 40px; background-color: #@entry.UserName.GetHashCode().ToString("X").Substring(0,6);">
-                                        @entry.UserName.Substring(0, 1).ToUpper()
+                                         style="width: 50px; height: 50px; background-color: #@entry.UserName.GetHashCode().ToString("X").Substring(0,6);">
+                                        @if(!string.IsNullOrEmpty(entry.TeamBadgeUrl) && entry.TeamBadgeUrl.Contains("http")) {
+                                            <img src="@entry.TeamBadgeUrl" style="width: 35px; height: 35px; object-fit: contain;">
+                                        } else {
+                                            @entry.UserName.Substring(0, 1).ToUpper()
+                                        }
                                     </div>
                                     <div>
-                                        <h5 class="mb-0 fw-bold">@entry.UserName</h5>
-                                        <small class="text-muted">Мениджър</small>
+                                        <h4 class="mb-0 fw-bold text-dark">@entry.TeamName</h4>
+                                        <small class="text-muted">Мениджър: @entry.UserName</small>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-2 text-center">
+                                <div class="text-muted small text-uppercase fw-bold mb-1">Състав</div>
                                 <span class="badge bg-white text-primary border border-primary px-3 py-2 rounded-pill">
-                                    @entry.PlayerCount Играчи
+                                    👥 @entry.PlayerCount Играчи
                                 </span>
                             </div>
-                            <div class="col-4 text-truncate">
+                            <div class="col-2 text-center">
+                                <div class="text-muted small text-uppercase fw-bold mb-1">Стойност</div>
+                                <div class="fw-bold text-success">💰 @entry.TotalCost <small>PTS</small></div>
+                            </div>
+                            <div class="col-3 text-truncate">
+                                <div class="text-muted small text-uppercase fw-bold mb-1">Звезда</div>
                                 @if(!string.IsNullOrEmpty(entry.BestPlayer))
                                 {
-                                    <span>🌟 @entry.BestPlayer</span>
+                                    <span class="fw-semibold">🌟 @entry.BestPlayer</span>
                                 }
                                 else
                                 {
                                     <span class="text-muted">-</span>
                                 }
                             </div>
-
                         </div>
                     </div>
                     rank++;

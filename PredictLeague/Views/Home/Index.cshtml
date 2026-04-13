@@ -17,10 +17,10 @@
                 <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill fw-bold">🏆 Игра №1 за футболни прогнози</span>
                 <h1 class="display-2 fw-bold mb-4" style="text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
                     Прогнозирай мача.<br>
-                    <span class="text-warning">Спечели лигата.</span>
+                    <span class="text-warning">Покори класацията.</span>
                 </h1>
                 <p class="lead mb-5 opacity-75 fs-4">
-                    Присъедини се към хиляди фенове, прогнозирай резултатите и се бори за първото място в класацията. Безплатно, забавно и конкурентно.
+                    Докажи футболните си знания, изкачи се до върха и спечели ежеседмични награди и признание.
                 </p>
                 <div class="d-flex justify-content-center gap-3">
                     <a href="@(isLoggedIn ? "/Matches" : "/Identity/Account/Login")" 
@@ -78,13 +78,67 @@
     </div>
 </div>
 
+<!-- ✅ WEEKLY REWARDS SECTION -->
+<div class="py-5" style="background: white;">
+    <div class="container">
+        <div class="text-center mb-5 fade-in-up">
+            <h2 class="display-6 fw-bold" style="color: #0f172a;">🎁 Спечели Награди на Седмицата</h2>
+            <p class="text-muted">Бъди в Топ 3 на седмичната класация и вземи бонуси за своя Fantasy отбор!</p>
+        </div>
+        
+        <div class="row g-4 justify-content-center">
+            <!-- 🥇 1st Place -->
+            <div class="col-md-4 fade-in-up delay-100">
+                <div class="card h-100 border-0 shadow-lg text-center p-4 rounded-4 position-relative overflow-hidden" 
+                     style="background: linear-gradient(135deg, #fff 0%, #fffbe6 100%); border: 1px solid #ffd700 !important;">
+                    <div class="fs-1 mb-3">🥇</div>
+                    <h3 class="h4 fw-bold mb-3">1-во Място</h3>
+                    <ul class="list-unstyled text-muted mb-0 text-start ps-3">
+                        <li class="mb-2">🏆 Статус "Шампион на седмицата"</li>
+                        <li class="mb-2">💰 +200 Бонус точки</li>
+                        <li>🌟 Златна значка до името</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 🥈 2nd Place -->
+            <div class="col-md-4 fade-in-up delay-200">
+                <div class="card h-100 border-0 shadow-sm text-center p-4 rounded-4" 
+                     style="background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+                    <div class="fs-1 mb-3">🥈</div>
+                    <h3 class="h4 fw-bold mb-3">2-ро Място</h3>
+                    <ul class="list-unstyled text-muted mb-0 text-start ps-3">
+                        <li class="mb-2">🥈 Статус "Вицешампион"</li>
+                        <li class="mb-2">💰 +150 Бонус точки</li>
+                        <li>🥈 Сребърна значка</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 🥉 3rd Place -->
+            <div class="col-md-4 fade-in-up delay-300">
+                <div class="card h-100 border-0 shadow-sm text-center p-4 rounded-4" 
+                     style="background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+                    <div class="fs-1 mb-3">🥉</div>
+                    <h3 class="h4 fw-bold mb-3">3-то Място</h3>
+                    <ul class="list-unstyled text-muted mb-0 text-start ps-3">
+                        <li class="mb-2">🥉 Статус "Бронзов медалист"</li>
+                        <li class="mb-2">💰 +100 Бонус точки</li>
+                        <li>🥉 Бронзова значка</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- BUILD DREAM TEAM SECTION -->
 <div class="bg-light py-5 border-top border-bottom">
     <div class="container">
          <div class="row align-items-center">
              <div class="col-lg-6 mb-4 mb-lg-0 fade-in-up">
-                 <img src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=800&q=80" 
-                      class="img-fluid rounded-4 shadow-lg" style="transform: rotate(-1deg); transition: transform 0.3s;" onmouseover="this.style.transform='rotate(0deg)'" onmouseout="this.style.transform='rotate(-1deg)'" alt="Dream Team Stadium">
+                 <img src="~/images/dream-team-exact.jpg" 
+                      class="img-fluid rounded-4 shadow-lg" style="transform: rotate(-1deg); transition: transform 0.3s;" onmouseover="this.style.transform='rotate(0deg)'" onmouseout="this.style.transform='rotate(-1deg)'" alt="Dream Team">
              </div>
              <div class="col-lg-6 ps-lg-5 fade-in-up delay-100">
                  <h2 class="display-5 fw-bold mb-4 text-dark">Създай своя <span class="text-success">Dream Team</span></h2>

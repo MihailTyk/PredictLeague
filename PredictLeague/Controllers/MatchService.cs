@@ -105,18 +105,18 @@ namespace PredictLeague.Controllers
             {
                 newPoints = 10;
             }
-            else if (
-                (match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
-                (match.HomeScore < match.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore) ||
-                (match.HomeScore == match.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore)
-            )
+            else 
             {
-                newPoints = 5;
-            }
-            else if (prediction.PredictedHomeScore == match.HomeScore ||
-                     prediction.PredictedAwayScore == match.AwayScore)
-            {
-                newPoints = 3;
+                if (prediction.PredictedHomeScore == match.HomeScore) newPoints += 3;
+                if (prediction.PredictedAwayScore == match.AwayScore) newPoints += 3;
+
+                if (newPoints == 0)
+                {
+                    bool outcomeMatches = (match.HomeScore > match.AwayScore && prediction.PredictedHomeScore > prediction.PredictedAwayScore) ||
+                                         (match.HomeScore < match.AwayScore && prediction.PredictedHomeScore < prediction.PredictedAwayScore) ||
+                                         (match.HomeScore == match.AwayScore && prediction.PredictedHomeScore == prediction.PredictedAwayScore);
+                    if (outcomeMatches) newPoints = 1;
+                }
             }
 
             // Бонус точки за позната дузпа (добавени върху основния резултат)
@@ -131,11 +131,23 @@ namespace PredictLeague.Controllers
             if (newPoints != oldPoints)
             {
                 var userSettings = _context.UserTeamSettings.FirstOrDefault(s => s.UserId == prediction.UserId);
-                if (userSettings != null)
+                if (userSettings == null)
+                {
+                    // Създаваме настройките, ако не съществуват, за да не се губят точките
+                    userSettings = new Models.UserTeamSettings 
+                    { 
+                        UserId = prediction.UserId, 
+                        Points = newPoints, 
+                        Formation = "4-4-2" 
+                    };
+                    _context.UserTeamSettings.Add(userSettings);
+                }
+                else
                 {
                     userSettings.Points += (newPoints - oldPoints);
                     _context.Update(userSettings);
                 }
+                
                 prediction.Points = newPoints;
                 _context.Update(prediction);
             }

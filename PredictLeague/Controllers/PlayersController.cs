@@ -192,7 +192,15 @@ namespace PredictLeague.Controllers
             var teamSettings = _context.UserTeamSettings.FirstOrDefault(s => s.UserId == user.Id);
             if (teamSettings == null)
             {
-                teamSettings = new Models.UserTeamSettings { UserId = user.Id, Points = 0, Formation = "4-4-2" };
+                // Почваме с точките, които потребителят вече е спечелил от прогнози
+                int startingPoints = _context.Prediction.Where(p => p.UserId == user.Id).Sum(p => p.Points);
+                
+                teamSettings = new Models.UserTeamSettings 
+                { 
+                    UserId = user.Id, 
+                    Points = startingPoints, 
+                    Formation = "4-4-2" 
+                };
                 _context.UserTeamSettings.Add(teamSettings);
                 await _context.SaveChangesAsync();
             }

@@ -694,7 +694,7 @@
         </div>
     <!-- Match Meta Stats below Hero -->
     <div class="match-meta text-center mt-3">
-        🕒 @(DateTime.TryParse(Model.MatchDate, out var dt) ? dt.ToString("dd.MM.yyyy HH:mm") : Model.MatchDate) &nbsp;|&nbsp; Мач #@Model.FixtureId
+        🕒 @(DateTime.TryParse(Model.MatchDate, out var dt) ? dt.ToString("dd.MM.yyyy HH:mm") : Model.MatchDate)
     </div>
 </div>
 
@@ -706,21 +706,61 @@
     string badgeClass = "bg-secondary";
     if (Model.HomeScore.HasValue && Model.AwayScore.HasValue)
     {
+        // ⚽ Базови точки за резултат
         if (p.PredictedHomeScore == Model.HomeScore.Value && p.PredictedAwayScore == Model.AwayScore.Value)
         {
             currentLivePoints = 10;
             pointReason = "Точен резултат!";
             badgeClass = "bg-warning text-dark";
         }
-        else if (p.PredictedHomeScore == Model.HomeScore.Value || p.PredictedAwayScore == Model.AwayScore.Value)
+        else 
         {
-            currentLivePoints = 3;
-            pointReason = "Частичен резултат!";
-            badgeClass = "bg-info text-white";
+            if (p.PredictedHomeScore == Model.HomeScore.Value) currentLivePoints += 3;
+            if (p.PredictedAwayScore == Model.AwayScore.Value) currentLivePoints += 3;
+
+            if (currentLivePoints == 0)
+            {
+                bool outcomeMatches = (Model.HomeScore > Model.AwayScore && p.PredictedHomeScore > p.PredictedAwayScore) ||
+                                     (Model.HomeScore < Model.AwayScore && p.PredictedHomeScore < p.PredictedAwayScore) ||
+                                     (Model.HomeScore == Model.AwayScore && p.PredictedHomeScore == p.PredictedAwayScore);
+                if (outcomeMatches) currentLivePoints = 1;
+            }
+            
+            if (currentLivePoints > 0) 
+            {
+                pointReason = "Частичен резултат!";
+                badgeClass = "bg-info text-white";
+            }
+            else 
+            {
+                pointReason = "Пропуск на резултата";
+                badgeClass = "bg-danger";
+            }
         }
-        else
+
+        // 🎯 Добавяне на бонуси
+        int bonusPoints = 0;
+        
+        // Дузпа (+3т) - Само при заложен "Да" и реална дузпа
+        if (Model.HadPenalty == true && p.PredictedPenalty == true) bonusPoints += 3;
+        
+        // Корнери (+3т)
+        // Тук е трудно да ги вземем за live без AJAX, но ако са в vm.Statistics, ги ползваме
+        int actualCorners = 0;
+        if (Model.Statistics != null && Model.Statistics.Count >= 1)
         {
-            pointReason = "Пропуск!";
+            foreach(var ts in Model.Statistics) {
+                var cs = ts.statistics.FirstOrDefault(s => s.type == "Corner Kicks");
+                int.TryParse(cs?.value?.ToString(), out var cv);
+                actualCorners += cv;
+            }
+            if (p.PredictedCorners == actualCorners && actualCorners > 0) bonusPoints += 3;
+        }
+
+        if (bonusPoints > 0) 
+        {
+            currentLivePoints += bonusPoints;
+            pointReason += $" ( +{bonusPoints} бонус )";
         }
     }
 
@@ -900,35 +940,35 @@
                         <!-- Extra options -->
                         <div class="extra-options">
                             <div class="option-group">
-                                <label>Ъглови удара (прибл.)</label>
+                                <label>Ъглови удара <span class="badge bg-primary ms-1" style="font-size:0.6rem;">+3 т.</span></label>
                                 <input type="number" name="predictedCorners" min="0" max="30" 
                                        placeholder="напр. 9"
                                        value="@(Model.UserPrediction?.PredictedCorners)"
                                        class="form-control-dark" />
                             </div>
                             <div class="option-group">
-                                <label>Засади (прибл.)</label>
+                                <label>Засади <span class="badge bg-secondary ms-1" style="font-size:0.6rem;">+2 т.</span></label>
                                 <input type="number" name="predictedOffsides" min="0" max="20" 
                                        placeholder="напр. 4"
                                        value="@(Model.UserPrediction?.PredictedOffsides)"
                                        class="form-control-dark" />
                             </div>
                             <div class="option-group">
-                                <label>Жълти картони</label>
+                                <label>Жълти картони <span class="badge bg-info text-dark ms-1" style="font-size:0.6rem;">+2 т.</span></label>
                                 <input type="number" name="predictedYellowCards" min="0" max="20" 
                                        placeholder="напр. 3"
                                        value="@(Model.UserPrediction?.PredictedYellowCards)"
                                        class="form-control-dark" />
                             </div>
                             <div class="option-group">
-                                <label>Червени картони</label>
+                                <label>Червени картони <span class="badge bg-danger ms-1" style="font-size:0.6rem;">+2 т.</span></label>
                                 <input type="number" name="predictedRedCards" min="0" max="10" 
                                        placeholder="напр. 0"
                                        value="@(Model.UserPrediction?.PredictedRedCards)"
                                        class="form-control-dark" />
                             </div>
                             <div class="option-group">
-                                <label>Ще има ли дузпа?</label>
+                                <label>Ще има ли дузпа? <span class="badge bg-warning text-dark ms-1" style="font-size:0.6rem;">+3 т.</span></label>
                                 <select name="predictedPenalty" class="form-control-dark">
                                     <option value="" selected="@(Model.UserPrediction?.PredictedPenalty == null)">-- Избери --</option>
                                     <option value="true" selected="@(Model.UserPrediction?.PredictedPenalty == true)">Да, ще има дузпа</option>
@@ -939,7 +979,7 @@
 
                         <div style="margin-top:1rem;">
                             <div class="option-group">
-                                <label>Голмайстор (за всяко)</label>
+                                <label>Голмайстор (Anytime Scorer) <span class="badge bg-info ms-1" style="font-size:0.6rem;">+5 т.</span></label>
                                 @if (allPlayers.Any())
                                 {
                                     <select name="anytimeGoalscorer" class="form-control-dark">

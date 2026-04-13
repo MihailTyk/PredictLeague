@@ -16,6 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
     <style>
         body {
@@ -136,6 +137,44 @@
         main {
             min-height: 70vh;
         }
+
+        /* 🔙 BACK BUTTON */
+        .back-btn-container {
+            margin-bottom: 2rem;
+            margin-top: 1rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 22px;
+            background: rgba(15, 23, 42, 0.05);
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            border-radius: 50px;
+            color: #0f172a;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+        }
+
+        .back-btn:hover {
+            background: #0f172a;
+            color: #ffd700 !important;
+            transform: translateX(-5px);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
+            border-color: #0f172a;
+        }
+
+        .back-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover i {
+            transform: translateX(-3px);
+        }
     </style>
 </head>
 
@@ -202,7 +241,7 @@
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item">
-                                <a class="nav-link px-3 rounded-pill text-info fw-semibold" asp-controller="MyPredictions" asp-action="Index">📋 Моите Предикти</a>
+                                <a class="nav-link px-3 rounded-pill text-info fw-semibold" asp-controller="MyPredictions" asp-action="Index">📋 Моите Прогнози</a>
                             </li>
                         }
 
@@ -269,6 +308,14 @@
 
     <!-- ✅ MAIN CONTENT -->
     <div class="container pb-5">
+        @if (ViewContext.RouteData.Values["controller"]?.ToString() != "Home" || ViewContext.RouteData.Values["action"]?.ToString() != "Index")
+        {
+            <div class="back-btn-container animate__animated animate__fadeIn">
+                <a href="javascript:history.back()" class="back-btn">
+                    <i>⬅️</i> Назад
+                </a>
+            </div>
+        }
         <main role="main">
             @RenderBody()
         </main>

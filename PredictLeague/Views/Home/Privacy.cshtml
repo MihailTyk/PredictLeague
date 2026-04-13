@@ -1,6 +1,51 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@{
+    ViewData["Title"] = "Политика за Поверителност";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container py-5">
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-dark text-white p-4">
+            <h1 class="h3 mb-0 fw-bold">🛡️ Полититка за Поверителност</h1>
+        </div>
+        <div class="card-body p-4 p-lg-5">
+            <p class="lead text-muted mb-4">
+                Вашата поверителност е важна за нас. Тази страница описва как събираме и използваме информацията във вашата любима платформа за футболни прогнози <strong>PredictLeague</strong>.
+            </p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h3 class="h5 fw-bold text-primary mb-3">1. Каква информация събираме?</h3>
+                    <p class="text-secondary small">
+                        Събираме минимална информация, необходима за вашето участие: имейл адрес, парола (в криптиран вид) и името на вашия виртуален Fantasy отбор. Вашите прогнози и спечелени точки също се съхраняват сигурно.
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5 fw-bold text-primary mb-3">2. Как използваме информацията?</h3>
+                    <p class="text-secondary small">
+                        Използваме данните ви единствено за да управляваме вашия профил, да изчисляваме точките ви в реално време и да ви показваме в глобалната класация (Leaderboard).
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5 fw-bold text-primary mb-3">3. Сигурност на данните</h3>
+                    <p class="text-secondary small">
+                        Използваме модерни технологии за защита. Вашите пароли се съхраняват чрез еднопосочно хеширане (PBKDF2), а цялата комуникация със сайта е защитена чрез SSL/TLS сертификат.
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5 fw-bold text-primary mb-3">4. Споделяне с трети лица</h3>
+                    <p class="text-secondary small">
+                        <strong>PredictLeague</strong> не продава, не отдава под наем и не споделя вашите лични данни с маркетингови фирми или трети страни.
+                    </p>
+                </div>
+            </div>
+
+            <hr class="my-5 opacity-10">
+
+            <div class="text-center">
+                <p class="text-muted small mb-0">С използването на този сайт, вие се съгласявате с нашите правила.</p>
+                <p class="text-muted mb-4" style="font-size: 0.8rem;">Последна актуализация: @DateTime.Now.ToString("dd.MM.yyyy")</p>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4">Връщане към Началото</a>
+            </div>
+        </div>
+    </div>
+</div>

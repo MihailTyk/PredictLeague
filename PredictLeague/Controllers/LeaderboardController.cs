@@ -24,6 +24,8 @@ namespace PredictLeague.Controllers
                 .GroupBy(up => up.User)
                 .Select(g => {
                     var settings = teamSettings.FirstOrDefault(s => s.UserId == g.Key.Id);
+                    double totalCost = g.Sum(up => Math.Max(10, Math.Round(up.Rating * 5)));
+
                     return new TeamLeaderboardEntry
                     {
                         UserName = g.Key.UserName,
@@ -31,6 +33,7 @@ namespace PredictLeague.Controllers
                         TeamBadgeUrl = settings?.TeamBadgeUrl ?? "https://cdn.pixabay.com/photo/2016/09/27/15/22/shield-1698650_1280.png",
                         PlayerCount = g.Count(),
                         TotalRating = g.Sum(up => up.Rating),
+                        TotalCost = (int)totalCost,
                         BestPlayer = g.OrderByDescending(up => up.Rating).FirstOrDefault()?.PlayerName
                     };
                 })
@@ -48,6 +51,7 @@ namespace PredictLeague.Controllers
         public string TeamBadgeUrl { get; set; }
         public int PlayerCount { get; set; }
         public double TotalRating { get; set; }
+        public int TotalCost { get; set; }
         public string BestPlayer { get; set; }
     }
 }

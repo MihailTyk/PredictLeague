@@ -17,5 +17,12 @@ namespace PredictLeague.Models
         public int? AwayScore { get; set; }
 
         public bool? HadPenalty { get; set; }
+
+        // Нови полета за детайлна статистика (за изчисляване на точки)
+        public int? ActualCorners { get; set; }
+        public int? ActualOffsides { get; set; }
+        public int? ActualYellowCards { get; set; }
+        public int? ActualRedCards { get; set; }
+        public string? ActualGoalscorers { get; set; } // Списък от имена, разделени със запетая
     }
 }

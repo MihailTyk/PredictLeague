@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model RegisterModel
 @{
     ViewData["Title"] = "Регистрация";
@@ -14,19 +14,19 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="mb-3">
-                <label asp-for="Input.Email" class="form-label fw-semibold"></label>
+                <label class="form-label fw-semibold">Имейл</label>
                 <input asp-for="Input.Email" class="form-control" placeholder="example@mail.com" />
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Input.Password" class="form-label fw-semibold"></label>
+                <label class="form-label fw-semibold">Парола</label>
                 <input asp-for="Input.Password" class="form-control" placeholder="••••••••" />
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
-                <label asp-for="Input.ConfirmPassword" class="form-label fw-semibold"></label>
+                <label class="form-label fw-semibold">Потвърди паролата</label>
                 <input asp-for="Input.ConfirmPassword" class="form-control" placeholder="••••••••" />
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
             </div>
