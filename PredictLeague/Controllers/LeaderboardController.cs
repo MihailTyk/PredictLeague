@@ -24,7 +24,14 @@ namespace PredictLeague.Controllers
                 .GroupBy(up => up.User)
                 .Select(g => {
                     var settings = teamSettings.FirstOrDefault(s => s.UserId == g.Key.Id);
-                    double totalCost = g.Sum(up => Math.Max(10, Math.Round(up.Rating * 5)));
+                    int totalCost = g.Sum(up => {
+                        double r = up.Rating;
+                        if (r >= 8.5) return 39;
+                        if (r >= 8.0) return 32;
+                        if (r >= 7.5) return 26;
+                        if (r >= 7.0) return 19;
+                        return 12;
+                    });
 
                     return new TeamLeaderboardEntry
                     {

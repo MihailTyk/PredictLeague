@@ -54,7 +54,14 @@ namespace PredictLeague.Controllers
                 AllPlayers = myPlayers,
                 StartingLineup = myPlayers.Where(p => p.IsStarter).ToList(),
                 Bench = myPlayers.Where(p => !p.IsStarter).ToList(),
-                TotalTeamValue = myPlayers.Sum(up => up.Rating)
+                TotalTeamValue = myPlayers.Sum(up => {
+                    double r = up.Rating;
+                    if (r >= 8.5) return 39;
+                    if (r >= 8.0) return 32;
+                    if (r >= 7.5) return 26;
+                    if (r >= 7.0) return 19;
+                    return 12;
+                })
             };
 
             ViewBag.Positions = GetFormationPositions(teamSettings.Formation);

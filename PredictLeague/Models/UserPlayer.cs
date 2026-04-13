@@ -18,6 +18,8 @@ namespace PredictLeague.Models
         
         public string? FieldPosition { get; set; } // e.g. "GK", "ST1", "CM2". Null if on bench.
         public string? PhotoUrl { get; set; } // URL for player image
+        public int Goals { get; set; }
+        public int Assists { get; set; }
         public bool IsStarter => !string.IsNullOrEmpty(FieldPosition);
     }
 }

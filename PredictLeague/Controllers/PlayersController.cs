@@ -25,7 +25,7 @@ namespace PredictLeague.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(int leagueId = 39, int season = 2024, int page = 1, string search = null)
+        public async Task<IActionResult> Index(int leagueId = 39, int season = 2025, int page = 1, string search = null)
         {
             // Списък с поддържани лиги за менюто
             ViewBag.Leagues = new Dictionary<int, string>
@@ -121,8 +121,8 @@ namespace PredictLeague.Controllers
                 string url;
                 if (!string.IsNullOrEmpty(search))
                 {
-                    // Търсене по име
-                    url = $"https://v3.football.api-sports.io/players?league={leagueId}&season={season}&search={search}";
+                    // Търсим точно по името, което потребителят е въвел
+                    url = $"https://v3.football.api-sports.io/players?season={season}&search={search}";
                 }
                 else
                 {
@@ -146,30 +146,28 @@ namespace PredictLeague.Controllers
                     }
                 }
 
+                // ГАРАНТИРАНО НИЩО НЕ ОСТАВА СКРИТО
                 if (result != null && result.Response != null)
                 {
-                     // ФИЛТРИРАНЕ: Показваме всички играчи
-                     List<PlayerEntry> playersToShow = result.Response;
+                     _logger.LogInformation($"Found {result.Response.Count} players for season {season}");
 
-                     // Запазваме информация за страниците
-                     if (result.Paging != null)
-                     {
-                         ViewBag.TotalPages = result.Paging.Total;
-                     }
-                     else
-                     {
-                         ViewBag.TotalPages = 1; // При търсене обикновено няма странициране в този endpoint по същия начин
-                     }
-                     
-                     if (!result.Response.Any() && !string.IsNullOrEmpty(search))
-                     {
-                         ViewBag.Warning = "Няма намерени играчи с това име. Уверете се, че сте написали името на латиница (напр. 'Yamal' вместо 'Ямал').";
-                     }
+                     // СОРТИРАНЕ: Най-висок рейтинг
+                     List<PlayerEntry> playersToShow = result.Response
+                        .OrderByDescending(p => {
+                            var rStr = p.Statistics?.FirstOrDefault()?.Games?.Rating;
+                            if (string.IsNullOrEmpty(rStr)) return 0.0;
+                            double.TryParse(rStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r);
+                            return r;
+                        })
+                        .ToList();
 
+                     ViewBag.TotalPages = result.Paging?.Total ?? 1;
+                     ViewBag.PlayerCount = playersToShow.Count;
                      return View("Index", playersToShow);
                 }
-
+                
                 return View("Index", new List<PlayerEntry>());
+
             }
             catch (Exception ex)
             {
@@ -180,7 +178,7 @@ namespace PredictLeague.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddToTeam(int playerId, string playerName, string position, string rating, string teamName)
+        public async Task<IActionResult> AddToTeam(int playerId, string playerName, string position, string rating, string teamName, int goals = 0, int assists = 0)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -212,12 +210,19 @@ namespace PredictLeague.Controllers
                 ratingValue = r;
             }
 
-            // Динамична цена: Рейтинг * 5 (минимум 10 точки)
-            int playerCost = 10;
-            if (ratingValue > 0)
-            {
-                playerCost = (int)Math.Max(10, Math.Round(ratingValue * 5));
-            }
+            // Нова скала на цените спрямо РЕЙТИНГ:
+            // 8.5+ -> 39 точки
+            // 8.0 - 8.4 -> 32 точки
+            // 7.5 - 7.9 -> 26 точки
+            // 7.0 - 7.4 -> 19 точки
+            // под 7.0 -> 12 точки
+            
+            int playerCost;
+            if (ratingValue >= 8.5) playerCost = 39;
+            else if (ratingValue >= 8.0) playerCost = 32;
+            else if (ratingValue >= 7.5) playerCost = 26;
+            else if (ratingValue >= 7.0) playerCost = 19;
+            else playerCost = 12;
 
             // 2. Check if user has enough points
             if (teamSettings.Points < playerCost)
@@ -241,7 +246,9 @@ namespace PredictLeague.Controllers
                 PlayerName = playerName,
                 Position = position,
                 Rating = ratingValue,
-                TeamName = teamName
+                TeamName = teamName,
+                Goals = goals,
+                Assists = assists
             };
 
             // 3. Deduct points and Save
@@ -342,6 +349,8 @@ namespace PredictLeague.Controllers
 
     public class LeagueDetails
     {
+        [JsonProperty("id")]
+        public int Id { get; set; }
         public string Name { get; set; }
         public string Country { get; set; }
         public string Logo { get; set; }

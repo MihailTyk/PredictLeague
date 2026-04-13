@@ -66,7 +66,7 @@ namespace PredictLeague.Controllers
                     .Select(t => new { 
                         Player = t.Player, 
                         RecentTransfers = t.Transfers
-                            .Where(tr => DateTime.TryParse(tr.Date, out var dt) && dt.Year >= 2024)
+                            .Where(tr => DateTime.TryParse(tr.Date, out var dt) && dt.Year >= 2025)
                             .OrderByDescending(tr => tr.Date)
                             .ToList() 
                     })

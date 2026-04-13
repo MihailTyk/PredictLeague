@@ -92,7 +92,13 @@
                  if (stats == null || shownPlayerIds.Contains(player.Id)) continue;
                  shownPlayerIds.Add(player.Id);
 
-                 int playerCost = (int)Math.Max(10, Math.Round((double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) ? r : 0) * 5));
+                 double ratingVal = double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r) ? r : 0;
+                 int playerCost;
+                 if (ratingVal >= 8.5) playerCost = 39;
+                 else if (ratingVal >= 8.0) playerCost = 32;
+                 else if (ratingVal >= 7.5) playerCost = 26;
+                 else if (ratingVal >= 7.0) playerCost = 19;
+                 else playerCost = 12;
 
                  <div class="col">
                     <div class="player-card rare">
@@ -115,7 +121,7 @@
                                     <span class="stat-label">АСИСТИ</span>
                                 </div>
                                 <div class="stat-box">
-                                    <span class="stat-num highlight">@(stats.Games.Rating?.Substring(0, 3) ?? "-")</span>
+                                    <span class="stat-num highlight">@(string.IsNullOrEmpty(stats.Games.Rating) ? "0.0" : (stats.Games.Rating.Length > 3 ? stats.Games.Rating.Substring(0, 3) : stats.Games.Rating))</span>
                                     <span class="stat-label">РЕЙТИНГ</span>
                                 </div>
                             </div>
@@ -129,6 +135,8 @@
                                     <input type="hidden" name="position" value="@stats.Games.Position" />
                                     <input type="hidden" name="rating" value="@stats.Games.Rating" />
                                     <input type="hidden" name="teamName" value="@stats.Team.Name" />
+                                    <input type="hidden" name="goals" value="@(stats.Goals.Total ?? 0)" />
+                                    <input type="hidden" name="assists" value="@(stats.Goals.Assists ?? 0)" />
                                     <button type="submit" class="action-btn gold">ВЗЕМИ ЗА @playerCost PTS</button>
                                 </form>
                             }
@@ -144,11 +152,29 @@
             @foreach (var entry in Model)
             {
                 var player = entry.Player;
-                var stats = entry.Statistics.FirstOrDefault();
-                if (stats == null || shownPlayerIds.Contains(player.Id)) continue;
-                shownPlayerIds.Add(player.Id);
+                // Статистика
+                var stats = entry.Statistics?.FirstOrDefault(s => s.League.Id == (int)ViewBag.CurrentLeagueId) ?? entry.Statistics?.FirstOrDefault();
+                
+                // Fallback stats if null
+                if (stats == null) {
+                    stats = new PredictLeague.Controllers.PlayerStats {
+                        Team = new PredictLeague.Controllers.TeamDetails { Name = "Unknown" },
+                        Goals = new PredictLeague.Controllers.PlayerGoals { Total = 0, Assists = 0 },
+                        Games = new PredictLeague.Controllers.Games { Rating = "0", Position = "N/A" }
+                    };
+                }
+                else {
+                    if (stats.Team == null) stats.Team = new PredictLeague.Controllers.TeamDetails { Name = "Unknown" };
+                    if (stats.Games == null) stats.Games = new PredictLeague.Controllers.Games { Rating = "0", Position = "N/A" };
+                }
 
-                int playerCost = (int)Math.Max(10, Math.Round((double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double rValue) ? rValue : 0) * 5));
+                double ratingVal = double.TryParse(stats.Games.Rating, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double rValue) ? rValue : 0;
+                int playerCost;
+                if (ratingVal >= 8.5) playerCost = 39;
+                else if (ratingVal >= 8.0) playerCost = 32;
+                else if (ratingVal >= 7.5) playerCost = 26;
+                else if (ratingVal >= 7.0) playerCost = 19;
+                else playerCost = 12;
 
                 <div class="col">
                     <div class="player-card">
@@ -170,7 +196,7 @@
                                     <span class="stat-label">АСИСТИ</span>
                                 </div>
                                 <div class="stat-box">
-                                    <span class="stat-num">@(stats.Games.Rating?.Substring(0, 3) ?? "-")</span>
+                                    <span class="stat-num">@(string.IsNullOrEmpty(stats.Games.Rating) ? "0.0" : (stats.Games.Rating.Length > 3 ? stats.Games.Rating.Substring(0, 3) : stats.Games.Rating))</span>
                                     <span class="stat-label">РЕЙТИНГ</span>
                                 </div>
                             </div>
@@ -184,6 +210,8 @@
                                     <input type="hidden" name="position" value="@stats.Games.Position" />
                                     <input type="hidden" name="rating" value="@stats.Games.Rating" />
                                     <input type="hidden" name="teamName" value="@stats.Team.Name" />
+                                    <input type="hidden" name="goals" value="@(stats.Goals.Total ?? 0)" />
+                                    <input type="hidden" name="assists" value="@(stats.Goals.Assists ?? 0)" />
                                     <button type="submit" class="action-btn">ДОБАВИ (@playerCost PTS)</button>
                                 </form>
                             }
