@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PredictLeague.Models;
 
@@ -15,5 +15,6 @@ namespace PredictLeague.Data
         public DbSet<Prediction> Prediction { get; set; }
         public DbSet<UserPlayer> UserPlayers { get; set; }
         public DbSet<UserTeamSettings> UserTeamSettings { get; set; }
+        public DbSet<WeeklyRewardHistory> WeeklyRewardHistory { get; set; }
     }
 }

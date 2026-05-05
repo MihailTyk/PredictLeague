@@ -7,11 +7,6 @@
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <h2 class="fw-bold text-dark mb-0">🛠️ Администраторски Панел</h2>
-        <form asp-controller="Admin" asp-action="RecalculateAllPoints" method="post" onsubmit="return confirm('Това ще преизчисли ВСИЧКИ точки на ВСИЧКИ потребители по новите правила. Сигурни ли сте?');">
-            <button type="submit" class="btn btn-outline-danger fw-bold rounded-pill px-4">
-                🔄 Преизчисли Всички Точки
-            </button>
-        </form>
     </div>
 
     @if (TempData["Success"] != null)
@@ -72,7 +67,7 @@
                 <div class="col-md-5 text-center mt-4 mt-md-0 border-start ps-4">
                     <form asp-controller="Admin" asp-action="DistributeWeeklyRewards" method="post" onsubmit="return confirm('Потвърждавате ли раздаването на награди за седмицата? ПРЕДУПРЕЖДЕНИЕ: Натискайте само веднъж на седмица.');">
                         <div class="mb-3 fs-1">📦</div>
-                        <button type="submit" class="btn btn-warning btn-lg fw-900 rounded-pill px-5 shadow-sm @(weeklyWinners?.Any() != true ? "disabled" : "")">
+                        <button type="submit" class="btn btn-warning btn-lg fw-bold rounded-pill px-5 shadow-sm" @(weeklyWinners?.Any() != true ? "disabled" : "")>
                             🎁 РАЗДАЙ НАГРАДИТЕ
                         </button>
                         <div class="mt-2 text-muted small">Внимавайте! Точките се добавят веднага.</div>

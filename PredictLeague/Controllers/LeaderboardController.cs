@@ -44,7 +44,7 @@ namespace PredictLeague.Controllers
                         BestPlayer = g.OrderByDescending(up => up.Rating).FirstOrDefault()?.PlayerName
                     };
                 })
-                .OrderByDescending(x => x.TotalRating)
+                .OrderByDescending(x => x.TotalCost)
                 .ToList();
 
             return View(userStats);

@@ -74,21 +74,86 @@ namespace PredictLeague.Controllers
 
             int[] prizes = { 200, 150, 100 };
             int distributedCount = 0;
+            DateTime now = DateTime.Now;
+
+            // Намираме датата на последното раздаване, ако има такова
+            var lastDistribution = await _context.WeeklyRewardHistory
+                .OrderByDescending(h => h.DistributedAt)
+                .FirstOrDefaultAsync();
+                
+            DateTime? lastDistributionDate = lastDistribution?.DistributedAt;
 
             for (int i = 0; i < top3.Count; i++)
             {
                 var winner = top3[i];
-                var settings = await _context.UserTeamSettings.FirstOrDefaultAsync(s => s.UserId == winner.UserId);
-                if (settings != null)
+                int currentPosition = i + 1;
+                
+                bool giveReward = true;
+                
+                if (lastDistributionDate.HasValue)
                 {
-                    settings.Points += prizes[i];
-                    _context.Update(settings);
+                    // Проверяваме предишната позиция на този потребител в последното раздаване (търсим запис около последната дата)
+                    var previousRecord = await _context.WeeklyRewardHistory
+                        .Where(h => h.UserId == winner.UserId && h.DistributedAt >= lastDistributionDate.Value.AddMinutes(-5))
+                        .OrderByDescending(h => h.DistributedAt)
+                        .FirstOrDefaultAsync();
+                        
+                    if (previousRecord != null && previousRecord.Position == currentPosition)
+                    {
+                        // Същата позиция. Проверяваме дали е правил прогнози СЛЕД последното раздаване
+                        bool hasNewPredictions = await _context.Prediction
+                            .AnyAsync(p => p.UserId == winner.UserId && p.CreatedAt > lastDistributionDate.Value);
+                            
+                        if (!hasNewPredictions)
+                        {
+                            giveReward = false; // Същата позиция и няма нови прогнози -> пропускаме
+                        }
+                    }
+                }
+
+                if (giveReward)
+                {
+                    var settings = await _context.UserTeamSettings.FirstOrDefaultAsync(s => s.UserId == winner.UserId);
+                    if (settings == null)
+                    {
+                        // Потребителят няма отбор — създаваме запис и добавяме точките
+                        settings = new UserTeamSettings
+                        {
+                            UserId = winner.UserId,
+                            Points = prizes[i]
+                        };
+                        _context.UserTeamSettings.Add(settings);
+                    }
+                    else
+                    {
+                        settings.Points += prizes[i];
+                        _context.Update(settings);
+                    }
+                    
+                    // Записваме в историята
+                    var history = new WeeklyRewardHistory
+                    {
+                        UserId = winner.UserId,
+                        Position = currentPosition,
+                        PointsAwarded = prizes[i],
+                        DistributedAt = now
+                    };
+                    _context.WeeklyRewardHistory.Add(history);
+                    
                     distributedCount++;
                 }
             }
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"Успешно раздадени награди на {distributedCount} играчи!";
+            
+            if (distributedCount > 0)
+            {
+                TempData["Success"] = $"Успешно раздадени награди на {distributedCount} играчи!";
+            }
+            else
+            {
+                TempData["Info"] = "Няма нови награди за раздаване (потребителите са запазили позициите си без нови прогнози).";
+            }
             return RedirectToAction(nameof(Index));
         }
 
