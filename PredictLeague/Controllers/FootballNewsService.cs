@@ -26,8 +26,8 @@ namespace PredictLeague.Controllers
             {
                 if (string.IsNullOrEmpty(apiKey)) return new List<FootballNews>();
 
-                // Най-простата възможна заявка
-                string url = $"https://newsdata.io/api/1/news?apikey={apiKey}&q=football&language=en";
+                // Търсим "футбол" строго в България (country=bg) и категория спорт (category=sports), за да избегнем други езици на кирилица
+                string url = $"https://newsdata.io/api/1/news?apikey={apiKey}&q=футбол&language=bg&country=bg&category=sports";
                 
                 var response = await _http.GetAsync(url);
                 if (!response.IsSuccessStatusCode) return GetFallbackNews();
@@ -44,7 +44,11 @@ namespace PredictLeague.Controllers
                         !((a.title ?? "") + (a.description ?? "")).Contains("NBA", StringComparison.OrdinalIgnoreCase) &&
                         !((a.title ?? "") + (a.description ?? "")).Contains("Cricket", StringComparison.OrdinalIgnoreCase) &&
                         !((a.title ?? "") + (a.description ?? "")).Contains("MLB", StringComparison.OrdinalIgnoreCase) &&
-                        !((a.title ?? "") + (a.description ?? "")).Contains("Xbox", StringComparison.OrdinalIgnoreCase))
+                        !((a.title ?? "") + (a.description ?? "")).Contains("Xbox", StringComparison.OrdinalIgnoreCase) &&
+                        !((a.title ?? "") + (a.description ?? "")).Contains("баскетбол", StringComparison.OrdinalIgnoreCase) &&
+                        !((a.title ?? "") + (a.description ?? "")).Contains("волейбол", StringComparison.OrdinalIgnoreCase) &&
+                        !((a.title ?? "") + (a.description ?? "")).Contains("тенис", StringComparison.OrdinalIgnoreCase) &&
+                        !((a.title ?? "") + (a.description ?? "")).Contains("спортът по телевизията", StringComparison.OrdinalIgnoreCase))
                     .Select(article => new FootballNews
                     {
                         title = article.title ?? "",
