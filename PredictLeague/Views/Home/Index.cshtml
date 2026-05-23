@@ -5,6 +5,16 @@
     ViewData["Title"] = "Home Page";
     var newsList = ViewData["NewsList"] as List<FootballNews> ?? new List<FootballNews>();
     var isLoggedIn = SignInManager.IsSignedIn(User);
+
+    string TranslateTransfer(string type) {
+        if (string.IsNullOrEmpty(type)) return "";
+        string lower = type.ToLower();
+        if (lower.Contains("loan")) return "Наем";
+        if (lower.Contains("raise")) return "Закупен / Промотиран";
+        if (lower.Contains("free")) return "Свободен агент";
+        if (lower == "n/a") return "Трансфер";
+        return type;
+    }
 }
 
 <!-- HERO SECTION -->
@@ -196,7 +206,7 @@
                                     @detail.Date
                                 }
                             </span>
-                            <span class="text-success small fw-bold">@detail.Type</span>
+                            <span class="text-success small fw-bold">@TranslateTransfer(detail.Type)</span>
                         </div>
                         
                         <div class="text-center mb-3">

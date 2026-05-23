@@ -73,6 +73,7 @@ namespace PredictLeague.Controllers
         public async Task<IActionResult> UpdateFormation(string formation)
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return LocalRedirect("/Identity/Account/Login");
             var settings = await _context.UserTeamSettings.FirstOrDefaultAsync(ts => ts.UserId == user.Id);
             
             if (settings != null)
@@ -87,6 +88,7 @@ namespace PredictLeague.Controllers
         public async Task<IActionResult> UpdateTeamNameAndBadge(string teamName, string teamBadgeUrl)
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return LocalRedirect("/Identity/Account/Login");
             var settings = await _context.UserTeamSettings.FirstOrDefaultAsync(ts => ts.UserId == user.Id);
             
             if (settings != null)
@@ -102,6 +104,7 @@ namespace PredictLeague.Controllers
         public async Task<IActionResult> AssignPlayer(int playerId, string position)
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user == null) return LocalRedirect("/Identity/Account/Login");
             var player = await _context.UserPlayers.FirstOrDefaultAsync(p => p.Id == playerId && p.UserId == user.Id);
             
             if (player == null) return NotFound();
@@ -126,6 +129,7 @@ namespace PredictLeague.Controllers
         public async Task<IActionResult> RemovePlayer(int playerId)
         {
              var user = await _userManager.GetUserAsync(User);
+             if (user == null) return LocalRedirect("/Identity/Account/Login");
              var player = await _context.UserPlayers.FirstOrDefaultAsync(p => p.Id == playerId && p.UserId == user.Id);
              
              if (player != null)

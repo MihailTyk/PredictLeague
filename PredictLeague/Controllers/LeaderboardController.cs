@@ -35,13 +35,13 @@ namespace PredictLeague.Controllers
 
                     return new TeamLeaderboardEntry
                     {
-                        UserName = g.Key.UserName,
+                        UserName = g.Key.UserName ?? "Unknown",
                         TeamName = settings?.TeamName ?? "Моят Отбор",
                         TeamBadgeUrl = settings?.TeamBadgeUrl ?? "https://cdn.pixabay.com/photo/2016/09/27/15/22/shield-1698650_1280.png",
                         PlayerCount = g.Count(),
                         TotalRating = g.Sum(up => up.Rating),
                         TotalCost = (int)totalCost,
-                        BestPlayer = g.OrderByDescending(up => up.Rating).FirstOrDefault()?.PlayerName
+                        BestPlayer = g.OrderByDescending(up => up.Rating).FirstOrDefault()?.PlayerName ?? "N/A"
                     };
                 })
                 .OrderByDescending(x => x.TotalCost)

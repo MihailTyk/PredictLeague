@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Футболен Пазар";
     var userPlayerIds = ViewBag.UserPlayerIds as HashSet<int> ?? new HashSet<int>();
+    var userPoints = (int)(ViewBag.UserPoints ?? 0);
 }
 
 <!-- Google Fonts -->
@@ -78,6 +79,12 @@
             <a asp-controller="MyTeam" asp-action="Index" class="alert-action">КЪМ МОЯ ОТБОР →</a>
         </div>
     }
+    @if (TempData["Error"] != null)
+    {
+        <div class="market-alert error animate__animated animate__bounceIn">
+            <span>❌ @TempData["Error"]</span>
+        </div>
+    }
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4 mt-2">
         
@@ -128,6 +135,10 @@
                             
                             @if (userPlayerIds.Contains(player.Id)) {
                                 <button class="action-btn owned" disabled>В ОТБОРА ТИ</button>
+                            } else if (userPoints < playerCost) {
+                                <button class="action-btn no-points" disabled>
+                                    ⚠️ Недостатъчно точки (@playerCost нужни, имате @userPoints)
+                                </button>
                             } else {
                                 <form method="post" asp-action="AddToTeam" asp-controller="Players">
                                     <input type="hidden" name="playerId" value="@player.Id" />
@@ -152,10 +163,8 @@
             @foreach (var entry in Model)
             {
                 var player = entry.Player;
-                // Статистика
                 var stats = entry.Statistics?.FirstOrDefault(s => s.League.Id == (int)ViewBag.CurrentLeagueId) ?? entry.Statistics?.FirstOrDefault();
                 
-                // Fallback stats if null
                 if (stats == null) {
                     stats = new PredictLeague.Controllers.PlayerStats {
                         Team = new PredictLeague.Controllers.TeamDetails { Name = "Unknown" },
@@ -203,6 +212,10 @@
 
                             @if (userPlayerIds.Contains(player.Id)) {
                                 <button class="action-btn owned" disabled>В ОТБОРА ТИ</button>
+                            } else if (userPoints < playerCost) {
+                                <button class="action-btn no-points" disabled>
+                                    ⚠️ Недостатъчно точки (@playerCost нужни, имате @userPoints)
+                                </button>
                             } else {
                                 <form method="post" asp-action="AddToTeam" asp-controller="Players">
                                     <input type="hidden" name="playerId" value="@player.Id" />
@@ -422,6 +435,16 @@
     .action-btn.gold { background: var(--accent-gold); color: black; border: none; }
     .action-btn.gold:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
     .action-btn.owned { background: rgba(255,255,255,0.1); color: var(--text-muted); cursor: default; }
+    .action-btn.owned:hover { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+    .action-btn.no-points { 
+        background: rgba(239, 68, 68, 0.15); 
+        border: 1px solid rgba(239, 68, 68, 0.3); 
+        color: #f87171; 
+        cursor: not-allowed;
+        font-size: 0.75rem;
+        letter-spacing: 0;
+    }
+    .action-btn.no-points:hover { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 
     /* 📄 Pagination */
     .pagination-overview { margin-bottom: 30px; }
@@ -449,6 +472,7 @@
         font-weight: 700;
     }
     .market-alert.success { background: rgba(40, 167, 69, 0.1); border: 1px solid rgba(40, 167, 69, 0.2); color: #4ade80; }
+    .market-alert.error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; }
     .alert-action { color: white; text-decoration: none; background: #22c55e; padding: 5px 15px; border-radius: 10px; font-size: 0.8rem; }
     
     .nationality-tag { position: absolute; top: 15px; right: 15px; font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 50px; }

@@ -25,6 +25,7 @@ namespace PredictLeague.Controllers
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
+            if (userId == null) return LocalRedirect("/Identity/Account/Login");
 
             var predictions = await _context.Prediction
                 .Include(p => p.Match)
@@ -51,6 +52,7 @@ namespace PredictLeague.Controllers
         public async Task<IActionResult> SyncBudget()
         {
             var userId = _userManager.GetUserId(User);
+            if (userId == null) return LocalRedirect("/Identity/Account/Login");
             var totalPointsEarned = await _context.Prediction
                 .Where(p => p.UserId == userId)
                 .SumAsync(p => p.Points);

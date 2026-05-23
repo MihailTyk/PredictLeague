@@ -25,7 +25,7 @@ namespace PredictLeague.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(int leagueId = 39, int season = 2025, int page = 1, string search = null)
+        public async Task<IActionResult> Index(int leagueId = 39, int season = 2024, int page = 1, string search = null)
         {
             // Списък с поддържани лиги за менюто
             ViewBag.Leagues = new Dictionary<int, string>
@@ -46,8 +46,9 @@ namespace PredictLeague.Controllers
             ViewBag.CurrentPage = page;
             ViewBag.SearchTerm = search;
             
-            ViewBag.CurrentLeagueName = (ViewBag.Leagues as Dictionary<int, string>).ContainsKey(leagueId) 
-                ? (ViewBag.Leagues as Dictionary<int, string>)[leagueId] 
+            var leagues = ViewBag.Leagues as Dictionary<int, string>;
+            ViewBag.CurrentLeagueName = leagues != null && leagues.ContainsKey(leagueId) 
+                ? leagues[leagueId] 
                 : "League";
 
             // Get user's existing players to mark them in UI
@@ -71,6 +72,11 @@ namespace PredictLeague.Controllers
                     .Where(up => up.UserId == user.Id)
                     .Select(up => up.PlayerApiId)))
                     .ToHashSet();
+
+                // Вземаме бюджета на потребителя
+                var teamSettings = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+                    .FirstOrDefaultAsync(_context.UserTeamSettings, s => s.UserId == user.Id);
+                ViewBag.UserPoints = teamSettings?.Points ?? 0;
             }
             ViewBag.UserPlayerIds = userPlayerIds;
 
@@ -93,79 +99,92 @@ namespace PredictLeague.Controllers
 
         private async Task<List<PlayerEntry>> FetchTopScorers(int leagueId, int season)
         {
-            try
+            int[] seasonsToTry = { season, 2024, 2023, 2022 };
+            foreach (var s in seasonsToTry.Distinct())
             {
-                // Взимаме само топ 4 за хедъра
-                string url = $"https://v3.football.api-sports.io/players/topscorers?league={leagueId}&season={season}";
-                var result = await FetchApiData(url);
-                
-                if (result == null || result.Response == null || !result.Response.Any())
+                try
                 {
-                    _logger.LogWarning($"Top Scorers API returned no data for League {leagueId} Season {season}");
-                    return null;
-                }
+                    string url = $"https://v3.football.api-sports.io/players/topscorers?league={leagueId}&season={s}";
+                    var result = await FetchApiData(url);
 
-                return result.Response.Take(4).ToList();
+                    if (result == null || result.Response == null || !result.Response.Any())
+                    {
+                        _logger.LogWarning($"Top Scorers API returned no data for League {leagueId} Season {s}. Trying next season...");
+                        continue;
+                    }
+
+                    _logger.LogInformation($"Top Scorers found for League {leagueId} Season {s}");
+                    return result.Response.Take(4).ToList();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error fetching Top Scorers for season {s}");
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching Top Scorers");
-                return null; 
-            }
+
+            return new List<PlayerEntry>();
         }
+
 
         private async Task<IActionResult> LoadPlayers(int leagueId, int season, int page, string search)
         {
             try
             {
-                string url;
-                if (!string.IsNullOrEmpty(search))
+                int[] seasonsToTry = { season, 2024, 2023, 2022 };
+                foreach (var s in seasonsToTry.Distinct())
                 {
-                    // Търсим точно по името, което потребителят е въвел
-                    url = $"https://v3.football.api-sports.io/players?season={season}&search={search}";
-                }
-                else
-                {
-                    // Стандартно странициране
-                    url = $"https://v3.football.api-sports.io/players?league={leagueId}&season={season}&page={page}";
-                }
-
-                var result = await FetchApiData(url);
-
-                if (result != null && result.Errors != null)
-                {
-                    bool hasErrors = false;
-                    if (result.Errors is Newtonsoft.Json.Linq.JArray arr && arr.Count == 0) hasErrors = false;
-                    else if (result.Errors is Newtonsoft.Json.Linq.JObject obj && !obj.HasValues) hasErrors = false;
-                    else hasErrors = true;
-
-                    if (hasErrors)
+                    string url;
+                    if (!string.IsNullOrEmpty(search))
                     {
-                        ViewBag.Error = "Грешка от API: " + result.Errors.ToString();
-                        return View("Index", new List<PlayerEntry>());
+                        // Търсим точно по името в рамките на лигата
+                        url = $"https://v3.football.api-sports.io/players?league={leagueId}&season={s}&search={search}";
+                    }
+                    else
+                    {
+                        // Стандартно странициране
+                        url = $"https://v3.football.api-sports.io/players?league={leagueId}&season={s}&page={page}";
+                    }
+
+                    var result = await FetchApiData(url);
+
+                    if (result != null && result.Errors != null)
+                    {
+                        bool hasErrors = false;
+                        if (result.Errors is Newtonsoft.Json.Linq.JArray arr && arr.Count == 0) hasErrors = false;
+                        else if (result.Errors is Newtonsoft.Json.Linq.JObject obj && !obj.HasValues) hasErrors = false;
+                        else hasErrors = true;
+
+                        if (hasErrors)
+                        {
+                            // If there's a serious API error, log it, but maybe try next season if it's a "season not found" error
+                            _logger.LogWarning($"API Error for season {s}: {result.Errors.ToString()}");
+                            continue;
+                        }
+                    }
+
+                    // ГАРАНТИРАНО НИЩО НЕ ОСТАВА СКРИТО
+                    if (result != null && result.Response != null && result.Response.Any())
+                    {
+                         _logger.LogInformation($"Found {result.Response.Count} players for season {s}");
+                         ViewBag.CurrentSeason = s;
+
+                         // СОРТИРАНЕ: Най-висок рейтинг
+                         List<PlayerEntry> playersToShow = result.Response
+                            .OrderByDescending(p => {
+                                var rStr = p.Statistics?.FirstOrDefault()?.Games?.Rating;
+                                if (string.IsNullOrEmpty(rStr)) return 0.0;
+                                double.TryParse(rStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r);
+                                return r;
+                            })
+                            .ToList();
+
+                         ViewBag.TotalPages = result.Paging?.Total ?? 1;
+                         ViewBag.PlayerCount = playersToShow.Count;
+                         return View("Index", playersToShow);
                     }
                 }
-
-                // ГАРАНТИРАНО НИЩО НЕ ОСТАВА СКРИТО
-                if (result != null && result.Response != null)
-                {
-                     _logger.LogInformation($"Found {result.Response.Count} players for season {season}");
-
-                     // СОРТИРАНЕ: Най-висок рейтинг
-                     List<PlayerEntry> playersToShow = result.Response
-                        .OrderByDescending(p => {
-                            var rStr = p.Statistics?.FirstOrDefault()?.Games?.Rating;
-                            if (string.IsNullOrEmpty(rStr)) return 0.0;
-                            double.TryParse(rStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double r);
-                            return r;
-                        })
-                        .ToList();
-
-                     ViewBag.TotalPages = result.Paging?.Total ?? 1;
-                     ViewBag.PlayerCount = playersToShow.Count;
-                     return View("Index", playersToShow);
-                }
                 
+                // Ако всички сезони са празни
                 return View("Index", new List<PlayerEntry>());
 
             }

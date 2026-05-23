@@ -25,8 +25,8 @@ namespace PredictLeague.Controllers
             var viewModel = users.Select(u => new AdminUserViewModel
             {
                 UserId = u.Id,
-                UserName = u.UserName,
-                Email = u.Email,
+                UserName = u.UserName ?? "Unknown",
+                Email = u.Email ?? "No Email",
                 TotalPredictions = predictions.Count(p => p.UserId == u.Id),
                 TotalPoints = predictions.Where(p => p.UserId == u.Id).Sum(p => p.Points)
             })
